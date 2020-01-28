@@ -3,14 +3,17 @@
 #include "../misc/Ticker.h"
 #include "../misc/Stopwatch.h"
 #include "../primitives/QuadTree.h"
+#include "../primitives/Reader.h"
 
 using namespace std;
 
+/*
 void executor(ServerHandle* handle, ServerHandle* context, vector<string> &tokens) {
 	cout << "Tokens: |";
 	for_each(tokens.begin(), tokens.end(), [](string token) { cout << token << "|"; });
 	cout << endl;
 }
+*/
 
 int main() {
 
@@ -41,23 +44,42 @@ int main() {
 	this_thread::sleep_for(milliseconds{ 5000 });
 	*/
 
+	/*
 	Rect border(-100, -100, 100, 100);
 	QuadTree tree(border, 16, 2);
+	vector<QuadItem*> items;
 
-	for (int i = -50; i < 50; i += 10) {
+	for (int i = -90; i < 90; i += 20) {
 		auto rect = new Rect(i, i, 20, 20);
-		auto item = new QuadItem(i + 10.0, i + 10.0, *rect);
-		rect->print(cout << "Inserting: ");
+		auto item = new QuadItem(i, i, *rect);
+		// rect->print(cout << "Inserting: ");
 		tree.insert(item);
-		cout << endl;
+		items.push_back(item);
+		// cout << endl;
 	}
+	*/
 
-	/*
-	Rect searchRange(-50, 50, 0, 0);
+	/* 
+	Rect searchRange(50, 50, 40, 40);
 	tree.search(searchRange, [](QuadItem* item) {
 		item->range.print(cout);
 	});
 	*/
 
+	/*
+	for (auto item : items) {
+		tree.remove(item);
+		delete &item->range;
+		delete item;
+	}
+
 	cout << tree;
+	*/
+
+	string_view view("12\00034");
+	Reader reader(view.data());
+
+	cout << reader.readStringUTF8() << endl;
+	reader.skip(3);
+	cout << reader.readStringUTF8() << endl;
 }

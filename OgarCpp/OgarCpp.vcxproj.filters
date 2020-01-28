@@ -47,6 +47,9 @@
     <ClInclude Include="src\primitives\QuadTree.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\primitives\Reader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\cli\default.cfg">

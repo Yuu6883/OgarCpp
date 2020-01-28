@@ -28,6 +28,7 @@
     <ClInclude Include="src\commands\CommandList.h" />
     <ClInclude Include="src\misc\Stopwatch.h" />
     <ClInclude Include="src\primitives\QuadTree.h" />
+    <ClInclude Include="src\primitives\Reader.h" />
     <ClInclude Include="src\primitives\Rect.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />

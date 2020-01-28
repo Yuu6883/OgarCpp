@@ -88,9 +88,9 @@ private:
 		double hh = range.h / 2;
 		branches = new QuadNode[4]{
 			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
+			QuadNode(Rect(x + hw, y - hh, hw, hh), maxLevel, maxItem, this),
+			QuadNode(Rect(x - hw, y + hh, hw, hh), maxLevel, maxItem, this),
+			QuadNode(Rect(x + hw, y + hh, hw, hh), maxLevel, maxItem, this),
 		};
 		auto iter = items.begin();
 		while (iter != items.end()) {
@@ -102,7 +102,6 @@ private:
 			branches[quadrant].insert(*iter);
 			iter = items.erase(iter);
 		}
-		cout << "Tree Splitting" << endl;
 	}
 
 	void merge() {
@@ -154,7 +153,8 @@ private:
 
 	void search(Rect& r, void(callback)(QuadItem*)) {
 		for (auto item : items) {
-			if (r.intersects(item->range)) callback(item);
+			if (r.intersects(item->range)) 
+				callback(item);
 		}
 		if (!hasSplit()) return;
 		auto quad = r.getQuadIntersect(range);

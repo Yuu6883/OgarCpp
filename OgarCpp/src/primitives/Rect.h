@@ -5,6 +5,14 @@ using namespace std;
 
 struct Quadrant {
 	bool t, b, l, r;
+	void print(ostream& stream) {
+		stream << "Quadrant(";
+		if (t) stream << "top ";
+		if (b) stream << "bottom ";
+		if (l) stream << "left ";
+		if (r) stream << "right ";
+		stream << ")";
+	}
 };
 
 class Point {
@@ -23,8 +31,8 @@ public:
 	bool intersects(Rect& other) {
 		return x - w <= other.x + other.w && \
 		  	x + w >= other.x - other.w && \
-			y - h >= other.y + other.h && \
-			y + h <= other.y - other.h;
+			y - h <= other.y + other.h && \
+			y + h >= other.y - other.h;
 	}
 
 	bool fullyIntersects(Rect& other) {
@@ -53,7 +61,7 @@ public:
 	}
 
 	void print(ostream& stream) {
-		stream << "[" << x << "," << y << "," << w << "," << h << "]" << endl;
+		stream << "{ x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << " }" << endl;
 	}
 };
 /*
