@@ -33,6 +33,7 @@
 
 # Debug folder
 Debug/*
+OgarCpp/Debug/*
 
 # Visual Studio
 .vs/*

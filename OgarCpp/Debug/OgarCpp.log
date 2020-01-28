@@ -1,5 +1,0 @@
-﻿  Main.cpp
-D:\vcpkg\installed\x86-windows\include\libconfig.h++(51,63): warning C4275: non dll-interface class 'std::exception' used as base for dll-interface class 'libconfig::ConfigException'
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.24.28314\include\vcruntime_exception.h(45): message : see declaration of 'std::exception'
-D:\vcpkg\installed\x86-windows\include\libconfig.h++(51): message : see declaration of 'libconfig::ConfigException'
-  OgarCpp.vcxproj -> D:\Repos\OgarCpp\Debug\OgarCpp.exe
