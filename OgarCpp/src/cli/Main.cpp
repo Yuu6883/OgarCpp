@@ -77,6 +77,7 @@ int main() {
 	cout << tree;
 	*/
 
+	/*
 	Writer writer;
 
 	writer.writeStringUTF8("pi is: ");
@@ -94,4 +95,7 @@ int main() {
 	cout << reader.readFloat32() << endl;
 	cout << reader.readStringUTF8() << endl;
 	cout << reader.readUInt32() << endl;
+	*/
+
+	return 0;
 }

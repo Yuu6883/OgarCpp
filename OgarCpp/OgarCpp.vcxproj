@@ -35,6 +35,7 @@
     <ClInclude Include="src\Settings.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\README.md" />
     <None Include="src\cli\default.cfg" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
