@@ -4,6 +4,7 @@
 #include "../misc/Stopwatch.h"
 #include "../primitives/QuadTree.h"
 #include "../primitives/Reader.h"
+#include "../primitives/Writer.h"
 
 using namespace std;
 
@@ -76,10 +77,21 @@ int main() {
 	cout << tree;
 	*/
 
-	string_view view("12\00034");
-	Reader reader(view.data());
+	Writer writer;
+
+	writer.writeStringUTF8("pi is: ");
+	writer.writeFloat32(3.1415926);
+	writer.writeStringUTF8("Hello world");
+	writer.writeUInt32(69420);
+
+	string_view buffer = writer.finalize();
+
+	cout << "Buffer size is: " << buffer.size() << endl;
+
+	Reader reader(buffer);
 
 	cout << reader.readStringUTF8() << endl;
-	reader.skip(3);
+	cout << reader.readFloat32() << endl;
 	cout << reader.readStringUTF8() << endl;
+	cout << reader.readUInt32() << endl;
 }

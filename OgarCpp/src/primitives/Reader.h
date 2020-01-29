@@ -5,13 +5,20 @@
 using namespace std;
 
 class Reader {
+
 	const char* origin;
 	char* charPtr;
 	size_t size;
 
+	void checkBound(int limit) {
+		if (offset() + limit > size) {
+			throw runtime_error("ReaderOutOfBoundException: [size=" + to_string(size) + "]");
+		}
+	}
+
 public:
-	Reader(const char* origin) : 
-		origin(origin), charPtr((char*) origin), size(sizeof(origin)) {};
+	Reader(string_view view) : 
+		origin(view.data()), charPtr((char*) view.data()), size(view.size()) {};
 
 	void reset() {
 		charPtr = (char*) origin;
@@ -55,6 +62,20 @@ public:
 		return value;
 	}
 
+	unsigned long readUInt64() {
+		checkBound(8);
+		auto value = *((unsigned long*) charPtr);
+		charPtr += 8;
+		return value;
+	}
+
+	long readInt64() {
+		checkBound(8);
+		auto value = *((long*) charPtr);
+		charPtr += 8;
+		return value;
+	}
+
 	float readFloat32() {
 		checkBound(4);
 		auto value = *((float*) charPtr);
@@ -73,18 +94,17 @@ public:
 		charPtr += count;
 	}
 
+	void back(long count) {
+		charPtr -= count;
+	}
+
+	int offset() {
+		return charPtr - origin;
+	}
+
 	string readStringUTF8() {
-		return string(charPtr);
-	}
-
-	void checkBound(int limit) {
-		if (charPtr - origin > size - limit) {
-			throw runtime_error("ReaderOutOfBoundException: [size=" + to_string(size) + "]");
-		}
-	}
-
-	int readColor() {
-		// TODO
-		return 0;
+		string result(charPtr);
+		skip(strlen(charPtr) + 1);
+		return result;
 	}
 };

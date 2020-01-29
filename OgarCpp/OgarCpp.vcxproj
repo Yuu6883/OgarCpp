@@ -30,6 +30,7 @@
     <ClInclude Include="src\primitives\QuadTree.h" />
     <ClInclude Include="src\primitives\Reader.h" />
     <ClInclude Include="src\primitives\Rect.h" />
+    <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
   </ItemGroup>
