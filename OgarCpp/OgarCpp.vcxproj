@@ -25,6 +25,7 @@
     <ClCompile Include="src\ServerHandle.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\cells\Cell.h" />
     <ClInclude Include="src\commands\CommandList.h" />
     <ClInclude Include="src\misc\Stopwatch.h" />
     <ClInclude Include="src\primitives\QuadTree.h" />
@@ -33,6 +34,7 @@
     <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\worlds\World.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md" />

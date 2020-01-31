@@ -1,10 +1,6 @@
 #include <iostream>
 #include "../ServerHandle.h"
-#include "../misc/Ticker.h"
-#include "../misc/Stopwatch.h"
-#include "../primitives/QuadTree.h"
-#include "../primitives/Reader.h"
-#include "../primitives/Writer.h"
+#include "../Settings.h"
 
 using namespace std;
 
@@ -26,6 +22,14 @@ int main() {
 	if (cl.execute(nullptr, "test hello world")) {
 		cout << "IT WORKED LMAO" << endl;
 	} */
+
+	Setting* settings = loadConfig();
+	ServerHandle handle(settings);
+
+	handle.start();
+
+	this_thread::sleep_for(seconds{ 10 });
+	cout << "Program ending" << endl;
 
 	/*
 	Ticker ticker(40);

@@ -8,7 +8,7 @@ using namespace std;
 static const char* configPath = "game.cfg";
 static const char* defaultConfigPath = "src/cli/default.cfg";
 
-Config* loadConfig() {
+Setting* loadConfig() {
 	Config* cfg = new Config();
 
 	cfg->setOptions(Config::OptionFsync
@@ -28,5 +28,5 @@ Config* loadConfig() {
 		cfg->writeFile(configPath);
 	}
 
-	return cfg;
+	return &cfg->getRoot();
 }

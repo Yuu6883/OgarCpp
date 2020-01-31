@@ -61,7 +61,10 @@ int main() {
         });
     });
 
-    for_each(threads.begin(), threads.end(), [](thread* t) {
-        t->join();
+    for_each(threads.begin(), threads.end(), [&](thread* t) {
+        if (t == *(threads.end() - 1))
+            t->join();
+        else 
+            t->detach();
     });
 }
