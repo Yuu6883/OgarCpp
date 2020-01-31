@@ -26,9 +26,15 @@ int main() {
 	Setting* settings = loadConfig();
 	ServerHandle handle(settings);
 
+	int playerMaxSize = handle.getSettingInt("playerMaxSize");
+	cout << "playerMaxSize: " << playerMaxSize << endl;
+
+	string serverName = handle.getSettingString("serverName");
+	cout << "serverName: " << serverName << endl;
+
 	handle.start();
 
-	this_thread::sleep_for(seconds{ 10 });
+	this_thread::sleep_for(seconds{ 1 });
 	cout << "Program ending" << endl;
 
 	/*

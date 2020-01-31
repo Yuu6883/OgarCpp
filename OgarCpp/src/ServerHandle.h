@@ -31,6 +31,12 @@ public:
 	ServerHandle(Setting* settings);
 
 	void setSettings(Setting* settings);
+	
+	int getSettingInt(const char* key);
+	bool getSettingBool(const char* key);
+	double getSettingDouble(const char* key);
+	string getSettingString(const char* key);
+
 	void onTick();
 	bool start();
 	bool stop();

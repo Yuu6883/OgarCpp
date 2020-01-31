@@ -22,8 +22,32 @@ void ServerHandle::setSettings(Setting* settings) {
 	this->settings = settings;
 }
 
+int ServerHandle::getSettingInt(const char* key) {
+	int value;
+	settings->lookupValue(key, value);
+	return value;
+}
+
+bool ServerHandle::getSettingBool(const char* key) {
+	bool value;
+	settings->lookupValue(key, value);
+	return value;
+}
+
+double ServerHandle::getSettingDouble(const char* key) {
+	double value;
+	settings->lookupValue(key, value);
+	return value;
+}
+
+string ServerHandle::getSettingString(const char* key) {
+	string value;
+	settings->lookupValue(key, value);
+	return value;
+}
+
 void ServerHandle::onTick() {
-	cout << "hi" << endl;
+
 }
 
 bool ServerHandle::start() {

@@ -26,7 +26,8 @@ class Rect : public Point {
 public:
 	double w, h;
 
-	Rect(double x, double y, double w, double h) : Point(x, y), w(w), h(h) {}
+	Rect() : Point(0, 0), w(0), h(0) {};
+	Rect(double x, double y, double w, double h) : Point(x, y), w(w), h(h) {};
 	
 	bool intersects(Rect& other) {
 		return x - w <= other.x + other.w && \
