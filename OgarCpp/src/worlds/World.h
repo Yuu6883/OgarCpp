@@ -24,6 +24,7 @@ struct Boost {
 
 class World {
 public:
+	ServerHandle* handle;
 	int id;
 	bool frozen = false;
 	unsigned int _nextCellId = 1;
@@ -39,7 +40,7 @@ public:
 
 	World(ServerHandle* handle, int id);
 	~World();
-	int getNextCellId() { return _nextCellId >= 4294967296 ? (_nextCellId = 1) : _nextCellId++; };
+	unsigned long getNextCellId() { return _nextCellId >= 4294967296 ? (_nextCellId = 1) : _nextCellId++; };
 	void afterCreation();
 	void setBorder(Rect& rect);
 	void addCell(Cell* cell);

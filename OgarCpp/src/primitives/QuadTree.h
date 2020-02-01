@@ -9,9 +9,8 @@ class QuadNode;
 class QuadItem : public Point {
 public:
 	QuadNode* root;
-	Rect& range;
-	QuadItem(const double x, const double y, Rect& range) : 
-		Point(x, y), range(range), root(nullptr) {};
+	Rect range;
+	QuadItem(const double x, const double y) : Point(x, y), root(nullptr) {};
 };
 
 class QuadTree {

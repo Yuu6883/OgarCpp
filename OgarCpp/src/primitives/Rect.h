@@ -18,6 +18,7 @@ struct Quadrant {
 class Point {
 public:
 	double x, y;
+	Point() : x(0), y(0) {};
 	Point(double x, double y) : x(x), y(y) {};
 };
 
@@ -26,7 +27,7 @@ class Rect : public Point {
 public:
 	double w, h;
 
-	Rect() : Point(0, 0), w(0), h(0) {};
+	Rect() : Point(), w(0), h(0) {};
 	Rect(double x, double y, double w, double h) : Point(x, y), w(w), h(h) {};
 	
 	bool intersects(Rect& other) {
