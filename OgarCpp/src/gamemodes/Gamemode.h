@@ -13,6 +13,7 @@ class Gamemode {
 public:
 	ServerHandle* handle;
 	Gamemode(ServerHandle* handle) : handle(handle) {};
+
 	int getType();
 	const char* getName();
 

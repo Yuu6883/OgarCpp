@@ -59,6 +59,15 @@
     <ClInclude Include="src\worlds\World.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\primitives\Logger.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\gamemodes\Gamemode.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\sockets\Listener.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\cli\default.cfg">

@@ -1,6 +1,11 @@
+#define _HAS_STD_BYTE 0
+#define _HAS_STD_BOOLEAN 0
+
 #include <iostream>
 #include "../ServerHandle.h"
 #include "../Settings.h"
+#include "../primitives/Logger.h"
+#include "../sockets/Listener.h"
 
 using namespace std;
 
@@ -25,17 +30,11 @@ int main() {
 
 	Setting* settings = loadConfig();
 	ServerHandle handle(settings);
+	Listener listener(&handle);
+	listener.open();
 
-	int playerMaxSize = handle.getSettingInt("playerMaxSize");
-	cout << "playerMaxSize: " << playerMaxSize << endl;
-
-	string serverName = handle.getSettingString("serverName");
-	cout << "serverName: " << serverName << endl;
-
-	handle.start();
-
-	this_thread::sleep_for(seconds{ 1 });
-	cout << "Program ending" << endl;
+	this_thread::sleep_for(seconds{ 5 });
+	listener.close();
 
 	/*
 	Ticker ticker(40);

@@ -27,13 +27,16 @@
   <ItemGroup>
     <ClInclude Include="src\cells\Cell.h" />
     <ClInclude Include="src\commands\CommandList.h" />
+    <ClInclude Include="src\gamemodes\Gamemode.h" />
     <ClInclude Include="src\misc\Stopwatch.h" />
+    <ClInclude Include="src\primitives\Logger.h" />
     <ClInclude Include="src\primitives\QuadTree.h" />
     <ClInclude Include="src\primitives\Reader.h" />
     <ClInclude Include="src\primitives\Rect.h" />
     <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\sockets\Listener.h" />
     <ClInclude Include="src\worlds\World.h" />
   </ItemGroup>
   <ItemGroup>
