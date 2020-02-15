@@ -29,8 +29,8 @@ public:
 	bool frozen = false;
 	unsigned int _nextCellId = 1;
 	
-	vector<Cell*> cells;
-	vector<Cell*> boostingCells;
+	std::vector<Cell*> cells;
+	std::vector<Cell*> boostingCells;
 
 	int pelletCount = 0;
 	int motherCellCount = 0;
@@ -55,7 +55,7 @@ public:
 	Point getSafeSpawnPos(double cellSize);
 	SpawnResult getPlayerSpawn(double cellSize);
 	void spawnPlayer(Player* player, Point& pos, double size);
-	void update() { frozen ? frozenUpdate() : liveUpdate() };
+	void update() { frozen ? frozenUpdate() : liveUpdate(); };
 	void frozenUpdate();
 	void liveUpdate();
 	void resolveRegidCheck(Cell* a, Cell* b);
@@ -70,6 +70,6 @@ public:
 	void splitPlayer(Player* player);
 	void ejectFromPlayer(Player* player);
 	void popPlayerCell(Player* player);
-	vector<double>* distributeCellMass(PlayerCell* cell);
+	std::vector<double>* distributeCellMass(PlayerCell* cell);
 	void compileStatistics();
 };

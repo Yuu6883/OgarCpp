@@ -9,15 +9,18 @@
 using namespace libconfig;
 using namespace std::chrono;
 
+class Player;
+class Router;
+
 class ServerHandle {
 
 public:
 	Setting* settings;
-	CommandList<ServerHandle*>* commands = nullptr;
-	CommandList<ServerHandle*>* chatCommands = nullptr;
+	CommandList<ServerHandle*> commands;
+	CommandList<ServerHandle*> chatCommands;
 
 	bool running = false;
-	int tick = -1;
+	unsigned long tick = -1;
 	int tickDelay = -1;
 	int stepMult = -1;
 
@@ -35,9 +38,14 @@ public:
 	int getSettingInt(const char* key);
 	bool getSettingBool(const char* key);
 	double getSettingDouble(const char* key);
-	string getSettingString(const char* key);
+	std::string getSettingString(const char* key);
 
 	void onTick();
 	bool start();
 	bool stop();
+	Player* createPlayer(Router*);
+	bool removePlayer(int);
 };
+
+#include "sockets/Router.h"
+#include "sockets/Listener.h"

@@ -2,8 +2,7 @@
 
 #include <chrono>
 
-using namespace std;
-using namespace chrono;
+using namespace std::chrono;
 
 class Stopwatch {
 	time_point<steady_clock> _start;
@@ -14,12 +13,12 @@ public:
 		reset();
 	}
 	double lap() {
-		double v = duration<double, milli>(steady_clock::now() - _lap).count();
+		double v = duration<double, std::milli>(steady_clock::now() - _lap).count();
 		_lap = steady_clock::now();
 		return v;
 	}
 	double elapsed() {
-		return duration<double, milli>(steady_clock::now() - _start).count();
+		return duration<double, std::milli>(steady_clock::now() - _start).count();
 	}
 	void stop() {}
 	void reset() {

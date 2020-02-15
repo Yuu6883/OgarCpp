@@ -3,8 +3,6 @@
 #include "Rect.h"
 #include <string>
 
-using namespace std;
-
 class QuadNode;
 class QuadItem : public Point {
 public:
@@ -14,7 +12,7 @@ public:
 };
 
 class QuadTree {
-	friend ostream& operator<<(ostream& stream, QuadTree& quad);
+	friend std::ostream& operator<<(std::ostream& stream, QuadTree& quad);
 private:
 	QuadNode* root;
 	int maxLevel;

@@ -37,6 +37,8 @@
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\sockets\Listener.h" />
+    <ClInclude Include="src\sockets\Router.h" />
+    <ClInclude Include="src\worlds\Player.h" />
     <ClInclude Include="src\worlds\World.h" />
   </ItemGroup>
   <ItemGroup>

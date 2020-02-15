@@ -2,7 +2,7 @@
 
 #include <string>
 #include <exception>
-using namespace std;
+#include <stdexcept>
 
 class Reader {
 
@@ -12,12 +12,12 @@ class Reader {
 
 	void checkBound(int limit) {
 		if (offset() + limit > size) {
-			throw runtime_error("ReaderOutOfBoundException: [size=" + to_string(size) + "]");
+			throw std::runtime_error("ReaderOutOfBoundException: [size=" + std::to_string(size) + "]");
 		}
 	}
 
 public:
-	Reader(string_view view) : 
+	Reader(std::string_view view) : 
 		origin(view.data()), charPtr((char*) view.data()), size(view.size()) {};
 
 	void reset() {
@@ -102,8 +102,8 @@ public:
 		return charPtr - origin;
 	}
 
-	string readStringUTF8() {
-		string result(charPtr);
+	std::string readStringUTF8() {
+		std::string result(charPtr);
 		skip(strlen(charPtr) + 1);
 		return result;
 	}

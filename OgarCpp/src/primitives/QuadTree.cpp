@@ -4,12 +4,10 @@
 #include <algorithm>
 #include <string>
 
-using namespace std;
-
 class QuadNode {
 
 	friend QuadTree;
-	friend ostream& operator<<(ostream& stream, QuadNode& quad);
+	friend std::ostream& operator<<(std::ostream& stream, QuadNode& quad);
 
 private:
 
@@ -20,7 +18,7 @@ private:
 	Rect range;
 	QuadNode* root;
 	QuadNode* branches;
-	list<QuadItem*> items;
+	std::list<QuadItem*> items;
 
 	QuadNode(Rect range, int& maxLevel, int& maxItem, QuadNode* root) : 
 		maxLevel(maxLevel), maxItem(maxItem), range(range), root(root), branches(nullptr) {
@@ -188,22 +186,22 @@ private:
 
 };
 
-ostream& operator<<(ostream& stream, QuadNode& quad) {
+std::ostream& operator<<(std::ostream& stream, QuadNode& quad) {
 	stream << "items " << quad.items.size() << "/" << quad.maxItem << "/" << \
 		quad.getItemCount() << " level " << quad.level << " x " << quad.range.x << " y " << quad.range.y << \
-		" w " << quad.range.w << " h " << quad.range.h << endl;
+		" w " << quad.range.w << " h " << quad.range.h << std::endl;
 	if (quad.hasSplit()) {
 		for (int i = 0; i < 4; i++)
-			stream << string(quad.level * 2, ' ') << quad.branches[i];
+			stream << std::string(quad.level * 2, ' ') << quad.branches[i];
 	}
 	return stream;
 }
 
-ostream& operator<<(ostream& stream, QuadTree& tree) {
+std::ostream& operator<<(std::ostream& stream, QuadTree& tree) {
 	if (tree.root) {
 		return stream << *tree.root;
 	} else {
-		return stream << "[ROOTLESS TREE]" << endl;
+		return stream << "[ROOTLESS TREE]" << std::endl;
 	}
 }
 

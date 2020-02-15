@@ -5,17 +5,15 @@
 #include <thread>
 #include <map>
 
-using namespace std;
-
 constexpr auto POOL_SIZE = 1024 * 1024;
-map<thread::id, char*> BufferMap;
+std::map<std::thread::id, char*> BufferMap;
 
 class Writer {
 	char* pool;
 	char* ptr;
 public:
 	Writer() {
-		auto thread_id = this_thread::get_id();
+		auto thread_id = std::this_thread::get_id();
 		if (BufferMap.contains(thread_id)) {
 			pool = BufferMap.at(thread_id);
 		} else {
@@ -91,10 +89,10 @@ public:
 		ptr++;
 	}
 
-	string_view finalize() {
+	std::string_view finalize() {
 		int offset = this->offset();
 		char* result = (char *) malloc(offset);
 		memcpy(result, pool, offset);
-		return string_view(result, offset);
+		return std::string_view(result, offset);
 	}
 };

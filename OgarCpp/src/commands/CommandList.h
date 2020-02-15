@@ -6,29 +6,27 @@
 #include <string.h>
 #include <iostream>
 #include <boost/algorithm/string.hpp>
-#include "../ServerHandle.h"
 
-using namespace std;
 using namespace boost::algorithm;
 
 class ServerHandle;
 
-static void toLowerCase(string* str) {
-	transform(str->begin(), str->end(), str->begin(), [](unsigned char c) { return tolower(c); });
+static void toLowerCase(std::string* str) {
+	std::transform(str->begin(), str->end(), str->begin(), [](unsigned char c) { return tolower(c); });
 };
 
 template<class T>
 class Command {
 
 public:
-	typedef void (*CommandExecutor)(ServerHandle*, T, vector<string>&);
-	string name;
-	string description;
-	string args;
+	typedef void (*CommandExecutor)(ServerHandle*, T, std::vector<std::string>&);
+	std::string name;
+	std::string description;
+	std::string args;
 	CommandExecutor executor;
 
 	Command() : name(""), description(""), args(""), executor(nullptr) {};
-	Command(string name, string description, string args = "", CommandExecutor executor = nullptr) :
+	Command(std::string name, std::string description, std::string args = "", CommandExecutor executor = nullptr) :
 		description(description), args(args), executor(executor) {
 		toLowerCase(&name);
 		this->name = name;
@@ -36,7 +34,7 @@ public:
 };
 
 template<class T>
-ostream& operator<<(ostream& stream, const Command<T>& cmd) {
+std::ostream& operator<<(std::ostream& stream, const Command<T>& cmd) {
 	stream << cmd.name;
 	if (cmd.args.length()) {
 		stream << " " << cmd.args;
@@ -46,28 +44,28 @@ ostream& operator<<(ostream& stream, const Command<T>& cmd) {
 
 template<class T>
 class CommandList {
-
+	friend ServerHandle;
 private:
 	ServerHandle* handle;
-	map<string, Command<T>> commands;
+	std::map<std::string, Command<T>> commands;
 
 public:
-	CommandList(ServerHandle* handle) : handle(handle) {};
+	CommandList(ServerHandle* handle = nullptr) : handle(handle) {};
 
 	void registerCommand(Command<T>& command) {
 		if (commands.contains(command.name)) {
-			cerr << "Command \"" << command.name << "\" is already registered." << endl;
+			error(std::string("Command \"") + command.name + std::string("\" is already registered."));
 		} else {
-			commands.insert(make_pair(command.name, command));
+			commands.insert(std::make_pair(command.name, command));
 		}
 	};
 
-	bool execute(T context, string input) {
-		vector<string> tokens;
+	bool execute(T context, std::string input) {
+		std::vector<std::string> tokens;
 		split(tokens, input, is_space());
 
 		if (tokens.empty()) return false;
-		string cmd = tokens[0];
+		std::string cmd = tokens[0];
 		tokens.erase(tokens.begin());
 
 		if (commands.contains(cmd)) {

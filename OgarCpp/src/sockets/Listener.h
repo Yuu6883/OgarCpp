@@ -1,11 +1,14 @@
 #pragma once
 
 #include <uwebsockets/App.h>
+#include <vector>
 
 #include "../ServerHandle.h"
-class ServerHandle;
-
+#include "./Router.h"
 #include "../primitives/Logger.h"
+
+class ServerHandle;
+class Router;
 
 struct SocketData {};
 
@@ -13,9 +16,10 @@ class Listener {
 public:
 	ServerHandle* handle;
 	us_listen_socket_t* socketServer;
-	thread* socketThread;
+	std::thread* socketThread;
 	// ChatChannel
 	// Routers
+	std::vector<Router*> routers;
 	// Connections
 	// ConnectionsByIP
 
@@ -27,9 +31,9 @@ public:
 		if (socketServer || socketThread) return false;
 		int port = handle->getSettingInt("listeningPort");
 
-		debug(string("listener opening at port ") + to_string(port));
+		Logger::debug(std::string("listener opening at port ") + std::to_string(port));
 
-		socketThread = new thread([this, port] {
+		socketThread = new std::thread([this, port] {
 			uWS::App().ws<SocketData>("/", {
 				/* Settings */
 				.compression = uWS::SHARED_COMPRESSOR,
@@ -37,17 +41,17 @@ public:
 				.maxBackpressure = 1 * 1024 * 1204,
 				/* Handlers */
 				.open = [](auto* ws, auto* req) {},
-				.message = [](auto* ws, string_view message, uWS::OpCode opCode) {},
+				.message = [](auto* ws, std::string_view message, uWS::OpCode opCode) {},
 				.drain = [](auto* ws) { /* Check getBufferedAmount here */ },
 				.ping  = [](auto* ws) {},
 				.pong  = [](auto* ws) {},
-				.close = [](auto* ws, int code, string_view message) {}
+				.close = [](auto* ws, int code, std::string_view message) {}
 			}).listen(port, [this, port](auto* listenerSocket) {
 				if (listenerSocket) {
 					socketServer = listenerSocket;
-					info(string("listener opened at port ") + to_string(port));
+					Logger::info(std::string("listener opened at port ") + std::to_string(port));
 				} else {
-					error(string("listener failed to open at port " + to_string(port)));
+					Logger::error(std::string("listener failed to open at port " + std::to_string(port)));
 				}
 			}).run();
 		});
@@ -61,7 +65,15 @@ public:
 		socketServer = nullptr;
 		delete socketThread;
 		socketThread = nullptr;
-		debug("listener closed");
+		Logger::debug("listener closed");
 		return true;
+	}
+
+	bool verifyClient() {
+
+	}
+
+	void addRouter(Router* router) {
+		routers.push_back(router);
 	}
 };

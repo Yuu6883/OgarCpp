@@ -4,10 +4,6 @@
 #include <iostream>
 #include "../ServerHandle.h"
 #include "../Settings.h"
-#include "../primitives/Logger.h"
-#include "../sockets/Listener.h"
-
-using namespace std;
 
 /*
 void executor(ServerHandle* handle, ServerHandle* context, vector<string> &tokens) {
@@ -31,10 +27,17 @@ int main() {
 	Setting* settings = loadConfig();
 	ServerHandle handle(settings);
 	Listener listener(&handle);
-	listener.open();
 
+	Router r(&listener);
+
+	r.spawningName = "<hello>world";
+	r.onSpawnRequest();
+
+	/*
+	listener.open();
 	this_thread::sleep_for(seconds{ 5 });
 	listener.close();
+	*/
 
 	/*
 	Ticker ticker(40);
@@ -106,5 +109,5 @@ int main() {
 	cout << reader.readUInt32() << endl;
 	*/
 
-	return 0;
+	return EXIT_SUCCESS;
 }

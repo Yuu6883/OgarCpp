@@ -2,10 +2,10 @@
 
 ServerHandle::ServerHandle(Setting* settings) {
 	
-	commands = new CommandList<ServerHandle*>(this);
-	chatCommands = new CommandList<ServerHandle*>(this);
+	commands.handle = this;
+	chatCommands.handle = this;
 
-	ticker.add(bind(&ServerHandle::onTick, this));
+	ticker.add([this] { onTick(); });
 
 	setSettings(settings);
 }
@@ -13,13 +13,11 @@ ServerHandle::ServerHandle(Setting* settings) {
 void ServerHandle::setSettings(Setting* settings) {
 	if (this->settings) delete this->settings;
 
-	int freq;
-	settings->lookupValue("serverFrequency", freq);
+	this->settings = settings;
+	int freq = getSettingInt("serverFrequency");
 	tickDelay = 1000 / freq;
 	ticker.setStep(tickDelay);
 	stepMult = tickDelay / 40;
-
-	this->settings = settings;
 }
 
 int ServerHandle::getSettingInt(const char* key) {
@@ -40,8 +38,8 @@ double ServerHandle::getSettingDouble(const char* key) {
 	return value;
 }
 
-string ServerHandle::getSettingString(const char* key) {
-	string value;
+std::string ServerHandle::getSettingString(const char* key) {
+	std::string value;
 	settings->lookupValue(key, value);
 	return value;
 }

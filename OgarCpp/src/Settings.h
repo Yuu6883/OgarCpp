@@ -3,7 +3,6 @@
 #include <filesystem>
 
 using namespace libconfig;
-using namespace std;
 
 static const char* configPath = "game.cfg";
 static const char* defaultConfigPath = "src/cli/default.cfg";
@@ -16,12 +15,12 @@ Setting* loadConfig() {
 		| Config::OptionColonAssignmentForGroups
 		| Config::OptionOpenBraceOnSeparateLine);
 
-	if (filesystem::exists(configPath)) {
+	if (std::filesystem::exists(configPath)) {
 		try {
 			cfg->readFile(configPath);
 		} catch (const ParseException & pex) {
-			cerr << "Parse error at " << pex.getFile() << ":" << pex.getLine()
-				<< " - " << pex.getError() << endl;
+			Logger::error(std::string("Parse error at ") + pex.getFile() + ":" + 
+				std::to_string(pex.getLine()) + " - " + pex.getError());
 		}
 	} else {
 		cfg->readFile(defaultConfigPath);

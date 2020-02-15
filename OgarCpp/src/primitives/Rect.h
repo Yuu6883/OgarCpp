@@ -1,11 +1,10 @@
 #pragma once
 
 #include <iostream>
-using namespace std;
 
 struct Quadrant {
 	bool t, b, l, r;
-	void print(ostream& stream) {
+	void print(std::ostream& stream) {
 		stream << "Quadrant(";
 		if (t) stream << "top ";
 		if (b) stream << "bottom ";
@@ -30,21 +29,21 @@ public:
 	Rect() : Point(), w(0), h(0) {};
 	Rect(double x, double y, double w, double h) : Point(x, y), w(w), h(h) {};
 	
-	bool intersects(Rect& other) {
+	bool intersects(const Rect& other) {
 		return x - w <= other.x + other.w && \
 		  	x + w >= other.x - other.w && \
 			y - h <= other.y + other.h && \
 			y + h >= other.y - other.h;
 	}
 
-	bool fullyIntersects(Rect& other) {
+	bool fullyIntersects(const Rect& other) {
 		return x - w >= other.x + other.w && \
 			x + w <= other.x - other.w && \
 			y - h >= other.y + other.h && \
 			y + h <= other.y - other.h;
 	}
 
-	Quadrant getQuadIntersect(Rect& other) {
+	Quadrant getQuadIntersect(const Rect& other) {
 		return Quadrant{
 			.t = y - h < other.y || y + h < other.y,
 			.b = y - h > other.y || y + h > other.y,
@@ -53,7 +52,7 @@ public:
 		};
 	}
 
-	Quadrant getQuadFullIntersect(Rect& other) {
+	Quadrant getQuadFullIntersect(const Rect& other) {
 		return Quadrant{
 			.t = y - h < other.y && y + h < other.y,
 			.b = y - h > other.y && y + h > other.y,
@@ -62,8 +61,8 @@ public:
 		};
 	}
 
-	void print(ostream& stream) {
-		stream << "{ x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << " }" << endl;
+	void print(std::ostream& stream) {
+		stream << "{ x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << " }" << std::endl;
 	}
 };
 /*
