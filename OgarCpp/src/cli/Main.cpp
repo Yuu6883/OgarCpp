@@ -15,29 +15,17 @@ void executor(ServerHandle* handle, ServerHandle* context, vector<string> &token
 
 int main() {
 
-	/*
-	Command<ServerHandle*> command("test", "test_description1", "blabla", &executor);
-	CommandList<ServerHandle*> cl(nullptr);
-
-	cl.registerCommand(command);
-	if (cl.execute(nullptr, "test hello world")) {
-		cout << "IT WORKED LMAO" << endl;
-	} */
-
 	Setting* settings = loadConfig();
 	ServerHandle handle(settings);
-	Listener listener(&handle);
 
-	Router r(&listener);
+	Router r(&handle.listener);
 
-	r.spawningName = "<hello>world";
+	r.spawningName = "hello world";
 	r.onSpawnRequest();
 
-	/*
-	listener.open();
-	this_thread::sleep_for(seconds{ 5 });
-	listener.close();
-	*/
+	handle.start();
+	while (std::cin.get());
+	handle.stop();
 
 	/*
 	Ticker ticker(40);

@@ -1,31 +1,25 @@
 #pragma once
 
 #include <vector>
-#include "../primitives/QuadTree.h"
-#include "../ServerHandle.h"
-#include "../cells/Cell.h"
-
-class ServerHandle;
-class Player;
-class PlayerCell;
-class Virus;
-class Cell;
+#include "../primitives/Rect.h"
 
 struct SpawnResult {
 	int color;
 	Point pos;
 };
 
-struct Boost {
-	double dx;
-	double dy;
-	double d;
-};
+#include "../primitives/QuadTree.h"
+#include "../cells/Cell.h"
+#include "Player.h"
+
+class PlayerCell;
+class Virus;
+class Cell;
 
 class World {
 public:
 	ServerHandle* handle;
-	int id;
+	unsigned int id;
 	bool frozen = false;
 	unsigned int _nextCellId = 1;
 	
@@ -36,9 +30,9 @@ public:
 	int motherCellCount = 0;
 	int virusCount = 0;
 	Rect border;
-	QuadTree* finder;
+	QuadTree* finder = nullptr;
 
-	World(ServerHandle* handle, int id);
+	World(ServerHandle* handle, unsigned int id);
 	~World();
 	unsigned long getNextCellId() { return _nextCellId >= 4294967296 ? (_nextCellId = 1) : _nextCellId++; };
 	void afterCreation();

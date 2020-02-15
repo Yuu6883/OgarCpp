@@ -2,19 +2,17 @@
 
 #include <math.h>
 #include "../primitives/QuadTree.h"
-#include "../worlds/World.h"
 
-class Player;
 class World;
-class Boost;
+class Player;
 
 class Cell : public QuadItem {
-	int color;
+	unsigned int color;
 public:
 	World* world;
 
 	unsigned long id;
-	unsigned int birthTick;
+	unsigned long birthTick;
 	bool exist = false;
 
 	Cell* eatenBy = nullptr;
@@ -23,8 +21,8 @@ public:
 
 	Player* owner = nullptr;
 	double size;
-	string name;
-	string skin;
+	std::string name;
+	std::string skin;
 
 	bool posChanged   = false;
 	bool sizeChanged  = false;
@@ -32,19 +30,14 @@ public:
 	bool nameChanged  = false;
 	bool skinChanged  = false;
 
-	Cell(World* world, double x, double y, double size, int color) : 
-		QuadItem(x, y), world(world), id(world->getNextCellId()), birthTick(world->handle->tick),
-		size(size), color(color) {
-	}
-
+	Cell(World* world, double x, double y, double size, int color);
 	int getType();
-
 	bool isSpiked();
 	bool isAgitated();
 
 	bool shouldAvoidWhenSpawning();
 	bool shouldUpdate() { return posChanged || sizeChanged || colorChanged || nameChanged || skinChanged; };
-	long getAge() { return (world->handle->tick - birthTick) * world->handle->stepMult; };
+	unsigned long getAge();
 
 	double getSquareSize() { return size * size; };
 	void setSquareSize(double s) { size = sqrt(s); };
@@ -52,8 +45,8 @@ public:
 	double getMass() { return size * size / 100; };
 	void setMass(double s) { size = sqrt(100 * s); };
 
-	int getColor() { return size; };
-	void setColor(int c) { color = c; };
+	unsigned int getColor() { return color; };
+	void setColor(unsigned int c) { color = c; };
 
 	unsigned char getEatResult(Cell* other);
 	void onSpawned() {};

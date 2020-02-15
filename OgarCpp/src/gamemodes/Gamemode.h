@@ -14,33 +14,33 @@ public:
 	ServerHandle* handle;
 	Gamemode(ServerHandle* handle) : handle(handle) {};
 
-	int getType();
-	const char* getName();
+	int getType() { return 0; };
+	std::string getName() { return "Unknown Gamemode"; };
 
-	void onHandleStart();
-	void onHandleTick();
-	void onHandleStop();
+	void onHandleStart() {};
+	void onHandleTick() {};
+	void onHandleStop() {};
 
-	bool canJoinWorld(World* world);
-	void onNewWorld(World* world);
-	void onWorldTick(World* world);
-	void onWorldDestroy(World* world);
+	bool canJoinWorld(World* world) { return true; };
+	void onNewWorld(World* world) {};
+	void onWorldTick(World* world) {};
+	void onWorldDestroy(World* world) {};
 
-	void onNewPlayer(Player* player);
-	void onPlayerPressQ(Player* player);
-	void onPlayerEject(Player* player);
-	void onPlayerSplit(Player* player);
-	void onPlayerRequestSpawn(Player* player);
-	void onPlayerDestroy(Player* player);
+	void onNewPlayer(Player* player) {};
+	void onPlayerPressQ(Player* player) {};
+	void onPlayerEject(Player* player) {};
+	void onPlayerSplit(Player* player) {};
+	void onPlayerSpawnRequest(Player* player, std::string name, std::string skin) {};
+	void onPlayerDestroy(Player* player) {};
 
-	void onPlayerJoinWorld(Player* player, World* world);
-	void onPlayerLeaveWorld(Player* player, World* world);
+	void onPlayerJoinWorld(Player* player, World* world) {};
+	void onPlayerLeaveWorld(Player* player, World* world) {};
 
-	void onNewCell(Cell* cell);
-	bool canEat(Cell* a, Cell* b);
-	double getDecayMult(Cell* cell);
-	void onCellRemove(Cell* cell);
+	void onNewCell(Cell* cell) {};
+	bool canEat(Cell* a, Cell* b) { return true; };
+	double getDecayMult(Cell* cell) { return 0; };
+	void onCellRemove(Cell* cell) {};
 
-	void compileLeaderboard(World* world);
-	void sendLeaderboard(Connection* connection);
+	void compileLeaderboard(World* world) {};
+	void sendLeaderboard(Connection* connection) {};
 };

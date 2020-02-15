@@ -1,13 +1,11 @@
 #pragma once
 
-class ServerHandle;
 class Listener;
 class Player;
 class PlayerCell;
 
 #include <regex>
 #include "Listener.h"
-#include "../ServerHandle.h"
 #include "../worlds/Player.h"
 
 static std::regex nameSkinRegex{ "<(.*)>(.*)" };
@@ -32,40 +30,18 @@ public:
 	bool hasPlayer = false;
 	Player* player = nullptr;
 	
-	Router(Listener* listener) : listener(listener), ejectTick(listener->handle->tick) {
-		this->listener->addRouter(this);
-	}
-
-	void createPlayer() {
-		if (hasPlayer) return;
-		hasPlayer = true;
-		player = listener->handle->createPlayer(this);
-	}
-
-	void destroyPlayer() {
-		if (!hasPlayer) return;
-		hasPlayer = false;
-		listener->handle->removePlayer(player->id);
-		player = nullptr;
-	}
-
+	Router(Listener* listener); 
+	void createPlayer();
+	void destroyPlayer();
 	void onWorldSet();
 	void onWorldReset();
 	void onNewOwnedCell(PlayerCell*);
-
-	void onSpawnRequest() {
-		if (!hasPlayer) return;
-		int playerMaxNameLength = listener->handle->getSettingInt("playerMaxNameLength");
-		std::string name = spawningName.substr(0, playerMaxNameLength);
-		std::string skin = "";
-		if (listener->handle->getSettingBool("playerAllowSkinInName")) {
-			std::smatch sm;
-			std::regex_match(name, sm, nameSkinRegex);
-			if (sm.size() == 3) {
-				skin = sm[1];
-				name = sm[2];
-			}
-		}
-		// listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
-	}
+	void onSpawnRequest();
+	void onSpectateRequest();
+	void onQPress();
+	void attemptSplit();
+	void attemptEject();
+	void close();
+	bool shouldClose();
+	void update();
 };

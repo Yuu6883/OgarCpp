@@ -19,10 +19,15 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\cells\Cell.cpp" />
     <ClCompile Include="src\cli\Main.cpp" />
     <ClCompile Include="src\misc\Ticker.h" />
     <ClCompile Include="src\primitives\QuadTree.cpp" />
     <ClCompile Include="src\ServerHandle.cpp" />
+    <ClCompile Include="src\sockets\Listener.cpp" />
+    <ClCompile Include="src\sockets\Router.cpp" />
+    <ClCompile Include="src\worlds\Player.cpp" />
+    <ClCompile Include="src\worlds\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cells\Cell.h" />

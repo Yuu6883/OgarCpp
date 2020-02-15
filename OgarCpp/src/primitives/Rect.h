@@ -2,6 +2,12 @@
 
 #include <iostream>
 
+struct Boost {
+	double dx;
+	double dy;
+	double d;
+};
+
 struct Quadrant {
 	bool t, b, l, r;
 	void print(std::ostream& stream) {
@@ -62,9 +68,21 @@ public:
 	}
 
 	void print(std::ostream& stream) {
-		stream << "{ x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << " }" << std::endl;
+		stream << "Rect { x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << " }" << std::endl;
 	}
 };
+
+class ViewArea : public Rect {
+public:
+	double s;
+	ViewArea() : Rect(), s(0) {};
+	ViewArea(double x, double y, double w, double h, double s) : Rect(x, y, w, y), s(s) {};
+
+	void print(std::ostream& stream) {
+		stream << "Rect { x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << ", s:" << s << " }" << std::endl;
+	}
+};
+
 /*
 ostream& operator<<(ostream& stream, Rect& rect) {
 	return stream << "[" << rect.x << "," << rect.y << "," << rect.w << "," << rect.h << "]";

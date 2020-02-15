@@ -50,7 +50,7 @@ private:
 	std::map<std::string, Command<T>> commands;
 
 public:
-	CommandList(ServerHandle* handle = nullptr) : handle(handle) {};
+	CommandList(ServerHandle* handle) : handle(handle) {};
 
 	void registerCommand(Command<T>& command) {
 		if (commands.contains(command.name)) {
