@@ -6,26 +6,19 @@
 #include <map>
 
 constexpr auto POOL_SIZE = 1024 * 1024;
-std::map<std::thread::id, char*> BufferMap;
+static const thread_local char* pool = (char*) malloc(POOL_SIZE);
 
 class Writer {
-	char* pool;
 	char* ptr;
 public:
+
 	Writer() {
-		auto thread_id = std::this_thread::get_id();
-		if (BufferMap.contains(thread_id)) {
-			pool = BufferMap.at(thread_id);
-		} else {
-			pool = (char*) malloc(POOL_SIZE);
-			BufferMap.insert(make_pair(thread_id, pool));
-		}
-		ptr = pool;
+		ptr = (char*) pool;
 	}
 
-	~Writer() {
-		delete pool;
-	}
+	const char* getPool() { return pool; };
+
+	~Writer() {}
 
 	int offset() {
 		return ptr - pool;
