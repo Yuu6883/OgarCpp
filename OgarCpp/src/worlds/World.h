@@ -13,11 +13,6 @@ struct SpawnResult {
 #include "../cells/Cell.h"
 #include "Player.h"
 
-class PlayerCell;
-class Virus;
-class EjectedCell;
-class Cell;
-
 static struct WorldStats {
 	unsigned short limit = 0;
 	unsigned short internal = 0;
@@ -55,12 +50,12 @@ public:
 
 	World(ServerHandle* handle, unsigned int id);
 	~World();
-	unsigned long getNextCellId() { return _nextCellId >= 4294967296 ? (_nextCellId = 1) : _nextCellId++; };
+	unsigned int getNextCellId() { return _nextCellId > 4294967295U ? (_nextCellId = 1) : _nextCellId++; };
 	void afterCreation();
 	void setBorder(Rect& rect);
 	void addCell(Cell* cell);
-	void setCellAsBoosting(Cell* cell);
-	void setCellAsNotBoosting(Cell* cell);
+	bool setCellAsBoosting(Cell* cell);
+	bool setCellAsNotBoosting(Cell* cell);
 	void updateCell(Cell* cell);
 	void removeCell(Cell* cell);
 	void addPlayer(Player* player);
@@ -74,17 +69,17 @@ public:
 	void frozenUpdate();
 	void liveUpdate();
 	void resolveRegidCheck(Cell* a, Cell* b);
-	void resolveEatCheck(Cell* a, Cell* b);
-	void boostCell(Cell* cell);
-	void bounceCell(Cell* cell, bool bounce);
+	void resolveEatCheck(Cell* a, Cell* b, double);
+	bool boostCell(Cell* cell);
+	void bounceCell(Cell* cell, bool bounce = false);
 	void splitVirus(Virus* virus);
 	void movePlayerCell(PlayerCell* cell);
-	void decayPlayerCell(PlayerCell* cell);
+	void decayPlayerCell(PlayerCell* cell, double minSize);
 	void launchPlayerCell(PlayerCell* cell, double size, Boost& boost);
 	void autosplitPlayerCell(PlayerCell* cell);
 	void splitPlayer(Player* player);
 	void ejectFromPlayer(Player* player);
 	void popPlayerCell(Player* player);
-	std::vector<double>* distributeCellMass(PlayerCell* cell);
+	void distributeCellMass(PlayerCell* cell, std::vector<double>& ref);
 	void compileStatistics();
 };

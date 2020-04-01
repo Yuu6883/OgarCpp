@@ -1,7 +1,10 @@
 #pragma once
 
-#include "Rect.h"
 #include <string>
+#include <functional>
+#include "Rect.h"
+
+using std::function;
 
 class QuadNode;
 class QuadItem : public Point {
@@ -23,6 +26,6 @@ public:
 	void insert(QuadItem*);
 	void update(QuadItem*);
 	void remove(QuadItem*);
-	void search(Rect&, void(callback)(QuadItem*));
-	bool containAny(Rect&, bool(selector)(QuadItem*));
+	void search(Rect&, function<void(QuadItem*)> callback);
+	bool containAny(Rect&, function<bool(QuadItem*)> selector);
 };

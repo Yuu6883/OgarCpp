@@ -149,7 +149,7 @@ private:
 		return -1;
 	};
 
-	void search(Rect& r, void(callback)(QuadItem*)) {
+	void search(Rect& r, function<void(QuadItem*)> callback) {
 		for (auto item : items) {
 			if (r.intersects(item->range)) 
 				callback(item);
@@ -166,7 +166,7 @@ private:
 		}
 	};
 
-	bool containAny(Rect& r, bool(selector)(QuadItem*)) {
+	bool containAny(Rect& r, function<bool(QuadItem*)> selector) {
 		for (auto item : items) {
 			if (r.intersects(item->range) && (!selector || selector(item)))
 				return true;
@@ -217,5 +217,10 @@ QuadTree::~QuadTree() {
 void QuadTree::insert(QuadItem* item) { if (root) root->insert(item); };
 void QuadTree::update(QuadItem* item) { if (root) root->update(item); };
 void QuadTree::remove(QuadItem* item) { if (root) root->remove(item); };
-void QuadTree::search(Rect& rect, void(callback)(QuadItem*)) { if (root) root->search(rect, callback); };
-bool QuadTree::containAny(Rect& rect, bool(selector)(QuadItem*)) { if (root) return root->containAny(rect, selector); return false; };
+void QuadTree::search(Rect& rect, function<void(QuadItem*)> callback) { 
+	if (root) root->search(rect, callback); 
+}
+bool QuadTree::containAny(Rect& rect, function<bool(QuadItem*)> selector) { 
+	if (root) return root->containAny(rect, selector); 
+	return false; 
+};

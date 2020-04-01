@@ -102,3 +102,12 @@ World* ServerHandle::createWorld() {
 	Logger::debug(std::string("Added world with ID ") + std::to_string(id));
 	return world;
 };
+
+bool ServerHandle::removeWorld(unsigned int id) {
+	if (!worlds.contains(id)) return false;
+	gamemode->onWorldDestroy(worlds[id]);
+	delete worlds[id];
+	worlds.erase(id);
+	Logger::debug(std::string("Removed world with ID ") + std::to_string(id));
+	return true;
+}

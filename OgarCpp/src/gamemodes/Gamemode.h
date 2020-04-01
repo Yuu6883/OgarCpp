@@ -7,7 +7,6 @@
 class ServerHandle;
 class Connection;
 class Player;
-class PlayerCell;
 
 class Gamemode {
 public:

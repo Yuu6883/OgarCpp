@@ -42,6 +42,7 @@
     <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\sockets\ChatChannel.h" />
     <ClInclude Include="src\sockets\Connection.h" />
     <ClInclude Include="src\sockets\Listener.h" />
     <ClInclude Include="src\sockets\Router.h" />

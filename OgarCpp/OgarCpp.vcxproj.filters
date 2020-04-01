@@ -95,6 +95,9 @@
     <ClInclude Include="src\sockets\Connection.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\sockets\ChatChannel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\cli\default.cfg">

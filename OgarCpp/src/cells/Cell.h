@@ -6,9 +6,23 @@
 class World;
 class Player;
 
+enum CellType : unsigned char {
+	PLAYER,
+	PELLET,
+	VIRUS,
+	EJECTED_CELL,
+	MOTHER_CELL
+};
+
+enum EatResult : unsigned char {
+	COLLIDE = 1,
+	EAT,
+	EATEN
+};
+
 class Cell : public QuadItem {
-	unsigned int color;
 public:
+	unsigned int color;
 	World* world;
 
 	unsigned long id;
@@ -31,11 +45,11 @@ public:
 	bool skinChanged  = false;
 
 	Cell(World* world, double x, double y, double size, int color);
-	int getType();
+	virtual CellType getType();
 	bool isSpiked();
 	bool isAgitated();
 
-	bool shouldAvoidWhenSpawning();
+	virtual bool shouldAvoidWhenSpawning();
 	bool shouldUpdate() { return posChanged || sizeChanged || colorChanged || nameChanged || skinChanged; };
 	unsigned long getAge();
 
@@ -48,10 +62,15 @@ public:
 	unsigned int getColor() { return color; };
 	void setColor(unsigned int c) { color = c; };
 
-	unsigned char getEatResult(Cell* other);
+	EatResult getEatResult(Cell* other);
 	void onSpawned() {};
 	void onTick() { posChanged = sizeChanged = colorChanged = nameChanged = skinChanged = false; };
 	void whenAte(Cell* other) { setSquareSize(getSquareSize() + other->getSquareSize()); };
 	void whenEatenBy(Cell* other) { eatenBy = other; };
 	void onRemoved() {};
 };
+
+class PlayerCell  : public Cell {};
+class Virus       : public Cell {};
+class EjectedCell : public Cell {};
+class MotherCell  : public Cell {};

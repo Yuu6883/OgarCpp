@@ -22,6 +22,7 @@ public:
 
 	Connection(Listener* listener, int ipv4, uWS::WebSocket<false, true>* socket) :
 		Router(listener), ipv4(ipv4), socket(socket) {};
+	bool isExternal() override { return true; };
 	void close();
 	void onSocketClose(int code, string_view reason);
 	void onSocketMessage(string_view buffer);

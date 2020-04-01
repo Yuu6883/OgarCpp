@@ -56,4 +56,5 @@ public:
 	Player* createPlayer(Router* router);
 	bool removePlayer(unsigned int id);
 	World* createWorld();
+	bool removeWorld(unsigned int id);
 };
