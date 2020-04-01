@@ -3,8 +3,8 @@
 
 #include <iostream>
 
-// #include "../ServerHandle.h"
-// #include "../Settings.h"
+#include "../ServerHandle.h"
+#include "../Settings.h"
 
 #include "../primitives/Writer.h"
 
@@ -18,7 +18,6 @@ void executor(ServerHandle* handle, ServerHandle* context, vector<string> &token
 
 int main() {
 
-	/*
 	Setting* settings = loadConfig();
 	ServerHandle handle(settings);
 
@@ -28,10 +27,10 @@ int main() {
 	r.onSpawnRequest();
 
 	handle.start();
-	while (std::cin.get());
+	std::this_thread::sleep_for(std::chrono::seconds{ 200 });
 	handle.stop();
-	*/
 
+	/*
 	std::thread thread1([] {
 		Writer writer1;
 		printf("writer1 address: 0x%p\n", writer1.getPool());
@@ -44,6 +43,7 @@ int main() {
 
 	thread1.join();
 	thread2.join();
+	*/
 
 	/*
 	Ticker ticker(40);

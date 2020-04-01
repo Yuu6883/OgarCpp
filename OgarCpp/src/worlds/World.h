@@ -1,10 +1,11 @@
 #pragma once
 
 #include <vector>
+#include "../sockets/ChatChannel.h"
 #include "../primitives/Rect.h"
 
 struct SpawnResult {
-	int color;
+	unsigned int color;
 	Point pos;
 };
 
@@ -14,7 +15,19 @@ struct SpawnResult {
 
 class PlayerCell;
 class Virus;
+class EjectedCell;
 class Cell;
+
+static struct WorldStats {
+	unsigned short limit = 0;
+	unsigned short internal = 0;
+	unsigned short external = 0;
+	unsigned short spectating = 0;
+	string name = "";
+	string mode = "";
+	double loadTime = 0;
+	unsigned long uptime = 0;
+};
 
 class World {
 public:
@@ -25,12 +38,20 @@ public:
 	
 	std::vector<Cell*> cells;
 	std::vector<Cell*> boostingCells;
+	std::vector<EjectedCell*> ejectedCells;
+	std::vector<PlayerCell*> playerCells;
+	std::vector<Player*> players;
+	Player* largestPlayer = nullptr;
+
+	ChatChannel worldChat = ChatChannel(&handle->listener);
 
 	int pelletCount = 0;
 	int motherCellCount = 0;
 	int virusCount = 0;
 	Rect border;
 	QuadTree* finder = nullptr;
+
+	WorldStats stats;
 
 	World(ServerHandle* handle, unsigned int id);
 	~World();

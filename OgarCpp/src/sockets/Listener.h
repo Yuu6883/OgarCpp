@@ -1,30 +1,39 @@
 #pragma once
 
 #include <uwebsockets/App.h>
+#include <regex>
 #include <vector>
 #include <map>
+#include "ChatChannel.h"
 
 class ServerHandle;
 class Router;
+class Connection;
 
-struct SocketData {};
+struct SocketData {
+	uWS::Loop* loop;
+	Connection* connection;
+};
 
 class Listener {
 public:
+	std::regex originRegex = std::regex("");
 	ServerHandle* handle;
-	us_listen_socket_t* socketServer;
-	std::thread* socketThread;
-	// ChatChannel
+	std::vector<us_listen_socket_t*> sockets;
+	std::vector<std::thread*> socketThreads;
+	
+	ChatChannel globalChat = ChatChannel(this);
+
 	std::vector<Router*> routers;
+	std::vector<Connection*> connections;
 	std::map<unsigned int, unsigned int> connectionsByIP;
 
-	Listener(ServerHandle* handle) : handle(handle),
-		socketServer(nullptr), socketThread(nullptr) {};
+	Listener(ServerHandle* handle) : handle(handle) {};
 	~Listener() { close(); }
 
-	bool open();
+	bool open(int);
 	bool close();
-	bool verifyClient(unsigned int ipv4, uWS::HttpRequest* req);
+	bool verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* socket, std::string origin);
 
 	void addRouter(Router* router) { routers.push_back(router); };
 
@@ -40,7 +49,8 @@ public:
 		}
 	}
 
-	void onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket);
-	void onDisconnection(uWS::WebSocket<false, true>* socket, int code, std::string_view message);
+	unsigned long getTick();
+	Connection* onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket);
+	void onDisconnection(Connection* connection, int code, std::string_view message);
 	void update();
 };

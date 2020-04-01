@@ -30,6 +30,7 @@ void Router::onSpawnRequest() {
 			name = sm[2];
 		}
 	}
+	std::cout << "Name: " << name << std::endl;
 	listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
 };
 

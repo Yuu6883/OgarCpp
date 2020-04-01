@@ -50,7 +50,7 @@ bool ServerHandle::start() {
 
 	running = true;
 	ticker.start();
-	listener.open();
+	listener.open(std::thread::hardware_concurrency());
 
 	return true;
 };

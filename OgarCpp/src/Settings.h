@@ -1,6 +1,7 @@
 #include <libconfig.h++>
 #include <iostream>
 #include <filesystem>
+#include "primitives/Logger.h"
 
 using namespace libconfig;
 
@@ -23,6 +24,7 @@ Setting* loadConfig() {
 				std::to_string(pex.getLine()) + " - " + pex.getError());
 		}
 	} else {
+		Logger::info("Writing default config to \"game.cfg\"");
 		cfg->readFile(defaultConfigPath);
 		cfg->writeFile(configPath);
 	}

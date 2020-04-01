@@ -24,6 +24,7 @@
     <ClCompile Include="src\misc\Ticker.h" />
     <ClCompile Include="src\primitives\QuadTree.cpp" />
     <ClCompile Include="src\ServerHandle.cpp" />
+    <ClCompile Include="src\sockets\Connection.cpp" />
     <ClCompile Include="src\sockets\Listener.cpp" />
     <ClCompile Include="src\sockets\Router.cpp" />
     <ClCompile Include="src\worlds\Player.cpp" />
@@ -41,6 +42,7 @@
     <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
+    <ClInclude Include="src\sockets\Connection.h" />
     <ClInclude Include="src\sockets\Listener.h" />
     <ClInclude Include="src\sockets\Router.h" />
     <ClInclude Include="src\worlds\Player.h" />
