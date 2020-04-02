@@ -49,7 +49,7 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_DOUBLE(mothercellActiveSpawnSpeed);
 	LOAD_DOUBLE(mothercellPelletBoost);
 	LOAD_INT(mothercellMaxPellets);
-	LOAD_INT(mothercellMaxSize);
+	LOAD_DOUBLE(mothercellMaxSize);
 	LOAD_DOUBLE(playerRoamSpeed);
 	LOAD_DOUBLE(playerRoamViewScale);
 	LOAD_DOUBLE(playerViewScaleMult);
@@ -69,8 +69,8 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_DOUBLE(playerSplitDistance);
 	LOAD_DOUBLE(playerSplitBoost);
 	LOAD_DOUBLE(playerNoCollideDelay);
-	LOAD_DOUBLE(playerNoMergeDelay);
-	LOAD_STR(playerMergeVersion);
+	LOAD_INT(playerNoMergeDelay);
+	LOAD_BOOL(playerMergeNewVersion);
 	LOAD_INT(playerMergeTime);
 	LOAD_DOUBLE(playerMergeTimeIncrease);
 	LOAD_DOUBLE(playerDecayMult);

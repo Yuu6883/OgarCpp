@@ -229,7 +229,7 @@ void World::liveUpdate() {
 					eat->push_back(c);
 					eat->push_back(other);
 					break;
-				case EatResult::EATEN:
+				case EatResult::EATINVD:
 					eat->push_back(other);
 					eat->push_back(c);
 					break;
@@ -241,7 +241,7 @@ void World::liveUpdate() {
 
 	for (auto c : playerCells) {
 		movePlayerCell(c);
-		decayPlayerCell(c, playerMinSize);
+		decayPlayerCell(c);
 		autosplitPlayerCell(c);
 		bounceCell(c);
 		updateCell(c);
@@ -260,7 +260,7 @@ void World::liveUpdate() {
 					eat->push_back(c);
 					eat->push_back(other);
 					break;
-				case EatResult::EATEN:
+				case EatResult::EATINVD:
 					eat->push_back(other);
 					eat->push_back(c);
 					break;
@@ -268,12 +268,10 @@ void World::liveUpdate() {
 		});
 	}
 
-	double overlapDiv = handle->getSettingDouble("worldEatOverlapDiv");
-
 	for (int i = 0, l = rigid->size(); i < l;)
 		resolveRegidCheck(rigid->at(i++), rigid->at(i++));
 	for (int i = 0, l = eat->size(); i < l;)
-		resolveEatCheck(eat->at(i++), eat->at(i++), overlapDiv);
+		resolveEatCheck(eat->at(i++), eat->at(i++));
 
 	delete rigid;
 	delete eat;
@@ -330,9 +328,10 @@ void World::liveUpdate() {
 	compileStatistics();
 	handle->gamemode->compileLeaderboard(this);
 
-	int worldMinCount = handle->getSettingInt("worldMinCount");
-	if (stats.external <= 0 && handle->worlds.size() > worldMinCount)
-		handle->removeWorld(id);
+	if (stats.external <= 0) {
+		if (handle->worlds.size() > handle->getSettingInt("worldMinCount"))
+			handle->removeWorld(id);
+	}
 }
 
 void World::resolveRegidCheck(Cell* a, Cell* b) {
@@ -356,12 +355,12 @@ void World::resolveRegidCheck(Cell* a, Cell* b) {
 	updateCell(b);
 }
 
-void World::resolveEatCheck(Cell* a, Cell* b, double overlapDiv) {
+void World::resolveEatCheck(Cell* a, Cell* b) {
 	if (!a->exist || !b->exist) return;
 	double dx = b->x - a->x;
 	double dy = b->y - a->y;
 	double d = sqrt(dx * dx + dy * dy);
-	if (d > a->size - b->size / overlapDiv) return;
+	if (d > a->size - b->size / handle->runtime.worldEatOverlapDiv) return;
 	if (!handle->gamemode->canEat(a, b)) return;
 	a->whenAte(b);
 	b->whenEatenBy(a);
@@ -408,8 +407,9 @@ void World::movePlayerCell(PlayerCell* cell) {
 	// TODO
 }
 
-void World::decayPlayerCell(PlayerCell* cell, double minSize) {
+void World::decayPlayerCell(PlayerCell* cell) {
 	double newSize = cell->size - cell->size * handle->gamemode->getDecayMult(cell) / 50 * handle->stepMult;
+	double minSize = handle->runtime.playerMinSize;
 	cell->size = max(newSize, minSize);
 }
 
@@ -432,7 +432,7 @@ void World::ejectFromPlayer(Player* player) {
 	// TODO
 }
 
-void World::popPlayerCell(Player* player) {
+void World::popPlayerCell(PlayerCell* cell) {
 	// TODO
 }
 

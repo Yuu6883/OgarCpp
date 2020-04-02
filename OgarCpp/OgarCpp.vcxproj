@@ -37,6 +37,7 @@
     <ClInclude Include="src\commands\CommandList.h" />
     <ClInclude Include="src\gamemodes\Gamemode.h" />
     <ClInclude Include="src\gamemodes\GamemodeList.h" />
+    <ClInclude Include="src\misc\Misc.h" />
     <ClInclude Include="src\misc\Stopwatch.h" />
     <ClInclude Include="src\primitives\Logger.h" />
     <ClInclude Include="src\primitives\QuadTree.h" />

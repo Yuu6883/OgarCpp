@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <list>
 #include "../sockets/ChatChannel.h"
 #include "../primitives/Rect.h"
 
@@ -69,17 +70,17 @@ public:
 	void frozenUpdate();
 	void liveUpdate();
 	void resolveRegidCheck(Cell* a, Cell* b);
-	void resolveEatCheck(Cell* a, Cell* b, double);
+	void resolveEatCheck(Cell* a, Cell* b);
 	bool boostCell(Cell* cell);
 	void bounceCell(Cell* cell, bool bounce = false);
 	void splitVirus(Virus* virus);
 	void movePlayerCell(PlayerCell* cell);
-	void decayPlayerCell(PlayerCell* cell, double minSize);
+	void decayPlayerCell(PlayerCell* cell);
 	void launchPlayerCell(PlayerCell* cell, double size, Boost& boost);
 	void autosplitPlayerCell(PlayerCell* cell);
 	void splitPlayer(Player* player);
 	void ejectFromPlayer(Player* player);
-	void popPlayerCell(Player* player);
+	void popPlayerCell(PlayerCell* cell);
 	void distributeCellMass(PlayerCell* cell, std::vector<double>& ref);
 	void compileStatistics();
 };

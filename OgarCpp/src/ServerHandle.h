@@ -48,7 +48,7 @@ struct RuntimeSettings {
 	double mothercellActiveSpawnSpeed;
 	double mothercellPelletBoost;
 	int mothercellMaxPellets;
-	int mothercellMaxSize;
+	double mothercellMaxSize;
 	double playerRoamSpeed;
 	double playerRoamViewScale;
 	double playerViewScaleMult;
@@ -69,8 +69,8 @@ struct RuntimeSettings {
 	double playerSplitDistance = 40;
 	double playerSplitBoost = 780;
 	double playerNoCollideDelay = 13;
-	double playerNoMergeDelay = 15;
-	string playerMergeVersion = "old";
+	int playerNoMergeDelay = 15;
+	bool playerMergeNewVersion = false;
 	int playerMergeTime = 30;
 	double playerMergeTimeIncrease = 0.02;
 	double playerDecayMult = 0.001;

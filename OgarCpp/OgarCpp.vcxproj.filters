@@ -113,6 +113,9 @@
     <ClInclude Include="src\gamemodes\GamemodeList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\misc\Misc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="src\cli\default.cfg">

@@ -33,6 +33,7 @@ public:
 	PlayerState state = PlayerState::DEAD;
 	bool hasWorld = false;
 	World* world = nullptr;
+	short team = -1;
 	double score = 0;
 	vector<PlayerCell*> ownedCells;
 	map<unsigned int, Cell*> visibleCells;
