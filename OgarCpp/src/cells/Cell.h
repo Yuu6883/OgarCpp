@@ -6,7 +6,8 @@
 class World;
 class Player;
 
-enum CellType : unsigned char {
+enum class CellType : char {
+	NONE = -1,
 	PLAYER,
 	PELLET,
 	VIRUS,
@@ -14,7 +15,7 @@ enum CellType : unsigned char {
 	MOTHER_CELL
 };
 
-enum EatResult : unsigned char {
+enum class EatResult : unsigned char {
 	COLLIDE = 1,
 	EAT,
 	EATEN
@@ -45,11 +46,11 @@ public:
 	bool skinChanged  = false;
 
 	Cell(World* world, double x, double y, double size, int color);
-	virtual CellType getType();
-	bool isSpiked();
-	bool isAgitated();
+	virtual CellType getType() { return CellType::NONE; };
+	virtual bool isSpiked() { return false; };
+	virtual bool isAgitated() { return false; };
 
-	virtual bool shouldAvoidWhenSpawning();
+	bool shouldAvoidWhenSpawning() { return false; };
 	bool shouldUpdate() { return posChanged || sizeChanged || colorChanged || nameChanged || skinChanged; };
 	unsigned long getAge();
 
@@ -62,7 +63,7 @@ public:
 	unsigned int getColor() { return color; };
 	void setColor(unsigned int c) { color = c; };
 
-	EatResult getEatResult(Cell* other);
+	EatResult getEatResult(Cell* other) { return EatResult::COLLIDE; };
 	void onSpawned() {};
 	void onTick() { posChanged = sizeChanged = colorChanged = nameChanged = skinChanged = false; };
 	void whenAte(Cell* other) { setSquareSize(getSquareSize() + other->getSquareSize()); };

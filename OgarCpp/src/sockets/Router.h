@@ -31,18 +31,18 @@ public:
 	Player* player = nullptr;
 	
 	Router(Listener* listener);
-	virtual bool isExternal();
+	virtual bool isExternal() { return false; };
 	void createPlayer();
 	void destroyPlayer();
-	void onWorldSet();
-	void onWorldReset();
-	void onNewOwnedCell(PlayerCell*);
+	virtual void onWorldSet() {};
+	virtual void onWorldReset() {};
+	virtual void onNewOwnedCell(PlayerCell*) {};
 	void onSpawnRequest();
 	void onSpectateRequest();
 	void onQPress();
 	void attemptSplit();
 	void attemptEject();
 	void close();
-	bool shouldClose();
-	void update();
+	virtual bool shouldClose() { return false; };
+	virtual void update() {};
 };

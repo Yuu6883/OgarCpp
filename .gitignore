@@ -34,6 +34,7 @@
 # Debug folder
 Debug/*
 OgarCpp/Debug/*
+OgarCpp/x64/*
 
 # Visual Studio
 .vs/*

@@ -10,18 +10,6 @@ enum CustomErrorCode : short {
 	IP_LIMITED
 };
 
-/*
-#include <regex>
-static const std::regex IPv4MappedValidate{ "^::ffff:(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})$" };
-std::string filterIPAddress(std::string ip) {
-	std::smatch sm;
-	std::regex_match(ip, sm, IPv4MappedValidate);
-	if (sm.size()) {
-		return sm[1];
-	}
-	return ip;
-} */
-
 using std::string;
 using std::to_string;
 
@@ -35,6 +23,10 @@ bool Listener::open(int threads = 1) {
 #if _WIN32
 	threads = 1;
 #endif
+
+	if (!globalChat) {
+		globalChat = new ChatChannel(this);
+	}
 
 	Logger::debug(std::to_string(threads) + " listener(s) opening at port " + std::to_string(port));
 
@@ -95,6 +87,12 @@ bool Listener::close() {
 	for (auto thread : socketThreads) {
 		thread->join();
 	}
+
+	if (globalChat) {
+		delete globalChat;
+		globalChat = nullptr;
+	}
+
 	socketThreads.clear();
 	Logger::debug("listener(s) closed");
 	return true;
@@ -130,7 +128,7 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* sock
 		return false;
 	}
 
-	// TODO check IP black list (use kernal is probably better)
+	// Maybe check IP black list (use kernal is probably better)
 
 	// check connection per IP
 	int ipLimit = handle->getSettingInt("listenerMaxConnectionsPerIP");
@@ -148,16 +146,6 @@ unsigned long Listener::getTick() {
 }
 
 Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket) {
-
-	// Log IP
-	/*
-	std::cout << "IP: ";
-	for (auto c : view) {
-		std::cout << std::to_string((int) c) << " ";
-	}
-	std::cout << std::endl;
-	*/
-
 	auto connection = new Connection(this, ipv4, socket);
 	if (connectionsByIP.contains(ipv4)) {
 		connectionsByIP[ipv4]++;
@@ -172,7 +160,7 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 	Logger::debug(string("Socket closed { code: ") + to_string(code) + ", reason: " + string(message) + " }");
 	if (--connectionsByIP[connection->ipv4] <= 0)
 		connectionsByIP.erase(connection->ipv4);
-	// TODO: Remove from global chat
+	globalChat->remove(connection);
 	auto iter = connections.begin();
 	auto cend = connections.cend();
 	while (iter != cend) {

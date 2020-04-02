@@ -6,6 +6,7 @@
 #include <map>
 #include "ChatChannel.h"
 
+class ChatChannel;
 class ServerHandle;
 class Router;
 class Connection;
@@ -22,7 +23,7 @@ public:
 	std::vector<us_listen_socket_t*> sockets;
 	std::vector<std::thread*> socketThreads;
 	
-	ChatChannel globalChat = ChatChannel(this);
+	ChatChannel* globalChat;
 
 	std::vector<Router*> routers;
 	std::vector<Connection*> connections;

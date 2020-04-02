@@ -3,14 +3,18 @@
 #include <map>
 #include <vector>
 #include "../primitives/Rect.h"
+#include "../cells/Cell.h"
 
+using std::string;
 using std::map;
+using std::vector;
 
 class ServerHandle;
+class PlayerCell;
 class Router;
 class World;
 
-enum PlayerState : unsigned char { 
+enum class PlayerState : unsigned char { 
 	DEAD, ALIVE, SPEC, ROAM 
 };
 
@@ -20,13 +24,13 @@ public:
 	unsigned int id;
 	Router* router;
 	bool exists = true;
-	std::string leaderboardName = "";
-	std::string cellName = "";
-	std::string chatName = "Spectator";
-	std::string cellSkin = "";
+	string leaderboardName = "";
+	string cellName = "";
+	string chatName = "Spectator";
+	string cellSkin = "";
 	unsigned int cellColor = 0x7F7F7F;
 	unsigned int chatColor = 0x7F7F7F;
-	PlayerState state = DEAD;
+	PlayerState state = PlayerState::DEAD;
 	bool hasWorld = false;
 	World* world = nullptr;
 	double score = 0;

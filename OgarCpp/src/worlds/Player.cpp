@@ -14,6 +14,18 @@ Player::~Player() {
 	exists = false;
 };
 
-void Player::updateState(PlayerState state) {
+void Player::updateVisibleCells() {
 
+}
+
+void Player::updateState(PlayerState targetState) {
+	if (!world) state = PlayerState::DEAD;
 };
+
+void Player::checkExistence() {
+
+}
+
+void Player::updateViewArea() {
+
+}

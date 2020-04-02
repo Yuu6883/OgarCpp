@@ -8,8 +8,11 @@ using namespace libconfig;
 static const char* configPath = "game.cfg";
 static const char* defaultConfigPath = "src/cli/default.cfg";
 
+static Config* cfg = nullptr;
+
 Setting* loadConfig() {
-	Config* cfg = new Config();
+	if (cfg) delete cfg;
+	cfg = new Config();
 
 	cfg->setOptions(Config::OptionFsync
 		| Config::OptionSemicolonSeparators
@@ -28,6 +31,22 @@ Setting* loadConfig() {
 		cfg->readFile(defaultConfigPath);
 		cfg->writeFile(configPath);
 	}
-
 	return &cfg->getRoot();
+}
+
+bool saveConfig() {
+	if (cfg) {
+		cfg->writeFile(configPath);
+		return true;
+	}
+	return false;
+}
+
+bool unloadConfig() {
+	if (cfg) {
+		delete cfg;
+		cfg = nullptr;
+		return true;
+	}
+	return false;
 }

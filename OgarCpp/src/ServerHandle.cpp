@@ -2,20 +2,79 @@
 #include "worlds/Player.h"
 #include "worlds/World.h"
 
+#define LOAD_INT(prop) runtime.prop = getSettingInt(#prop)
+#define LOAD_DOUBLE(prop) runtime.prop = getSettingDouble(#prop)
+#define LOAD_BOOL(prop) runtime.prop = getSettingBool(#prop)
+#define LOAD_STR(prop) runtime.prop = getSettingString(#prop)
+
 ServerHandle::ServerHandle(Setting* settings) {
 	ticker.add([this] { onTick(); });
 	setSettings(settings);
+	protocols = new ProtocolStore();
+	gamemodes = new GamemodeList(this);
+	gamemode = nullptr;
 };
 
 void ServerHandle::setSettings(Setting* settings) {
-	if (this->settings) delete this->settings;
 
 	this->settings = settings;
 	int freq = getSettingInt("serverFrequency");
 	tickDelay = 1000 / freq;
 	ticker.setStep(tickDelay);
 	stepMult = tickDelay / 40;
-};
+
+	LOAD_DOUBLE(worldEatMult);
+	LOAD_DOUBLE(worldEatOverlapDiv);
+	LOAD_INT(worldSafeSpawnTries);
+	LOAD_DOUBLE(worldSafeSpawnFromEjectedChance);
+	LOAD_INT(pelletMinSize);
+	LOAD_INT(pelletMaxSize);
+	LOAD_INT(pelletGrowTicks);
+	LOAD_INT(pelletCount);
+	LOAD_INT(virusMinCount);
+	LOAD_INT(virusMaxCount);
+	LOAD_DOUBLE(virusSize);
+	LOAD_INT(virusFeedTimes);
+	LOAD_BOOL(virusPushing);
+	LOAD_DOUBLE(virusSplitBoost);
+	LOAD_DOUBLE(virusPushBoost);
+	LOAD_BOOL(virusMonotonePops);
+	LOAD_DOUBLE(ejectedSize);
+	LOAD_DOUBLE(ejectingLoss);
+	LOAD_DOUBLE(ejectDispersion);
+	LOAD_DOUBLE(ejectedCellBoost);
+	LOAD_DOUBLE(mothercellSize);
+	LOAD_INT(mothercellCount);
+	LOAD_DOUBLE(mothercellPassiveSpawnChance);
+	LOAD_DOUBLE(mothercellActiveSpawnSpeed);
+	LOAD_DOUBLE(mothercellPelletBoost);
+	LOAD_INT(mothercellMaxPellets);
+	LOAD_INT(mothercellMaxSize);
+	LOAD_DOUBLE(playerRoamSpeed);
+	LOAD_DOUBLE(playerRoamViewScale);
+	LOAD_DOUBLE(playerViewScaleMult);
+	LOAD_DOUBLE(playerMinViewScale);
+	LOAD_INT(playerMaxNameLength);
+	LOAD_BOOL(playerAllowSkinInName);
+	LOAD_DOUBLE(playerMinSize);
+	LOAD_DOUBLE(playerSpawnSize);
+	LOAD_DOUBLE(playerMaxSize);
+	LOAD_DOUBLE(playerMinSplitSize);
+	LOAD_DOUBLE(playerMinEjectSize);
+	LOAD_INT(playerSplitCap);
+	LOAD_INT(playerEjectDelay);
+	LOAD_INT(playerMaxCells);
+	LOAD_DOUBLE(playerMoveMult);
+	LOAD_DOUBLE(playerSplitSizeDiv);
+	LOAD_DOUBLE(playerSplitDistance);
+	LOAD_DOUBLE(playerSplitBoost);
+	LOAD_DOUBLE(playerNoCollideDelay);
+	LOAD_DOUBLE(playerNoMergeDelay);
+	LOAD_STR(playerMergeVersion);
+	LOAD_INT(playerMergeTime);
+	LOAD_DOUBLE(playerMergeTimeIncrease);
+	LOAD_DOUBLE(playerDecayMult);
+}
 
 int ServerHandle::getSettingInt(const char* key) {
 	int value;

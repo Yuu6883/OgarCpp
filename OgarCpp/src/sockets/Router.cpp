@@ -22,7 +22,7 @@ void Router::onSpawnRequest() {
 	int playerMaxNameLength = listener->handle->getSettingInt("playerMaxNameLength");
 	std::string name = spawningName.substr(0, playerMaxNameLength);
 	std::string skin = "";
-	if (listener->handle->getSettingBool("playerAllowSkinInName")) {
+	if (listener->handle->runtime.playerAllowSkinInName) {
 		std::smatch sm;
 		std::regex_match(name, sm, nameSkinRegex);
 		if (sm.size() == 3) {
@@ -30,13 +30,13 @@ void Router::onSpawnRequest() {
 			name = sm[2];
 		}
 	}
-	std::cout << "Name: " << name << std::endl;
+	Logger::debug(string("Name: ") + name + " Skin: " + skin);
 	listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
 };
 
 void Router::onSpectateRequest() {
 	if (!hasPlayer) return;
-	player->updateState(SPEC);
+	player->updateState(PlayerState::SPEC);
 }
 
 void Router::onQPress() {

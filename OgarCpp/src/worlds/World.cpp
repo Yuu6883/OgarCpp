@@ -6,6 +6,7 @@
 using std::to_string;
 
 World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
+	worldChat = new ChatChannel(&handle->listener);
 	double x = handle->getSettingDouble("worldMapX");
 	double y = handle->getSettingDouble("worldMapY");
 	double w = handle->getSettingDouble("worldMapW");
@@ -22,6 +23,7 @@ void World::afterCreation() {
 }
 
 World::~World() {
+	delete worldChat;
 	while (players.size())
 		removePlayer(players[0]);
 	while (cells.size())
@@ -35,7 +37,7 @@ void World::setBorder(Rect& rect) {
 	int maxItems = handle->getSettingInt("worldFinderMaxItems");
 	finder = new QuadTree(border, maxLevel, maxItems);
 	for (auto cell : cells) {
-		if (cell->getType() == PLAYER) continue;
+		if (cell->getType() == CellType::PLAYER) continue;
 		finder->insert(cell);
 		if (!border.fullyIntersects(cell->range))
 			removeCell(cell);
@@ -104,7 +106,7 @@ void World::addPlayer(Player* player) {
 	players.push_back(player);
 	player->world = this;
 	player->hasWorld = true;
-	worldChat.add(player->router);
+	worldChat->add(player->router);
 	Logger::debug(string("player ") + to_string(player->id) + " has been added to world " + to_string(id));
 	if (!player->router->isExternal()) return;
 	int minionsPerPlayer = handle->getSettingInt("worldMinionsPerPlayer");
@@ -125,7 +127,7 @@ void World::removePlayer(Player* player) {
 	handle->gamemode->onPlayerLeaveWorld(player, this);
 	player->world = nullptr;
 	player->hasWorld = false;
-	worldChat.remove(player->router);
+	worldChat->remove(player->router);
 	while (player->ownedCells.size())
 		removeCell(player->ownedCells[0]);
 	player->router->onWorldReset();
@@ -170,7 +172,7 @@ SpawnResult World::getPlayerSpawn(double cellSize) {
 				return { cell->color, { cell->x, cell->y } };
 			}
 		}
-		return { -1, getSafeSpawnPos(cellSize) };
+		return { (unsigned int) -1, getSafeSpawnPos(cellSize) };
 	}
 }
 
@@ -214,20 +216,20 @@ void World::liveUpdate() {
 	}
 
 	for (auto c : boostingCells) {
-		if (c->getType() != VIRUS && c->getType() != EJECTED_CELL) continue;
+		if (c->getType() != CellType::VIRUS && c->getType() != CellType::EJECTED_CELL) continue;
 		finder->search(c->range, [c, rigid, eat](auto o) {
 			auto other = (Cell*) o;
 			if (c->id == other->id) return;
 			switch (c->getEatResult(other)) {
-				case COLLIDE: 
+				case EatResult::COLLIDE: 
 					rigid->push_back(c);
 					rigid->push_back(other);
 					break;
-				case EAT: 
+				case EatResult::EAT:
 					eat->push_back(c);
 					eat->push_back(other);
 					break;
-				case EATEN:
+				case EatResult::EATEN:
 					eat->push_back(other);
 					eat->push_back(c);
 					break;
@@ -250,15 +252,15 @@ void World::liveUpdate() {
 			auto other = (Cell*)o;
 			if (c->id == other->id) return;
 			switch (c->getEatResult(other)) {
-				case COLLIDE:
+				case EatResult::COLLIDE:
 					rigid->push_back(c);
 					rigid->push_back(other);
 					break;
-				case EAT:
+				case EatResult::EAT:
 					eat->push_back(c);
 					eat->push_back(other);
 					break;
-				case EATEN:
+				case EatResult::EATEN:
 					eat->push_back(other);
 					eat->push_back(c);
 					break;
@@ -290,8 +292,8 @@ void World::liveUpdate() {
 		player->checkExistence();
 		if (!player->exists) { i--; l--; continue; }
 
-		if (player->state == SPEC && !largestPlayer)
-			player->updateState(ROAM);
+		if (player->state == PlayerState::SPEC && !largestPlayer)
+			player->updateState(PlayerState::ROAM);
 
 		auto router = player->router;
 		for (int j = 0, k = splitCap; j < k && router->splitAttempts > 0; j++) {
@@ -378,7 +380,7 @@ bool World::boostCell(Cell* cell) {
 	return false;
 }
 
-void World::bounceCell(Cell* cell, bool bounce = false) {
+void World::bounceCell(Cell* cell, bool bounce) {
 	double r = cell->size / 2.0;
 	if (cell->x <= border.x - border.w + r) {
 		cell->x = border.x - border.w + r;
@@ -421,9 +423,9 @@ void World::autosplitPlayerCell(PlayerCell* cell) {
 
 void World::splitPlayer(Player* player) {
 	auto router = player->router;
-	for (auto c : player->ownedCells) {
+	// for (auto c : player->ownedCells) {
 		// TODO
-	}
+	// }
 }
 
 void World::ejectFromPlayer(Player* player) {
@@ -443,8 +445,8 @@ void World::compileStatistics() {
 	for (auto p : players) {
 		if (!p->router->isExternal()) { internal++; continue; }
 		external++;
-		if (p->state == ALIVE) playing++;
-		else if (p->state == SPEC || p->state == ROAM)
+		if (p->state == PlayerState::ALIVE) playing++;
+		else if (p->state == PlayerState::SPEC || p->state == PlayerState::ROAM)
 			spectating++;
 	}
 	// TODO: update stats

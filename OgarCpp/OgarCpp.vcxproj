@@ -21,9 +21,11 @@
   <ItemGroup>
     <ClCompile Include="src\cells\Cell.cpp" />
     <ClCompile Include="src\cli\Main.cpp" />
+    <ClCompile Include="src\gamemodes\GamemodeList.cpp" />
     <ClCompile Include="src\misc\Ticker.h" />
     <ClCompile Include="src\primitives\QuadTree.cpp" />
     <ClCompile Include="src\ServerHandle.cpp" />
+    <ClCompile Include="src\sockets\ChatChannel.cpp" />
     <ClCompile Include="src\sockets\Connection.cpp" />
     <ClCompile Include="src\sockets\Listener.cpp" />
     <ClCompile Include="src\sockets\Router.cpp" />
@@ -34,12 +36,15 @@
     <ClInclude Include="src\cells\Cell.h" />
     <ClInclude Include="src\commands\CommandList.h" />
     <ClInclude Include="src\gamemodes\Gamemode.h" />
+    <ClInclude Include="src\gamemodes\GamemodeList.h" />
     <ClInclude Include="src\misc\Stopwatch.h" />
     <ClInclude Include="src\primitives\Logger.h" />
     <ClInclude Include="src\primitives\QuadTree.h" />
     <ClInclude Include="src\primitives\Reader.h" />
     <ClInclude Include="src\primitives\Rect.h" />
     <ClInclude Include="src\primitives\Writer.h" />
+    <ClInclude Include="src\protocols\Protocol.h" />
+    <ClInclude Include="src\protocols\ProtocolStore.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\sockets\ChatChannel.h" />
@@ -135,6 +140,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

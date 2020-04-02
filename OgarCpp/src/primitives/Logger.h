@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <iostream>
 
 #define L_DEBUG   0
@@ -13,6 +14,9 @@
 static int logLevel = L_DEBUG;
 static std::ostream* out = &std::cout;
 static bool color = true;
+
+using std::string;
+using std::string_view;
 
 class Logger {
 public:

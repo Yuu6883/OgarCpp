@@ -38,7 +38,7 @@ public:
 	std::vector<Player*> players;
 	Player* largestPlayer = nullptr;
 
-	ChatChannel worldChat = ChatChannel(&handle->listener);
+	ChatChannel* worldChat;
 
 	int pelletCount = 0;
 	int motherCellCount = 0;
