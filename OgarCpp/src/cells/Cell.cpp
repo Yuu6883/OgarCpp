@@ -8,7 +8,7 @@ Cell::Cell(World* world, double x, double y, double size, unsigned int color) :
 
 unsigned long Cell::getAge() { return (world->handle->tick - birthTick) * world->handle->stepMult; };
 
-PlayerCell::PlayerCell(Player* owner, double x, double y, double size, unsigned int color):
+PlayerCell::PlayerCell(Player* owner, double x, double y, double size):
 	Cell(owner->world, x, y, size, owner->cellColor), owner(owner) {};
 
 string_view PlayerCell::getName() { return owner->cellName; };

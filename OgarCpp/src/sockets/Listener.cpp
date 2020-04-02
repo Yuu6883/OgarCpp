@@ -1,6 +1,7 @@
 #include "../primitives/Logger.h"
 #include "Listener.h"
 #include "Connection.h"
+#include "ChatChannel.h"
 #include "../ServerHandle.h"
 
 enum CustomErrorCode : short {

@@ -10,6 +10,29 @@ class Reader;
 using std::string;
 using std::string_view;
 
+enum class LBType {
+	FFA, PIE, TEXT
+};
+
+struct LBEntry {};
+
+struct FFAEntry : LBEntry {
+	string name;
+	bool highlighted;
+	unsigned int cellId;
+	unsigned char position;
+};
+
+struct PIEEntry : LBEntry {
+	double weight;
+	unsigned int color;
+};
+
+struct TEXTENtry : LBEntry {
+	string text;
+};
+
+
 class Protocol {
 public:
 	Connection* connection;
@@ -20,9 +43,9 @@ public:
 	virtual void onSocketMessage(Reader& reader) {};
 	virtual void onChatMessage(ChatSource& source, string_view message) {};
 	virtual void onNewOwnedCell(PlayerCell* cell) {};
-	virtual void onNewWorldBounds(World* world, bool includeServerInfo) {};
+	virtual void onNewWorldBounds(Rect* border, bool includeServerInfo) {};
 	virtual void onWorldReset() {};
-	virtual void onLeaderboardUpdate(string_view type) {};
+	virtual void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) {};
 	virtual void onSpectatePosition(ViewArea& viewArea) {};
 	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) {};
 	virtual void send(string_view data) {};

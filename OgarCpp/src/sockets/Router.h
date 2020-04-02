@@ -1,12 +1,9 @@
 #pragma once
+#include <regex>
 
 class Listener;
 class Player;
-
-#include <regex>
-#include "Listener.h"
-#include "../cells/Cell.h"
-#include "../worlds/Player.h"
+class PlayerCell;
 
 static std::regex nameSkinRegex{ "<(.*)>(.*)" };
 
@@ -32,8 +29,8 @@ public:
 	
 	Router(Listener* listener);
 	virtual bool isExternal() { return false; };
-	void createPlayer();
-	void destroyPlayer();
+	virtual void createPlayer();
+	virtual void destroyPlayer();
 	virtual void onWorldSet() {};
 	virtual void onWorldReset() {};
 	virtual void onNewOwnedCell(PlayerCell*) {};

@@ -23,10 +23,13 @@ void ServerHandle::setSettings(Setting* settings) {
 	ticker.setStep(tickDelay);
 	stepMult = tickDelay / 40;
 
+	LOAD_STR(serverName);
+	LOAD_INT(listenerMaxConnections);
 	LOAD_DOUBLE(worldEatMult);
 	LOAD_DOUBLE(worldEatOverlapDiv);
 	LOAD_INT(worldSafeSpawnTries);
 	LOAD_DOUBLE(worldSafeSpawnFromEjectedChance);
+	LOAD_INT(worldPlayerDisposeDelay);
 	LOAD_INT(pelletMinSize);
 	LOAD_INT(pelletMaxSize);
 	LOAD_INT(pelletGrowTicks);

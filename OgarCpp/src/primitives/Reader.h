@@ -8,7 +8,7 @@ class Reader {
 
 	const char* origin;
 	char* charPtr;
-	size_t size;
+	int size;
 
 	void checkBound(int limit) {
 		if (offset() + limit > size) {
@@ -22,6 +22,10 @@ public:
 
 	void reset() {
 		charPtr = (char*) origin;
+	}
+
+	int length() {
+		return size;
 	}
 
 	int readUInt8() {

@@ -4,7 +4,6 @@
 #include <regex>
 #include <vector>
 #include <map>
-#include "ChatChannel.h"
 
 class ChatChannel;
 class ServerHandle;
@@ -23,7 +22,7 @@ public:
 	std::vector<us_listen_socket_t*> sockets;
 	std::vector<std::thread*> socketThreads;
 	
-	ChatChannel* globalChat;
+	ChatChannel* globalChat = nullptr;
 
 	std::vector<Router*> routers;
 	std::vector<Connection*> connections;

@@ -22,10 +22,13 @@ using namespace libconfig;
 using namespace std::chrono;
 
 struct RuntimeSettings {
+	string serverName;
+	int listenerMaxConnections;
 	double worldEatMult;
 	double worldEatOverlapDiv;
 	int worldSafeSpawnTries;
 	double worldSafeSpawnFromEjectedChance;
+	int worldPlayerDisposeDelay;
 	int pelletMinSize;
 	int pelletMaxSize;
 	int pelletGrowTicks;
@@ -94,7 +97,7 @@ public:
 	int tickDelay = -1;
 	int stepMult = -1;
 
-	float averageTickTime = 0;
+	double averageTickTime = 0.0;
 
 	Ticker ticker;
 	Stopwatch stopwatch;

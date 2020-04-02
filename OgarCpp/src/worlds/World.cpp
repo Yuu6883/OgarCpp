@@ -1,7 +1,7 @@
 #include "World.h"
 #include "../ServerHandle.h"
+#include "../cells/Cell.h"
 #include <random>
-#include <minmax.h>
 
 using std::to_string;
 
@@ -176,10 +176,10 @@ SpawnResult World::getPlayerSpawn(double cellSize) {
 	}
 }
 
-void World::spawnPlayer(Player*, Point& pos, double size) {
-	// TODO: Make new player cell
-	// TODO: Call addCell
-	// TODO: update player state
+void World::spawnPlayer(Player* player, Point& pos, double size) {
+	auto playerCell = new PlayerCell(player, pos.x, pos.y, size);
+	addCell(playerCell);
+	player->updateState(PlayerState::ALIVE);
 }
 
 void World::frozenUpdate() {
@@ -206,9 +206,20 @@ void World::liveUpdate() {
 	for (auto c : cells)
 		c->onTick();
 
-	// TODO: Add pellet
-	// TODO: Add virus
-	// TODO: Add mothercell
+	while (pelletCount < handle->runtime.pelletCount) {
+		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize);
+		addCell(new Pellet(this, this, pos.x, pos.y));
+	}
+
+	while (virusCount < handle->runtime.virusMinCount) {
+		auto pos = getSafeSpawnPos(handle->runtime.virusSize);
+		addCell(new Virus(this, pos.x, pos.y));
+	}
+
+	while (motherCellCount < handle->runtime.mothercellCount) {
+		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize);
+		addCell(new MotherCell(this, pos.x, pos.y));
+	}
 	
 	for (int i = 0, l = boostingCells.size(); i < l;) {
 		if (!boostCell(boostingCells[i])) l--;
@@ -236,8 +247,6 @@ void World::liveUpdate() {
 			}
 		});
 	}
-
-	double playerMinSize = handle->getSettingDouble("playerMinSize");
 
 	for (auto c : playerCells) {
 		movePlayerCell(c);
@@ -281,9 +290,6 @@ void World::liveUpdate() {
 		if (p->score > 0 && (!largestPlayer || p->score > largestPlayer->score))
 			largestPlayer = p;
 
-	int splitCap = handle->getSettingInt("playerSplitCap");
-	int ejectDelay = handle->getSettingInt("playerEjectDelay");
-
 	for (int i = 0, l = players.size(); i < l; i++) {
 
 		auto player = players[i];
@@ -294,12 +300,12 @@ void World::liveUpdate() {
 			player->updateState(PlayerState::ROAM);
 
 		auto router = player->router;
-		for (int j = 0, k = splitCap; j < k && router->splitAttempts > 0; j++) {
+		for (int j = 0, k = handle->runtime.playerSplitCap; j < k && router->splitAttempts > 0; j++) {
 			router->attemptSplit();
 			router->splitAttempts--;
 		}
 
-		auto nextEjectTick = handle->tick - ejectDelay;
+		auto nextEjectTick = handle->tick - handle->runtime.playerEjectDelay;
 		if (router->ejectAttempts > 0 && nextEjectTick >= router->ejectTick) {
 			router->attemptEject();
 			router->ejectAttempts = 0;
@@ -400,48 +406,146 @@ void World::bounceCell(Cell* cell, bool bounce) {
 }
 
 void World::splitVirus(Virus* virus) {
-	// TODO
+	auto newVirus = new Virus(this, virus->x, virus->y);
+	newVirus->boost.dx = sin(virus->splitAngle);
+	newVirus->boost.dy = cos(virus->splitAngle);
+	newVirus->boost.d = handle->runtime.virusSplitBoost;
+	addCell(newVirus);
+	setCellAsBoosting(newVirus);
 }
 
 void World::movePlayerCell(PlayerCell* cell) {
-	// TODO
+	auto router = cell->owner->router;
+	if (router->disconnected) return;
+	double dx = router->mouseX - cell->x;
+	double dy = router->mouseY - cell->y;
+	double d = sqrt(dx * dx + dy * dy);
+	if (d < 1) return;
+	dx /= d; dy /= d;
+	double m = std::min(cell->getMoveSpeed(), d) * handle->stepMult;
+	cell->x += dx * m;
+	cell->y += dy * m;
 }
 
 void World::decayPlayerCell(PlayerCell* cell) {
 	double newSize = cell->size - cell->size * handle->gamemode->getDecayMult(cell) / 50 * handle->stepMult;
 	double minSize = handle->runtime.playerMinSize;
-	cell->size = max(newSize, minSize);
+	cell->size = std::max(newSize, minSize);
 }
 
 void World::launchPlayerCell(PlayerCell* cell, double size, Boost& boost) {
-	// TODO
+	cell->setSquareSize(cell->getSquareSize() - size * size);
+	double x = cell->x + handle->runtime.playerSplitDistance * boost.dx;
+	double y = cell->y + handle->runtime.playerSplitDistance * boost.dy;
+	auto newCell = new PlayerCell(cell->owner, x, y, size);
+	newCell->boost = boost;
+	addCell(newCell);
+	setCellAsBoosting(newCell);
 }
 
 void World::autosplitPlayerCell(PlayerCell* cell) {
-	// TODO
+	double minSplit = handle->runtime.playerMaxSize * handle->runtime.playerMaxSize;
+	int cellsLeft = 1 + handle->runtime.playerMaxCells - cell->owner->ownedCells.size();
+	double size = cell->getSquareSize();
+	int overflow = ceil(size / minSplit);
+	if (overflow == 1 || cellsLeft <= 0) return;
+	double splitTimes = std::min(overflow, cellsLeft);
+	double splitSize = std::min(sqrt(size / splitTimes), handle->runtime.playerMaxSize);
+	for (int i = 0; i < splitTimes; i++) {
+		auto angle = randomZeroToOne * 2 * PI;
+		Boost boost { sin(angle), cos(angle), handle->runtime.playerSplitBoost };
+		launchPlayerCell(cell, splitSize, boost);
+	}
+	cell->size = splitSize;
 }
 
 void World::splitPlayer(Player* player) {
+	if (player->ownedCells.size() >= handle->runtime.playerMaxCells) return;
+
 	auto router = player->router;
-	// for (auto c : player->ownedCells) {
-		// TODO
-	// }
+	for (auto cell : player->ownedCells) {
+		if (cell->size < handle->runtime.playerMinSplitSize) continue;
+		double dx = router->mouseX - cell->x;
+		double dy = router->mouseY - cell->y;
+		double d = sqrt(dx * dx + dy * dy);
+		if (d < 1) dx = 1, dy = 0, d = 1;
+		else dx /= d, dy /= d;
+		Boost boost {dx, dy, handle->runtime.playerSplitBoost };
+		launchPlayerCell(cell, cell->size / handle->runtime.playerSplitSizeDiv, boost);
+	}
 }
 
 void World::ejectFromPlayer(Player* player) {
-	// TODO
+	double dispersion = handle->runtime.ejectDispersion;
+	double loss = handle->runtime.ejectingLoss * handle->runtime.ejectingLoss;
+	auto router = player->router;
+	for (auto cell : player->ownedCells) {
+		if (cell->size < handle->runtime.playerMinEjectSize) continue;
+		double dx = router->mouseX - cell->x;
+		double dy = router->mouseY - cell->y;
+		double d = sqrt(dx * dx + dy * dy);
+		if (d < 1) dx = 1, dy = 0, d = 1;
+		else dx /= d, dy /= d;
+		double sx = cell->x + dx * cell->size;
+		double sy = cell->y + dy * cell->size;
+		auto newCell = new EjectedCell(this, player, sx, sy, cell->color);
+		double a = atan2(dx, dy) - dispersion + randomZeroToOne * 2 * dispersion;
+		newCell->boost.dx = sin(a);
+		newCell->boost.dy = cos(a);
+		newCell->boost.d = handle->runtime.ejectedCellBoost;
+		addCell(newCell);
+		setCellAsBoosting(newCell);
+		cell->setSquareSize(cell->getSquareSize() - loss);
+		updateCell(cell);
+	}
 }
 
 void World::popPlayerCell(PlayerCell* cell) {
-	// TODO
+	vector<double> dist;
+	distributeCellMass(cell, dist);
+	for (auto mass : dist) {
+		double angle = randomZeroToOne * 2 * PI;
+		Boost boost { sin(angle), cos(angle), handle->runtime.playerSplitBoost };
+		launchPlayerCell(cell, sqrt(mass * 100), boost);
+	}
 }
 
-void World::distributeCellMass(PlayerCell* cell, std::vector<double>& ref) {
-	// TODO
+void World::distributeCellMass(PlayerCell* cell, std::vector<double>& dist) {
+	auto player = cell->owner;
+	double cellsLeft = handle->runtime.playerMaxCells - player->ownedCells.size();
+	if (cellsLeft <= 0) return;
+	double splitMin = handle->runtime.playerMinSplitSize;
+	splitMin = splitMin * splitMin / 100;
+	double cellMass = cell->getMass();
+	if (handle->runtime.virusMonotonePops) {
+		double amount = std::min(floor(cellMass / splitMin), cellsLeft);
+		double perPiece = cellMass / (amount + 1.0);
+		while (--amount >= 0) dist.push_back(perPiece);
+		return;
+	}
+	if (cellMass / cellsLeft < splitMin) {
+		double amount = 2.0, perPiece = 0;
+		while ((perPiece = cellMass / (amount + 1.0)) >= splitMin && amount * 2 <= cellsLeft)
+			amount *= 2.0;
+		while (--amount >= 0) dist.push_back(perPiece);
+		return;
+	}
+	double nextMass = cellMass / 2.0;
+	double massLeft = cellMass / 2.0;
+	while (cellsLeft > 0) {
+		if (nextMass / cellsLeft < splitMin) break;
+		while (nextMass >= massLeft && cellsLeft > 1)
+			nextMass /= 2.0;
+		dist.push_back(nextMass);
+		massLeft -= nextMass;
+		cellsLeft--;
+	}
+	nextMass = massLeft / cellsLeft;
+	while (--cellsLeft >= 0) dist.push_back(nextMass);
 }
 
 void World::compileStatistics() {
-	unsigned int internal = 0, external = 0, playing = 0, spectating = 0;
+	unsigned short internal = 0, external = 0, playing = 0, spectating = 0;
 	for (auto p : players) {
 		if (!p->router->isExternal()) { internal++; continue; }
 		external++;
@@ -449,6 +553,14 @@ void World::compileStatistics() {
 		else if (p->state == PlayerState::SPEC || p->state == PlayerState::ROAM)
 			spectating++;
 	}
-	// TODO: update stats
+	stats.limit = handle->runtime.listenerMaxConnections - handle->listener.connections.size() + external;
+	stats.internal = internal;
+	stats.external = external;
+	stats.playing = playing;
+	stats.spectating = spectating;
+	stats.name = handle->runtime.serverName;
+	stats.gamemode = handle->gamemode->getName();
+	stats.loadTime = handle->averageTickTime / handle->stepMult;
+	stats.uptime = duration_cast<seconds>(system_clock::now() - handle->startTime).count();
 }
 

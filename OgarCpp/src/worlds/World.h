@@ -18,14 +18,15 @@ static struct WorldStats {
 	unsigned short limit = 0;
 	unsigned short internal = 0;
 	unsigned short external = 0;
+	unsigned short playing = 0;
 	unsigned short spectating = 0;
 	string name = "";
-	string mode = "";
+	string gamemode = "";
 	double loadTime = 0;
 	unsigned long uptime = 0;
 };
 
-class World {
+class World : public Spawner {
 public:
 	ServerHandle* handle;
 	unsigned int id;
@@ -41,7 +42,6 @@ public:
 
 	ChatChannel* worldChat;
 
-	int pelletCount = 0;
 	int motherCellCount = 0;
 	int virusCount = 0;
 	Rect border;

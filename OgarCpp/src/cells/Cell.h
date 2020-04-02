@@ -1,5 +1,9 @@
 #pragma once
 
+struct Spawner {
+	int pelletCount = 0;
+};
+
 #include <math.h>
 #include <string_view>
 #include "../misc/Misc.h"
@@ -76,15 +80,11 @@ public:
 	virtual void onRemoved() {};
 };
 
-struct Spawner {
-	int pelletCount = 0;
-};
-
 class PlayerCell  : public Cell {
 public:
 	Player* owner;
 	bool _canMerge = false;
-	PlayerCell(Player* owner, double x, double y, double size, unsigned int color);
+	PlayerCell(Player* owner, double x, double y, double size);
 	double getMoveSpeed(); 
 	bool canMerge() { return _canMerge; };
 	virtual CellType getType() override { return CellType::PLAYER; };

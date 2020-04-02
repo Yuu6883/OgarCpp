@@ -82,6 +82,11 @@ public:
 		ptr++;
 	}
 
+	void writeColor(const unsigned int& value) {
+		*((unsigned int*) ptr) = ((value & 0xFF) << 16) | (((value >> 8) & 0xFF) << 8) | (value >> 16);
+		ptr += 3;
+	}
+
 	std::string_view finalize() {
 		int offset = this->offset();
 		char* result = (char *) malloc(offset);
