@@ -11,13 +11,12 @@ struct Spawner {
 
 using std::string_view;
 
-static const double PI = atan(1) * 4;
+static const float PI = atan(1) * 4;
 
 class World;
 class Player;
 
-enum class CellType : char {
-	NONE = -1,
+enum CellType : char {
 	PLAYER,
 	PELLET,
 	VIRUS,
@@ -37,16 +36,16 @@ public:
 	unsigned int color;
 	World* world;
 
-	unsigned long id;
+	unsigned int id;
 	unsigned long birthTick;
 	bool exist = false;
 
 	Cell* eatenBy = nullptr;
-	Boost boost;
+	Boost boost = Boost();
 	bool isBoosting = false;
 
 	Player* owner = nullptr;
-	double size;
+	float size;
 
 	bool posChanged   = false;
 	bool sizeChanged  = false;
@@ -54,111 +53,134 @@ public:
 	bool nameChanged  = false;
 	bool skinChanged  = false;
 
-	Cell(World* world, double x, double y, double size, unsigned int color);
-	virtual CellType getType() { return CellType::NONE; };
-	virtual bool isSpiked() { return false; };
-	virtual bool isAgitated() { return false; };
+	Cell(World* world, float x, float y, float size, unsigned int color);
+	virtual CellType getType() = 0;
+	virtual bool isSpiked() = 0;
+	virtual bool isAgitated() = 0;
 
-	virtual string_view getName() { return ""; };
-	virtual string_view getSkin() { return ""; };
+	virtual string_view getName() = 0;
+	virtual string_view getSkin() = 0;
 
-	virtual bool shouldAvoidWhenSpawning() { return false; };
+	virtual bool shouldAvoidWhenSpawning() = 0;
 	bool shouldUpdate() { return posChanged || sizeChanged || colorChanged || nameChanged || skinChanged; };
 	unsigned long getAge();
 
-	double getSquareSize() { return size * size; };
-	void setSquareSize(double s) { size = sqrt(s); };
+	float getSquareSize() { return size * size; };
+	void setSquareSize(float s) { size = sqrt(s); };
 
-	double getMass() { return size * size / 100; };
-	void setMass(double s) { size = sqrt(100 * s); };
+	float getMass() { return size * size / 100; };
+	void setMass(float s) { size = sqrt(100 * s); };
 
-	virtual EatResult getEatResult(Cell* other) { return EatResult::COLLIDE; };
-	virtual void onSpawned() {};
-	virtual void onTick() { posChanged = sizeChanged = colorChanged = nameChanged = skinChanged = false; };
-	virtual void whenAte(Cell* other) { setSquareSize(getSquareSize() + other->getSquareSize()); };
-	virtual void whenEatenBy(Cell* other) { eatenBy = other; };
-	virtual void onRemoved() {};
+	virtual EatResult getEatResult(Cell* other) = 0;
+
+	void onTickDefault() { posChanged = sizeChanged = colorChanged = nameChanged = skinChanged = false; };
+	virtual void onTick() = 0;
+
+	void whenAteDefault(Cell* other) { setSquareSize(getSquareSize() + other->getSquareSize()); };
+	virtual void whenAte(Cell* other) = 0;
+
+	void whenEatenByDefault(Cell* other) { eatenBy = other; };
+	virtual void whenEatenBy(Cell* other) = 0;
+
+	virtual void onSpawned() = 0;
+	virtual void onRemoved() = 0;
 };
 
 class PlayerCell  : public Cell {
 public:
 	Player* owner;
 	bool _canMerge = false;
-	PlayerCell(Player* owner, double x, double y, double size);
-	double getMoveSpeed(); 
+	PlayerCell(Player* owner, float x, float y, float size);
+	float getMoveSpeed(); 
 	bool canMerge() { return _canMerge; };
-	virtual CellType getType() override { return CellType::PLAYER; };
-	virtual bool isSpiked() override { return false; };
-	virtual bool isAgitated() override { return false; };
-	virtual bool shouldAvoidWhenSpawning() override { return true; };
-	virtual string_view getName() override;
-	virtual string_view getSkin() override;
-	virtual EatResult getEatResult(Cell* other) override;
+	CellType getType() { return PLAYER; };
+	bool isSpiked() { return false; };
+	bool isAgitated() { return false; };
+	bool shouldAvoidWhenSpawning() { return true; };
+	string_view getName();
+	string_view getSkin();
+	EatResult getEatResult(Cell* other);
 	EatResult getDefaultEatResult(Cell* other);
-	virtual void onTick() override;
-	virtual void onSpawned() override;
-	virtual void onRemoved() override;
+	void whenAte(Cell* other) { Cell::whenAteDefault(other); };
+	void whenEatenBy(Cell* other) { Cell::whenEatenByDefault(other); };
+	void onTick();
+	void onSpawned();
+	void onRemoved();
 };
 
 class Virus       : public Cell {
 public:
 	int fedTimes = 0;
-	double splitAngle = 0;
-	Virus(World* world, double x, double y);
-	virtual CellType getType() override { return CellType::VIRUS; };
-	virtual bool isSpiked() override { return true; };
-	virtual bool isAgitated() override { return false; };
-	virtual bool shouldAvoidWhenSpawning() override { return true; };
-	virtual EatResult getEatResult(Cell* other) override; 
+	float splitAngle = 0;
+	Virus(World* world, float x, float y);
+	CellType getType() { return VIRUS; };
+	string_view getName() { return string_view(""); };
+	string_view getSkin() { return string_view(""); };
+	bool isSpiked() { return true; };
+	bool isAgitated() { return false; };
+	bool shouldAvoidWhenSpawning() { return true; };
+	EatResult getEatResult(Cell* other); 
 	EatResult getEjectedEatResult(bool isSelf);
-	virtual void whenAte(Cell* cell) override;
-	virtual void whenEatenBy(Cell* cell);
-	virtual void onSpawned() override;
-	virtual void onRemoved() override;
+	void onTick() { Cell::onTickDefault(); };
+	void whenAte(Cell* cell);
+	void whenEatenBy(Cell* cell);
+	void onSpawned();
+	void onRemoved();
 };
 
 class EjectedCell : public Cell {
 public:
 	Player* owner;
-	EjectedCell(World* world, Player* owner, double x, double y, unsigned int color);
-	virtual CellType getType() override { return CellType::EJECTED_CELL; };
-	virtual bool isSpiked() override { return false; };
-	virtual bool isAgitated() override { return false; };
-	virtual bool shouldAvoidWhenSpawning() override { return false; };
-	virtual EatResult getEatResult(Cell* other) override;
-	virtual void onSpawned() override;
-	virtual void onRemoved() override;
+	EjectedCell(World* world, Player* owner, float x, float y, unsigned int color);
+	CellType getType() { return EJECTED_CELL; };
+	string_view getName() { return string_view(""); };
+	string_view getSkin() { return string_view(""); };
+	bool isSpiked() { return false; };
+	bool isAgitated() { return false; };
+	bool shouldAvoidWhenSpawning() { return false; };
+	EatResult getEatResult(Cell* other);
+	void onTick() { Cell::onTickDefault(); };
+	void whenAte(Cell* other) { Cell::whenAteDefault(other); };
+	void whenEatenBy(Cell* other) { Cell::whenEatenByDefault(other); };
+	void onSpawned();
+	void onRemoved();
 };
 
 class Pellet : public Cell {
 public:
 	Spawner* spawner;
 	unsigned long lastGrowTick;
-	Pellet(World* world, Spawner* spawner, double x, double y);
-	virtual CellType getType() override { return CellType::PELLET; };
-	virtual bool isSpiked() override { return false; };
-	virtual bool isAgitated() override { return false; };
-	virtual bool shouldAvoidWhenSpawning() override { return false; };
-	virtual EatResult getEatResult(Cell* other) override { return EatResult::NONE; };
-	virtual void onTick() override;
-	virtual void onSpawned() override;
-	virtual void onRemoved() override;
+	Pellet(World* world, Spawner* spawner, float x, float y);
+	CellType getType() { return PELLET; };
+	string_view getName() { return string_view(""); };
+	string_view getSkin() { return string_view(""); };
+	bool isSpiked() { return false; };
+	bool isAgitated() { return false; };
+	bool shouldAvoidWhenSpawning() { return false; };
+	EatResult getEatResult(Cell* other) { return EatResult::NONE; };
+	void onTick();
+	void whenAte(Cell* other) { Cell::whenAteDefault(other); };
+	void whenEatenBy(Cell* other) { Cell::whenEatenByDefault(other); };
+	void onSpawned();
+	void onRemoved();
 };
 
 class MotherCell  : public Cell, Spawner {
 public:
-	double activePelletFromQueue  = 0.0;
-	double passivePelletFromQueue = 0.0;
-	MotherCell(World* world, double x, double y);
-	virtual CellType getType() override { return CellType::MOTHER_CELL; };
-	virtual bool isSpiked() override { return true; };
-	virtual bool isAgitated() override { return false; };
-	virtual bool shouldAvoidWhenSpawning() override { return true; };
-	virtual EatResult getEatResult(Cell* other) override { return EatResult::NONE; };
-	virtual void onTick() override;
+	float activePelletFromQueue  = 0.0;
+	float passivePelletFromQueue = 0.0;
+	MotherCell(World* world, float x, float y);
+	CellType getType() { return MOTHER_CELL; };
+	string_view getName() { return string_view(""); };
+	string_view getSkin() { return string_view(""); };
+	bool isSpiked() { return true; };
+	bool isAgitated() { return false; };
+	bool shouldAvoidWhenSpawning() { return true; };
+	EatResult getEatResult(Cell* other) { return EatResult::NONE; };
+	void onTick();
+	void whenAte(Cell* cell);
+	void whenEatenBy(Cell* cell);
 	void spawnPellet();
-	virtual void whenAte(Cell* cell) override;
-	virtual void whenEatenBy(Cell* cell) override;
-	virtual void onSpawned() override;
-	virtual void onRemoved() override;
+	void onSpawned();
+	void onRemoved();
 };

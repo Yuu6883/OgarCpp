@@ -34,7 +34,7 @@ public:
 	bool hasWorld = false;
 	World* world = nullptr;
 	short team = -1;
-	double score = 0;
+	float score = 0;
 	vector<PlayerCell*> ownedCells;
 	map<unsigned int, Cell*> visibleCells;
 	map<unsigned int, Cell*> lastVisibleCells;

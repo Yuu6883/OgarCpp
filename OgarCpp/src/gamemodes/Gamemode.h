@@ -1,9 +1,10 @@
 #pragma once
 
-#include "../ServerHandle.h"
-#include "../worlds/World.h"
-#include "../cells/Cell.h"
+#include <string>
+using std::string;
 
+class Cell;
+class World;
 class ServerHandle;
 class Connection;
 class Player;
@@ -13,33 +14,34 @@ public:
 	ServerHandle* handle;
 	Gamemode(ServerHandle* handle) : handle(handle) {};
 
-	int getType() { return 0; };
-	std::string getName() { return "Unknown Gamemode"; };
+	virtual unsigned char getType() = 0;
+	virtual string getName() = 0;
+	virtual Gamemode* clone() = 0;
 
-	void onHandleStart() {};
-	void onHandleTick() {};
-	void onHandleStop() {};
+	virtual void onHandleStart() = 0;
+	virtual void onHandleTick() = 0;
+	virtual void onHandleStop() = 0;
 
-	bool canJoinWorld(World* world) { return true; };
-	void onNewWorld(World* world) {};
-	void onWorldTick(World* world) {};
-	void onWorldDestroy(World* world) {};
+	virtual bool canJoinWorld(World* world) = 0;
+	virtual void onNewWorld(World* world) = 0;
+	virtual void onWorldTick(World* world) = 0;
+	virtual void onWorldDestroy(World* world) = 0;
 
-	void onNewPlayer(Player* player) {};
-	void onPlayerPressQ(Player* player) {};
-	void onPlayerEject(Player* player) {};
-	void onPlayerSplit(Player* player) {};
-	void onPlayerSpawnRequest(Player* player, std::string name, std::string skin) {};
-	void onPlayerDestroy(Player* player) {};
+	virtual void onNewPlayer(Player* player) = 0;
+	void onPlayerPressQ(Player* player);
+	virtual void onPlayerEject(Player* player) = 0;
+	void onPlayerSplit(Player* player);
+	virtual void onPlayerSpawnRequest(Player* player, string name, string skin) = 0;
+	virtual void onPlayerDestroy(Player* player) = 0;
 
-	void onPlayerJoinWorld(Player* player, World* world) {};
-	void onPlayerLeaveWorld(Player* player, World* world) {};
+	virtual void onPlayerJoinWorld(Player* player, World* world) = 0;
+	virtual void onPlayerLeaveWorld(Player* player, World* world) = 0;
 
-	void onNewCell(Cell* cell) {};
-	bool canEat(Cell* a, Cell* b) { return true; };
-	double getDecayMult(Cell* cell) { return 0; };
-	void onCellRemove(Cell* cell) {};
+	virtual void onNewCell(Cell* cell) = 0;
+	virtual bool canEat(Cell* a, Cell* b) = 0;
+	float getDecayMult(Cell* cell);
+	virtual void onCellRemove(Cell* cell) = 0;
 
-	void compileLeaderboard(World* world) {};
-	void sendLeaderboard(Connection* connection) {};
+	virtual void compileLeaderboard(World* world) = 0;
+	virtual void sendLeaderboard(Connection* connection) = 0;
 };

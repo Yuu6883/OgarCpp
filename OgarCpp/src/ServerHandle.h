@@ -11,6 +11,7 @@
 #include "sockets/Router.h"
 #include "sockets/Listener.h"
 #include "worlds/World.h"
+#include "worlds/MatchMaker.h"
 #include "protocols/ProtocolStore.h"
 #include "gamemodes/GamemodeList.h"
 #include "gamemodes/Gamemode.h"
@@ -23,11 +24,19 @@ using namespace std::chrono;
 
 struct RuntimeSettings {
 	string serverName;
+	bool chatEnabled;
+	int worldMaxPlayers;
+	int worldMaxCount;
 	int listenerMaxConnections;
-	double worldEatMult;
-	double worldEatOverlapDiv;
+	int chatCooldown;
+	int matchmakerBulkSize;
+	bool minionEnableQBasedControl;
+	bool matchmakerNeedsQueuing;
+	float minionSpawnSize;
+	float worldEatMult;
+	float worldEatOverlapDiv;
 	int worldSafeSpawnTries;
-	double worldSafeSpawnFromEjectedChance;
+	float worldSafeSpawnFromEjectedChance;
 	int worldPlayerDisposeDelay;
 	int pelletMinSize;
 	int pelletMaxSize;
@@ -35,48 +44,48 @@ struct RuntimeSettings {
 	int pelletCount;
 	int virusMinCount;
 	int virusMaxCount;
-	double virusSize;
+	float virusSize;
 	int virusFeedTimes;
 	bool virusPushing;
-	double virusSplitBoost;
-	double virusPushBoost;
+	float virusSplitBoost;
+	float virusPushBoost;
 	bool virusMonotonePops;
-	double ejectedSize;
-	double ejectingLoss;
-	double ejectDispersion;
-	double ejectedCellBoost;
-	double mothercellSize;
+	float ejectedSize;
+	float ejectingLoss;
+	float ejectDispersion;
+	float ejectedCellBoost;
+	float mothercellSize;
 	int mothercellCount;
-	double mothercellPassiveSpawnChance;
-	double mothercellActiveSpawnSpeed;
-	double mothercellPelletBoost;
+	float mothercellPassiveSpawnChance;
+	float mothercellActiveSpawnSpeed;
+	float mothercellPelletBoost;
 	int mothercellMaxPellets;
-	double mothercellMaxSize;
-	double playerRoamSpeed;
-	double playerRoamViewScale;
-	double playerViewScaleMult;
-	double playerMinViewScale;
+	float mothercellMaxSize;
+	float playerRoamSpeed;
+	float playerRoamViewScale;
+	float playerViewScaleMult;
+	float playerMinViewScale;
 	int playerMaxNameLength;
 	bool playerAllowSkinInName;
-	double playerMinSize = 32.0;
-	double playerSpawnSize = 32.0;
-	double playerMaxSize = 1500.0;
-	double playerMinSplitSize = 60.0;
-	double playerMinEjectSize = 60.0;
+	float playerMinSize = 32.0;
+	float playerSpawnSize = 32.0;
+	float playerMaxSize = 1500.0;
+	float playerMinSplitSize = 60.0;
+	float playerMinEjectSize = 60.0;
 	int playerSplitCap = 255;
 	int playerEjectDelay = 2;
 	int playerMaxCells = 16;
 
-	double playerMoveMult = 1;
-	double playerSplitSizeDiv = 1.414213562373095;
-	double playerSplitDistance = 40;
-	double playerSplitBoost = 780;
-	double playerNoCollideDelay = 13;
+	float playerMoveMult = 1;
+	float playerSplitSizeDiv = 1.414213562373095;
+	float playerSplitDistance = 40;
+	float playerSplitBoost = 780;
+	float playerNoCollideDelay = 13;
 	int playerNoMergeDelay = 15;
 	bool playerMergeNewVersion = false;
 	int playerMergeTime = 30;
-	double playerMergeTimeIncrease = 0.02;
-	double playerDecayMult = 0.001;
+	float playerMergeTimeIncrease = 0.02;
+	float playerDecayMult = 0.001;
 };
 
 class ServerHandle {
@@ -97,24 +106,26 @@ public:
 	int tickDelay = -1;
 	int stepMult = -1;
 
-	double averageTickTime = 0.0;
+	float averageTickTime = 0.0;
 
 	Ticker ticker;
 	Stopwatch stopwatch;
 	
 	time_point<system_clock> startTime = system_clock::now();
 	Listener listener = Listener(this);
+	MatchMaker matchmaker = MatchMaker(this);
 
 	std::map<unsigned int, World*>  worlds;
 	std::map<unsigned int, Player*> players;
 
 	ServerHandle(Setting* settings);
+	~ServerHandle();
 
 	void setSettings(Setting* settings);
 	
 	int getSettingInt(const char* key);
 	bool getSettingBool(const char* key);
-	double getSettingDouble(const char* key);
+	float getSettingDouble(const char* key);
 	std::string getSettingString(const char* key);
 
 	void onTick();

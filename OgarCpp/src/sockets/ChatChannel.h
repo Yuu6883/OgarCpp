@@ -4,7 +4,8 @@
 #include <string_view>
 #include <vector>
 
-class Router;
+class Connection;
+class Listener;
 
 using std::string;
 using std::string_view;
@@ -19,24 +20,24 @@ struct ChatSource {
 	ChatSource(string name, bool isServer, unsigned int color) :
 		name(name), isServer(isServer), color(color) {};
 
-	static ChatSource from(Router* router);
+	static ChatSource from(Connection* conn);
 };
 
 struct ChatChannel {
 
-	vector<Router*> connections;
+	vector<Connection*> connections;
 	Listener* listener;
 
 	ChatChannel(Listener* listener) : listener(listener) {};
 
-	void add(Router* router) {
-		connections.push_back(router);
+	void add(Connection* conn) {
+		connections.push_back(conn);
 	}
 
-	void remove(Router* router) {
+	void remove(Connection* conn) {
 		auto iter = connections.begin();
 		while (iter != connections.cend()) {
-			if (*iter == router) {
+			if (*iter == conn) {
 				connections.erase(iter);
 				return;
 			}
@@ -46,7 +47,7 @@ struct ChatChannel {
 
 	bool shouldFilter(string_view message);
 
-	void broadcast(Router* conn, string_view message);
+	void broadcast(Connection* conn, string_view message);
 
-	void directMessage(Router* conn, Router* recip, string_view message);
+	void directMessage(Connection* conn, Connection* recip, string_view message);
 };

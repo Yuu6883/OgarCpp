@@ -3,9 +3,9 @@
 #include <iostream>
 
 struct Boost {
-	double dx;
-	double dy;
-	double d;
+	float dx;
+	float dy;
+	float d;
 };
 
 struct Quadrant {
@@ -22,18 +22,18 @@ struct Quadrant {
 
 class Point {
 public:
-	double x, y;
+	float x, y;
 	Point() : x(0), y(0) {};
-	Point(double x, double y) : x(x), y(y) {};
+	Point(float x, float y) : x(x), y(y) {};
 };
 
 class Rect : public Point {
 	// friend ostream & operator<<(ostream& stream, Rect& rect);
 public:
-	double w, h;
+	float w, h;
 
 	Rect() : Point(), w(0), h(0) {};
-	Rect(double x, double y, double w, double h) : Point(x, y), w(w), h(h) {};
+	Rect(float x, float y, float w, float h) : Point(x, y), w(w), h(h) {};
 	
 	bool intersects(const Rect& other) {
 		return x - w <= other.x + other.w && \
@@ -74,9 +74,9 @@ public:
 
 class ViewArea : public Rect {
 public:
-	double s;
+	float s;
 	ViewArea() : Rect(), s(0) {};
-	ViewArea(double x, double y, double w, double h, double s) : Rect(x, y, w, y), s(s) {};
+	ViewArea(float x, float y, float w, float h, float s) : Rect(x, y, w, y), s(s) {};
 
 	void print(std::ostream& stream) {
 		stream << "Rect { x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << ", s:" << s << " }" << std::endl;

@@ -57,13 +57,16 @@ bool Listener::open(int threads = 1) {
 						}
 					});
 				},
-				.message = [](auto* ws, std::string_view message, uWS::OpCode opCode) {
+				.message = [](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
+					auto data = (SocketData*)ws->getUserData();
+					data->connection->onSocketMessage(buffer);
 				},
 				.drain = [](auto* ws) { /* Check getBufferedAmount here */ },
 				.ping = [](auto* ws) {},
 				.pong = [](auto* ws) {},
 				.close = [this](auto* ws, int code, std::string_view message) {
 					auto data = (SocketData*)ws->getUserData();
+					data->connection->socketDisconnected = true;
 					onDisconnection(data->connection, code, message);
 				}
 			}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
@@ -171,6 +174,10 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 		}
 		iter++;
 	}
+	if (connection->hasPlayer) {
+		connection->player->router = nullptr;
+	}
+	delete connection;
 };
 
 void Listener::update() {

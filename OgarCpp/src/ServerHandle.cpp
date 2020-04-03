@@ -1,9 +1,10 @@
 #include "ServerHandle.h"
+#include "Settings.h"
 #include "worlds/Player.h"
 #include "worlds/World.h"
 
 #define LOAD_INT(prop) runtime.prop = getSettingInt(#prop)
-#define LOAD_DOUBLE(prop) runtime.prop = getSettingDouble(#prop)
+#define LOAD_FLOAT(prop) runtime.prop = getSettingDouble(#prop)
 #define LOAD_BOOL(prop) runtime.prop = getSettingBool(#prop)
 #define LOAD_STR(prop) runtime.prop = getSettingString(#prop)
 
@@ -15,6 +16,12 @@ ServerHandle::ServerHandle(Setting* settings) {
 	gamemode = nullptr;
 };
 
+ServerHandle::~ServerHandle() {
+	delete gamemodes;
+	delete protocols;
+	unloadConfig();
+}
+
 void ServerHandle::setSettings(Setting* settings) {
 
 	this->settings = settings;
@@ -23,12 +30,20 @@ void ServerHandle::setSettings(Setting* settings) {
 	ticker.setStep(tickDelay);
 	stepMult = tickDelay / 40;
 
+	LOAD_BOOL(chatEnabled);
 	LOAD_STR(serverName);
+	LOAD_INT(worldMaxPlayers);
+	LOAD_INT(worldMaxCount);
+	LOAD_INT(chatCooldown);
+	LOAD_INT(matchmakerBulkSize);
+	LOAD_BOOL(minionEnableQBasedControl);
+	LOAD_BOOL(matchmakerNeedsQueuing);
+	LOAD_FLOAT(minionSpawnSize);
 	LOAD_INT(listenerMaxConnections);
-	LOAD_DOUBLE(worldEatMult);
-	LOAD_DOUBLE(worldEatOverlapDiv);
+	LOAD_FLOAT(worldEatMult);
+	LOAD_FLOAT(worldEatOverlapDiv);
 	LOAD_INT(worldSafeSpawnTries);
-	LOAD_DOUBLE(worldSafeSpawnFromEjectedChance);
+	LOAD_FLOAT(worldSafeSpawnFromEjectedChance);
 	LOAD_INT(worldPlayerDisposeDelay);
 	LOAD_INT(pelletMinSize);
 	LOAD_INT(pelletMaxSize);
@@ -36,84 +51,108 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_INT(pelletCount);
 	LOAD_INT(virusMinCount);
 	LOAD_INT(virusMaxCount);
-	LOAD_DOUBLE(virusSize);
+	LOAD_FLOAT(virusSize);
 	LOAD_INT(virusFeedTimes);
 	LOAD_BOOL(virusPushing);
-	LOAD_DOUBLE(virusSplitBoost);
-	LOAD_DOUBLE(virusPushBoost);
+	LOAD_FLOAT(virusSplitBoost);
+	LOAD_FLOAT(virusPushBoost);
 	LOAD_BOOL(virusMonotonePops);
-	LOAD_DOUBLE(ejectedSize);
-	LOAD_DOUBLE(ejectingLoss);
-	LOAD_DOUBLE(ejectDispersion);
-	LOAD_DOUBLE(ejectedCellBoost);
-	LOAD_DOUBLE(mothercellSize);
+	LOAD_FLOAT(ejectedSize);
+	LOAD_FLOAT(ejectingLoss);
+	LOAD_FLOAT(ejectDispersion);
+	LOAD_FLOAT(ejectedCellBoost);
+	LOAD_FLOAT(mothercellSize);
 	LOAD_INT(mothercellCount);
-	LOAD_DOUBLE(mothercellPassiveSpawnChance);
-	LOAD_DOUBLE(mothercellActiveSpawnSpeed);
-	LOAD_DOUBLE(mothercellPelletBoost);
+	LOAD_FLOAT(mothercellPassiveSpawnChance);
+	LOAD_FLOAT(mothercellActiveSpawnSpeed);
+	LOAD_FLOAT(mothercellPelletBoost);
 	LOAD_INT(mothercellMaxPellets);
-	LOAD_DOUBLE(mothercellMaxSize);
-	LOAD_DOUBLE(playerRoamSpeed);
-	LOAD_DOUBLE(playerRoamViewScale);
-	LOAD_DOUBLE(playerViewScaleMult);
-	LOAD_DOUBLE(playerMinViewScale);
+	LOAD_FLOAT(mothercellMaxSize);
+	LOAD_FLOAT(playerRoamSpeed);
+	LOAD_FLOAT(playerRoamViewScale);
+	LOAD_FLOAT(playerViewScaleMult);
+	LOAD_FLOAT(playerMinViewScale);
 	LOAD_INT(playerMaxNameLength);
 	LOAD_BOOL(playerAllowSkinInName);
-	LOAD_DOUBLE(playerMinSize);
-	LOAD_DOUBLE(playerSpawnSize);
-	LOAD_DOUBLE(playerMaxSize);
-	LOAD_DOUBLE(playerMinSplitSize);
-	LOAD_DOUBLE(playerMinEjectSize);
+	LOAD_FLOAT(playerMinSize);
+	LOAD_FLOAT(playerSpawnSize);
+	LOAD_FLOAT(playerMaxSize);
+	LOAD_FLOAT(playerMinSplitSize);
+	LOAD_FLOAT(playerMinEjectSize);
 	LOAD_INT(playerSplitCap);
 	LOAD_INT(playerEjectDelay);
 	LOAD_INT(playerMaxCells);
-	LOAD_DOUBLE(playerMoveMult);
-	LOAD_DOUBLE(playerSplitSizeDiv);
-	LOAD_DOUBLE(playerSplitDistance);
-	LOAD_DOUBLE(playerSplitBoost);
-	LOAD_DOUBLE(playerNoCollideDelay);
+	LOAD_FLOAT(playerMoveMult);
+	LOAD_FLOAT(playerSplitSizeDiv);
+	LOAD_FLOAT(playerSplitDistance);
+	LOAD_FLOAT(playerSplitBoost);
+	LOAD_FLOAT(playerNoCollideDelay);
 	LOAD_INT(playerNoMergeDelay);
 	LOAD_BOOL(playerMergeNewVersion);
 	LOAD_INT(playerMergeTime);
-	LOAD_DOUBLE(playerMergeTimeIncrease);
-	LOAD_DOUBLE(playerDecayMult);
+	LOAD_FLOAT(playerMergeTimeIncrease);
+	LOAD_FLOAT(playerDecayMult);
 }
 
 int ServerHandle::getSettingInt(const char* key) {
-	int value;
+	int value = 0;
 	settings->lookupValue(key, value);
 	return value;
 };
 
 bool ServerHandle::getSettingBool(const char* key) {
-	bool value;
+	bool value = false;
 	settings->lookupValue(key, value);
 	return value;
 };
 
-double ServerHandle::getSettingDouble(const char* key) {
+float ServerHandle::getSettingDouble(const char* key) {
 	double value;
-	settings->lookupValue(key, value);
-	return value;
+	if (settings->lookupValue(key, value))
+		return value;
+	int v2;
+	if (settings->lookupValue(key, v2))
+		return (float) v2;
+	Logger::error(string("Failed to load prop: ") + key);
+	return 0;
 };
 
 std::string ServerHandle::getSettingString(const char* key) {
-	std::string value;
+	std::string value = "";
 	settings->lookupValue(key, value);
 	return value;
 };
 
 void ServerHandle::onTick() {
+	stopwatch.begin();
+	tick++;
 
+	for (auto pair : worlds)
+		pair.second->update();
+	listener.update();
+	matchmaker.update();
+	gamemode->onHandleTick();
+
+	averageTickTime = stopwatch.elapsed();
+	stopwatch.stop();
 };
 
 bool ServerHandle::start() {
 	if (running) return false;
 
-	running = true;
-	ticker.start();
-	listener.open(std::thread::hardware_concurrency());
+	gamemodes->setGamemode(getSettingString("serverGamemode"));
 
+	startTime = system_clock::now();
+	averageTickTime = tick = 0;
+	running = true;
+
+	listener.open(std::thread::hardware_concurrency());
+	ticker.start();
+	gamemode->onHandleStart();
+
+	Logger::info("Ticker started");
+	Logger::info(string("OgarCpp ") + OGAR_VERSION_STRING);
+	Logger::info(string("Gamemode: ") + gamemode->getName());
 	return true;
 };
 
@@ -122,12 +161,18 @@ bool ServerHandle::stop() {
 
 	if (ticker.running)
 		ticker.stop();
-
-	// TODO: remove worlds
-	// TODO: remove players
+	for (auto pair : worlds)
+		removeWorld(pair.first);
+	for (auto pair : players)
+		removePlayer(pair.first);
+	for (auto router : listener.routers)
+		router->close();
+	gamemode->onHandleStop();
 	listener.close();
 
-	startTime = system_clock::now();
+	running = false;
+
+	Logger::info("Ticker stopped");
 	return true;
 };
 

@@ -80,10 +80,10 @@ private:
 
 	void split() {
 		if (hasSplit() || level > maxLevel || items.size() < maxItem) return;
-		double x = range.x;
-		double y = range.y;
-		double hw = range.w / 2;
-		double hh = range.h / 2;
+		float x = range.x;
+		float y = range.y;
+		float hw = range.w / 2;
+		float hh = range.h / 2;
 		branches = new QuadNode[4]{
 			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
 			QuadNode(Rect(x + hw, y - hh, hw, hh), maxLevel, maxItem, this),

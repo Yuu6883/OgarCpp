@@ -2,24 +2,24 @@
 #include "../worlds/World.h"
 #include "../ServerHandle.h"
 
-Cell::Cell(World* world, double x, double y, double size, unsigned int color) : 
+Cell::Cell(World* world, float x, float y, float size, unsigned int color) : 
 	QuadItem(x, y), world(world), id(world->getNextCellId()), birthTick(world->handle->tick),
 	size(size), color(color) {};
 
 unsigned long Cell::getAge() { return (world->handle->tick - birthTick) * world->handle->stepMult; };
 
-PlayerCell::PlayerCell(Player* owner, double x, double y, double size):
+PlayerCell::PlayerCell(Player* owner, float x, float y, float size):
 	Cell(owner->world, x, y, size, owner->cellColor), owner(owner) {};
 
 string_view PlayerCell::getName() { return owner->cellName; };
 string_view PlayerCell::getSkin() { return owner->cellSkin; };
 
-double PlayerCell::getMoveSpeed() {
+float PlayerCell::getMoveSpeed() {
 	return 88 * pow(size, -0.4396754) * owner->handle->runtime.playerMoveMult;
 }
 
 EatResult PlayerCell::getEatResult(Cell* other) {
-	if (other->getType() == CellType::PLAYER) {
+	if (other->getType() == PLAYER) {
 		auto delay = world->handle->runtime.playerNoCollideDelay;
 		if (((PlayerCell*)other)->id == id) {
 			if (other->getAge() < delay || getAge() < delay) return EatResult::NONE;
@@ -30,9 +30,9 @@ EatResult PlayerCell::getEatResult(Cell* other) {
 		return (other->getAge() < delay || getAge() < delay) ? EatResult::NONE : EatResult::COLLIDE;
 		return getDefaultEatResult(other);
 	}
-	if (other->getType() == CellType::MOTHER_CELL &&
+	if (other->getType() == MOTHER_CELL &&
 		other->size > size* world->handle->runtime.worldEatMult) return EatResult::EATINVD;
-	if (other->getType() == CellType::PELLET) return EatResult::EAT;
+	if (other->getType() == PELLET) return EatResult::EAT;
 	return getDefaultEatResult(other);
 }
 
@@ -41,7 +41,7 @@ EatResult PlayerCell::getDefaultEatResult(Cell* other) {
 }
 
 void PlayerCell::onTick() {
-	Cell::onTick();
+	Cell::onTickDefault();
 	if (color != owner->cellColor) color = owner->cellColor;
 	auto delay = world->handle->runtime.playerNoMergeDelay;
 	if (world->handle->runtime.playerMergeTime > 0) {
@@ -81,12 +81,12 @@ void PlayerCell::onRemoved() {
 	owner->updateState(PlayerState::DEAD);
 }
 
-Virus::Virus(World* world, double x, double y) :
+Virus::Virus(World* world, float x, float y) :
 	Cell(world, x, y, world->handle->runtime.virusSize, 0x33FF33) {};
 
 EatResult Virus::getEatResult(Cell* other) {
-	if (other->getType() == CellType::EJECTED_CELL) return getEjectedEatResult(true);
-	if (other->getType() == CellType::MOTHER_CELL) return EatResult::EATINVD;
+	if (other->getType() == EJECTED_CELL) return getEjectedEatResult(true);
+	if (other->getType() == MOTHER_CELL) return EatResult::EATINVD;
 	return EatResult::NONE;
 }
 
@@ -105,19 +105,19 @@ void Virus::whenAte(Cell* cell) {
 		world->setCellAsBoosting(this);
 	}
 	else {
-		double angle = atan2(cell->boost.dx, cell->boost.dy);
+		float angle = atan2(cell->boost.dx, cell->boost.dy);
 		if (++fedTimes >= runtime->virusFeedTimes) {
 			fedTimes = 0;
 			size = runtime->virusSize;
 			world->splitVirus(this);
 		}
-		else Cell::whenAte(cell);
+		else Cell::whenAteDefault(cell);
 	}
 }
 
 void Virus::whenEatenBy(Cell* cell) {
-	Cell::whenEatenBy(cell);
-	if (cell->getType() == CellType::PLAYER) 
+	Cell::whenEatenByDefault(cell);
+	if (cell->getType() == PLAYER) 
 		world->popPlayerCell((PlayerCell*)cell);
 }
 
@@ -129,13 +129,13 @@ void Virus::onRemoved() {
 	world->virusCount--;
 }
 
-EjectedCell::EjectedCell(World* world, Player* owner, double x, double y, unsigned int color) :
+EjectedCell::EjectedCell(World* world, Player* owner, float x, float y, unsigned int color) :
 	Cell(world, x, y, world->handle->runtime.ejectedSize, color), owner(owner) {};
 
 EatResult EjectedCell::getEatResult(Cell* other) {
-	if (other->getType() == CellType::VIRUS) return ((Virus*)other)->getEjectedEatResult(false);
-	if (other->getType() == CellType::MOTHER_CELL) return EatResult::EATINVD;
-	if (other->getType() == CellType::EJECTED_CELL) {
+	if (other->getType() == VIRUS) return ((Virus*)other)->getEjectedEatResult(false);
+	if (other->getType() == MOTHER_CELL) return EatResult::EATINVD;
+	if (other->getType() == EJECTED_CELL) {
 		if (!other->isBoosting) world->setCellAsBoosting(other);
 		return EatResult::COLLIDE;
 	}
@@ -158,12 +158,12 @@ void EjectedCell::onRemoved() {
 	}
 }
 
-Pellet::Pellet(World* world, Spawner* spawner, double x, double y):
+Pellet::Pellet(World* world, Spawner* spawner, float x, float y):
 	Cell(world, x, y, world->handle->runtime.pelletMinSize, randomColor()),
 	spawner(spawner), lastGrowTick(birthTick) {};
 
 void Pellet::onTick() {
-	Cell::onTick();
+	Cell::onTickDefault();
 	if (size >= world->handle->runtime.pelletMaxSize) return;
 	if (world->handle->tick - lastGrowTick > world->handle->runtime.pelletGrowTicks / world->handle->stepMult) {
 		lastGrowTick = world->handle->tick;
@@ -179,7 +179,7 @@ void Pellet::onRemoved() {
 	world->pelletCount--;
 }
 
-MotherCell::MotherCell(World* world, double x, double y) :
+MotherCell::MotherCell(World* world, float x, float y) :
 	Cell(world, x, y, world->handle->runtime.mothercellSize, 0xCE6363) {};
 
 void MotherCell::onTick() {
@@ -189,7 +189,7 @@ void MotherCell::onTick() {
 	auto minSpawnSqSize = mcSize * mcSize + pSize * pSize;
 
 	activePelletFromQueue += runtime->mothercellActiveSpawnSpeed * world->handle->stepMult;
-	passivePelletFromQueue += ((double)rand() / (RAND_MAX)) * runtime->mothercellPassiveSpawnChance * world->handle->stepMult;
+	passivePelletFromQueue += ((float)rand() / (RAND_MAX)) * runtime->mothercellPassiveSpawnChance * world->handle->stepMult;
 
 	while (activePelletFromQueue > 0) {
 		if (getSquareSize() > minSpawnSqSize)
@@ -207,26 +207,26 @@ void MotherCell::onTick() {
 }
 
 void MotherCell::spawnPellet() {
-	auto angle = ((double)rand() / (RAND_MAX)) * 2 * PI;
+	auto angle = ((float)rand() / (RAND_MAX)) * 2 * PI;
 	auto x = this->x + size * sin(angle);
 	auto y = this->y + size * cos(angle);
 	auto pellet = new Pellet(world, this, x, y);
 	pellet->boost.dx = sin(angle);
 	pellet->boost.dy = cos(angle);
 	auto d = world->handle->runtime.mothercellPelletBoost;
-	pellet->boost.d = d / 2.0 + ((double)rand() / (RAND_MAX)) * d / 2.0;
+	pellet->boost.d = d / 2.0 + ((double) rand() / (RAND_MAX)) * d / 2.0;
 	world->addCell(pellet);
 	world->setCellAsBoosting(pellet);
 }
 
 void MotherCell::whenAte(Cell* cell) {
-	Cell::whenAte(cell);
+	Cell::whenAteDefault(cell);
 	size = std::min(size, world->handle->runtime.mothercellMaxSize);
 }
 
 void MotherCell::whenEatenBy(Cell* cell) {
-	Cell::whenEatenBy(cell);
-	if (cell->getType() == CellType::PLAYER) world->popPlayerCell((PlayerCell*)cell);
+	Cell::whenEatenByDefault(cell);
+	if (cell->getType() == PLAYER) world->popPlayerCell((PlayerCell*)cell);
 }
 
 void MotherCell::onSpawned() {

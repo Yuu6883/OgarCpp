@@ -28,12 +28,12 @@ public:
 		return size;
 	}
 
-	int readUInt8() {
+	unsigned char readUInt8() {
 		checkBound(1);
 		return (unsigned char) *charPtr++;
 	}
 
-	int readInt8() {
+	char readInt8() {
 		checkBound(1);
 		return (char) *charPtr++;
 	}
@@ -87,9 +87,9 @@ public:
 		return value;
 	}
 
-	double readFloat64() {
+	float readFloat64() {
 		checkBound(8);
-		auto value = *((double*) charPtr);
+		auto value = *((float*) charPtr);
 		charPtr += 8;
 		return value;
 	}

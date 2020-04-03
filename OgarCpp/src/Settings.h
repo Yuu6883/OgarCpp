@@ -10,7 +10,7 @@ static const char* defaultConfigPath = "src/cli/default.cfg";
 
 static Config* cfg = nullptr;
 
-Setting* loadConfig() {
+inline Setting* loadConfig() {
 	if (cfg) delete cfg;
 	cfg = new Config();
 
@@ -34,7 +34,7 @@ Setting* loadConfig() {
 	return &cfg->getRoot();
 }
 
-bool saveConfig() {
+inline bool saveConfig() {
 	if (cfg) {
 		cfg->writeFile(configPath);
 		return true;
@@ -42,7 +42,7 @@ bool saveConfig() {
 	return false;
 }
 
-bool unloadConfig() {
+inline bool unloadConfig() {
 	if (cfg) {
 		delete cfg;
 		cfg = nullptr;

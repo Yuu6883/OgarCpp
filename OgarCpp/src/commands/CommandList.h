@@ -7,9 +7,11 @@
 #include <iostream>
 #include <sstream>
 #include <iterator>
+#include <functional>
 
 using std::string;
 using std::vector;
+using std::function;
 
 class ServerHandle;
 
@@ -21,7 +23,7 @@ template<class T>
 class Command {
 
 public:
-	typedef void (*CommandExecutor)(ServerHandle*, T, vector<string>&);
+	typedef function<void(ServerHandle*, T, vector<string>&)> CommandExecutor;
 	string name;
 	string description;
 	string args;
@@ -56,7 +58,7 @@ public:
 
 	void registerCommand(Command<T>& command) {
 		if (commands.contains(command.name)) {
-			error(string("Command \"") + command.name + string("\" is already registered."));
+			Logger::error(string("Command \"") + command.name + string("\" is already registered."));
 		} else {
 			commands.insert(std::make_pair(command.name, command));
 		}

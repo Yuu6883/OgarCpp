@@ -89,8 +89,6 @@ public:
 
 	std::string_view finalize() {
 		int offset = this->offset();
-		char* result = (char *) malloc(offset);
-		memcpy(result, pool, offset);
-		return std::string_view(result, offset);
+		return std::string_view(pool, offset);
 	}
 };

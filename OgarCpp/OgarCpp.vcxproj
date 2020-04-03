@@ -21,21 +21,26 @@
   <ItemGroup>
     <ClCompile Include="src\cells\Cell.cpp" />
     <ClCompile Include="src\cli\Main.cpp" />
+    <ClCompile Include="src\gamemodes\FFA.cpp" />
+    <ClCompile Include="src\gamemodes\Gamemode.cpp" />
     <ClCompile Include="src\gamemodes\GamemodeList.cpp" />
     <ClCompile Include="src\misc\Ticker.h" />
     <ClCompile Include="src\primitives\QuadTree.cpp" />
     <ClCompile Include="src\protocols\ModernProtocol.cpp" />
+    <ClCompile Include="src\protocols\Protocol6.cpp" />
     <ClCompile Include="src\ServerHandle.cpp" />
     <ClCompile Include="src\sockets\ChatChannel.cpp" />
     <ClCompile Include="src\sockets\Connection.cpp" />
     <ClCompile Include="src\sockets\Listener.cpp" />
     <ClCompile Include="src\sockets\Router.cpp" />
+    <ClCompile Include="src\worlds\MatchMaker.cpp" />
     <ClCompile Include="src\worlds\Player.cpp" />
     <ClCompile Include="src\worlds\World.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\cells\Cell.h" />
     <ClInclude Include="src\commands\CommandList.h" />
+    <ClInclude Include="src\gamemodes\FFA.h" />
     <ClInclude Include="src\gamemodes\Gamemode.h" />
     <ClInclude Include="src\gamemodes\GamemodeList.h" />
     <ClInclude Include="src\misc\Misc.h" />
@@ -47,6 +52,7 @@
     <ClInclude Include="src\primitives\Writer.h" />
     <ClInclude Include="src\protocols\ModernProtocol.h" />
     <ClInclude Include="src\protocols\Protocol.h" />
+    <ClInclude Include="src\protocols\Protocol6.h" />
     <ClInclude Include="src\protocols\ProtocolStore.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
@@ -54,6 +60,7 @@
     <ClInclude Include="src\sockets\Connection.h" />
     <ClInclude Include="src\sockets\Listener.h" />
     <ClInclude Include="src\sockets\Router.h" />
+    <ClInclude Include="src\worlds\MatchMaker.h" />
     <ClInclude Include="src\worlds\Player.h" />
     <ClInclude Include="src\worlds\World.h" />
   </ItemGroup>

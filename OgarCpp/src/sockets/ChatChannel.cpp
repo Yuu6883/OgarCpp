@@ -1,7 +1,10 @@
 #include "ChatChannel.h"
+#include "Connection.h"
+#include "../protocols/Protocol.h"
+#include "../worlds/Player.h"
 
-ChatSource ChatSource::from(Router* router) {
-	return ChatSource(router->player->chatName, false, router->player->chatColor);
+ChatSource ChatSource::from(Connection* conn) {
+	return ChatSource(conn->player->chatName, false, conn->player->chatColor);
 }
 
 static void toLowerCase(string* str) {
@@ -14,14 +17,15 @@ bool ChatChannel::shouldFilter(string_view message) {
 	return false;
 }
 
-void ChatChannel::broadcast(Router* conn, string_view message) {
+void ChatChannel::broadcast(Connection* conn, string_view message) {
 	if (shouldFilter(message)) return;
 	auto source = conn ? ChatSource::from(conn) : serverSource;
-	// TODO broadcast to protocol instances
+	for (auto recip : connections)
+		recip->protocol->onChatMessage(source, message);
 }
 
-void ChatChannel::directMessage(Router* conn, Router* recip, string_view message) {
+void ChatChannel::directMessage(Connection* conn, Connection* recip, string_view message) {
 	if (shouldFilter(message)) return;
 	auto source = conn ? ChatSource::from(conn) : serverSource;
-	// TODO dm to the protocol instance
+	recip->protocol->onChatMessage(source, message);
 }

@@ -26,7 +26,7 @@ void Player::updateViewArea() {
 
 	if (!world) return;
 
-	double size = 0, x = 0, y = 0, score = 0;
+	float size = 0, x = 0, y = 0, score = 0;
 	switch (state) {
 		case PlayerState::DEAD:
 			this->score = -1;
@@ -51,10 +51,10 @@ void Player::updateViewArea() {
 			break;
 		case PlayerState::ROAM:
 			score = -1;
-			double dx = router->mouseX - viewArea.x;
-			double dy = router->mouseY - viewArea.y;
-			double d = sqrt(dx * dx + dy * dy);
-			double D = std::min(d, handle->runtime.playerRoamSpeed);
+			float dx = router->mouseX - viewArea.x;
+			float dy = router->mouseY - viewArea.y;
+			float d = sqrt(dx * dx + dy * dy);
+			float D = std::min(d, handle->runtime.playerRoamSpeed);
 			if (D < 1) break;
 			dx /= d; dy /= d;
 			auto b = &world->border;

@@ -1,8 +1,13 @@
+
+
 #include "Listener.h"
 #include "Connection.h"
+#include "../misc/Misc.h"
 #include "../ServerHandle.h"
 #include "../protocols/Protocol.h"
 #include "../primitives/Logger.h"
+#include "../worlds/MatchMaker.h"
+
 #define MAX_FRAME_SIZE 512
 
 string ipv4ToString(unsigned int ipv4) {
@@ -22,7 +27,9 @@ void Connection::close() {
 
 void Connection::onSocketClose(int code, string_view reason) {
 	if (socketDisconnected) return;
-	Logger::debug(string("Connection from "));
+	socketDisconnected = true;
+	closeCode = code;
+	closeReason = string(reason);
 }
 
 void Connection::closeSocket(int code, string_view str) {
@@ -30,7 +37,9 @@ void Connection::closeSocket(int code, string_view str) {
 	socketDisconnected = true;
 	closeCode = code;
 	closeReason = string(str);
-	socket->end(code || CLOSE_ABNORMAL);
+	uWS::Loop::get()->defer([this, code, str] {
+		socket->end(code ? code : CLOSE_ABNORMAL, str);
+	});
 }
 
 void Connection::onSocketMessage(string_view buffer) {
@@ -38,22 +47,46 @@ void Connection::onSocketMessage(string_view buffer) {
 		closeSocket(CLOSE_TOO_LARGE, "Unexpected message size");
 		return;
 	}
+	Reader reader(buffer);
+	if (protocol) protocol->onSocketMessage(reader);
+	else {
+		protocol = listener->handle->protocols->decide(this, reader);
+		if (!protocol) closeSocket(CloseCodes::CLOSE_UNSUPPORTED, "Ambiguous protocol");
+	}
 }
 
 void Connection::createPlayer() {
 	Router::createPlayer();
-	if (listener->handle->getSettingBool("chatEnabled"))
+	if (listener->handle->runtime.chatEnabled)
 		listener->globalChat->add(this);
-	if (listener->handle->getSettingBool("matchmakerNeedsQueuing")) {
+	if (listener->handle->runtime.matchmakerNeedsQueuing) {
 		listener->globalChat->directMessage(nullptr, this, "This server requires players to be queued.");
 		listener->globalChat->directMessage(nullptr, this, "Try spawning to enqueue.");
 	} else {
-		// TODO match maker toggle queued
+		listener->handle->matchmaker.toggleQueued(this);
 	}
 }
 
 void Connection::onChatMessage(string_view message) {
-	message
+	string m = trim(string(message));
+	if (!m.size()) return;
+	auto lastChatTime = this->lastChatTime;
+	this->lastChatTime = steady_clock::now();
+	if (m.length() >= 2 && m[0] == '/') {
+		m.erase(m.begin());
+		if (!listener->handle->chatCommands.execute(listener->handle, m))
+			listener->globalChat->directMessage(nullptr, this, "Unknown command, execute /help for the list of commands");
+	} else if (duration_cast<milliseconds>(this->lastChatTime - lastChatTime).count() 
+		>= listener->handle->runtime.chatCooldown) {
+		listener->globalChat->broadcast(this, m);
+	}
+}
+
+void Connection::onQPress() {
+	if (!hasPlayer) return;
+	if (listener->handle->runtime.minionEnableQBasedControl && minions.size())
+		controllingMinions = !controllingMinions;
+	else listener->handle->gamemode->onPlayerPressQ(player);
 }
 
 void Connection::onWorldSet() {
@@ -76,9 +109,8 @@ void Connection::send(string_view message) {
 void Connection::update() {
 	if (!hasPlayer) return;
 	if (!player->hasWorld) {
-		if (spawningName.size()) {
-			// TODO: match maker toggle queued
-		}
+		if (spawningName.size())
+			listener->handle->matchmaker.toggleQueued(this);
 		spawningName = "";
 		splitAttempts = 0;
 		ejectAttempts = 0;
@@ -106,7 +138,7 @@ void Connection::update() {
 	}
 	
 	if (player->state == PlayerState::SPEC || player->state == PlayerState::ROAM)
-		protocol->onSpectatePosition(player->viewArea);
+		protocol->onSpectatePosition(&player->viewArea);
 	if (listener->handle->tick % 4 == 0)
 		listener->handle->gamemode->sendLeaderboard(this);
 	protocol->onVisibleCellUpdate(add, upd, eat, del);

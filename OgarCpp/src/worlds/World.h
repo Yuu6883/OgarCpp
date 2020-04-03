@@ -22,8 +22,8 @@ static struct WorldStats {
 	unsigned short spectating = 0;
 	string name = "";
 	string gamemode = "";
-	double loadTime = 0;
-	unsigned long uptime = 0;
+	float loadTime = 0;
+	unsigned int uptime = 0;
 };
 
 class World : public Spawner {
@@ -61,11 +61,11 @@ public:
 	void removeCell(Cell* cell);
 	void addPlayer(Player* player);
 	void removePlayer(Player* player);
-	Point getRandomPos(double cellSize);
+	Point getRandomPos(float cellSize);
 	bool isSafeSpawnPos(Rect& range);
-	Point getSafeSpawnPos(double cellSize);
-	SpawnResult getPlayerSpawn(double cellSize);
-	void spawnPlayer(Player* player, Point& pos, double size);
+	Point getSafeSpawnPos(float cellSize);
+	SpawnResult getPlayerSpawn(float cellSize);
+	void spawnPlayer(Player* player, Point& pos, float size);
 	void update() { frozen ? frozenUpdate() : liveUpdate(); };
 	void frozenUpdate();
 	void liveUpdate();
@@ -76,11 +76,11 @@ public:
 	void splitVirus(Virus* virus);
 	void movePlayerCell(PlayerCell* cell);
 	void decayPlayerCell(PlayerCell* cell);
-	void launchPlayerCell(PlayerCell* cell, double size, Boost& boost);
+	void launchPlayerCell(PlayerCell* cell, float size, Boost& boost);
 	void autosplitPlayerCell(PlayerCell* cell);
 	void splitPlayer(Player* player);
 	void ejectFromPlayer(Player* player);
 	void popPlayerCell(PlayerCell* cell);
-	void distributeCellMass(PlayerCell* cell, std::vector<double>& ref);
+	void distributeCellMass(PlayerCell* cell, std::vector<float>& ref);
 	void compileStatistics();
 };

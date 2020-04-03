@@ -7,6 +7,10 @@ class PlayerCell;
 
 static std::regex nameSkinRegex{ "<(.*)>(.*)" };
 
+enum class RouterType {
+	NONE, PLAYER, MINION
+};
+
 class Router {
 public:
 	Listener* listener;
@@ -14,8 +18,10 @@ public:
 	bool disconnected = false;
 	unsigned long disconnectedTick = 0;
 
-	double mouseX = 0;
-	double mouseY = 0;
+	float mouseX = 0;
+	float mouseY = 0;
+
+	RouterType type = RouterType::NONE;
 
 	std::string spawningName = "";
 	bool requestingSpectate = false;
@@ -28,18 +34,18 @@ public:
 	Player* player = nullptr;
 	
 	Router(Listener* listener);
-	virtual bool isExternal() { return false; };
-	virtual void createPlayer();
-	virtual void destroyPlayer();
-	virtual void onWorldSet() {};
-	virtual void onWorldReset() {};
-	virtual void onNewOwnedCell(PlayerCell*) {};
+	virtual bool isExternal() = 0;
+	void createPlayer();
+	void destroyPlayer();
+	virtual void onWorldSet() = 0;
+	virtual void onWorldReset() = 0;
+	virtual void onNewOwnedCell(PlayerCell*) = 0;
+	void onQPress();
 	void onSpawnRequest();
 	void onSpectateRequest();
-	void onQPress();
 	void attemptSplit();
 	void attemptEject();
 	void close();
-	virtual bool shouldClose() { return false; };
-	virtual void update() {};
+	virtual bool shouldClose() = 0;
+	virtual void update() = 0;
 };

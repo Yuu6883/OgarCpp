@@ -1,12 +1,16 @@
 #pragma once
 
 #include <chrono>
+#include <vector>
 #include <uwebsockets/App.h>
+#include "../primitives/Logger.h"
 #include "Router.h"
 
 class Protocol;
+class Minion;
 
 using namespace std::chrono;
+using std::vector;
 using std::string;
 using std::string_view;
 
@@ -31,20 +35,26 @@ public:
 	bool socketDisconnected = false;
 	int closeCode = 0;
 	string closeReason = "";
-	// Minions
+	vector<Minion*> minions;
 	bool minionsFrozen = false;
 	bool controllingMinions = false;
 
 	Connection(Listener* listener, unsigned int ipv4, uWS::WebSocket<false, true>* socket) :
-		Router(listener), ipv4(ipv4), socket(socket) {};
-	bool isExternal() override { return true; };
+		Router(listener), ipv4(ipv4), socket(socket) {
+		type = RouterType::PLAYER;
+	};
+	~Connection() {
+		Logger::info("Deleting Connection&Protocol");
+		delete protocol;
+	}
+	bool isExternal() { return true; };
 	void close();
 	void onSocketClose(int code, string_view reason);
 	void onSocketMessage(string_view buffer);
-	void createPlayer() override;
+	void createPlayer();
 	void onChatMessage(string_view message);
-	void onQPress();
 	bool shouldClose() { return socketDisconnected; };
+	void onQPress();
 	void update();
 	void onWorldSet();
 	void onNewOwnedCell(PlayerCell*);

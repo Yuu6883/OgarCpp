@@ -10,11 +10,10 @@ using std::make_pair;
 
 class ModernProtocol : public Protocol {
 public:
-	Connection* connection;
 	unsigned int protocol = -1;
 	bool leaderboardPending = false;
 
-	LBType lbType;
+	LBType lbType = LBType::NONE;
 	vector<LBEntry*> lbData;
 	LBEntry* lbSelfData = nullptr;
 
@@ -28,11 +27,12 @@ public:
 	bool clearCellsPending = false;
 
 	ModernProtocol(Connection* connection) : Protocol(connection) {};
-	virtual string getType() override { return "Modern"; };
-	virtual string getSubtype() override { return string("m") + (protocol > 0 ? std::to_string(protocol) : "//"); };
-	virtual bool distinguishes(Reader& reader) override {
+	string getType() { return "Modern"; };
+	string getSubtype() { return string("m") + (protocol > 0 ? std::to_string(protocol) : "//"); };
+	bool distinguishes(Reader& reader) {
+
 		if (reader.length() < 5) return false;
-		if (reader.readFloat32.readUInt8() != 1) return false;
+		if (reader.readUInt8() != 1) return false;
 		protocol = reader.readUInt32();
 		if (protocol != 3) {
 			fail(CloseCodes::CLOSE_UNSUPPORTED, "Unsupported protocol version");
@@ -41,22 +41,23 @@ public:
 		connection->createPlayer();
 		return true;
 	}
-	virtual void onSocketMessage(Reader& reader) override;
-	virtual void onChatMessage(ChatSource& source, string message) {
-		chatPending.push_back(make_pair(new ChatSource(source), message));
+	void onSocketMessage(Reader& reader);
+	void onChatMessage(ChatSource& source, string_view message) {
+		chatPending.push_back(make_pair(new ChatSource(source), string(message)));
 	}
-	virtual void onNewWorldBounds(Rect* border, bool includeServerInfo) override {
+	void onNewOwnedCell(PlayerCell* cell) { /* ignores it */ };
+	void onNewWorldBounds(Rect* border, bool includeServerInfo) {
 		worldBorderPending = border;
 		serverInfoPending = includeServerInfo;
 	};
-	virtual void onWorldReset() {
+	void onWorldReset() {
 		clearCellsPending = true;
-		worldBorderPending = false;
+		worldBorderPending = nullptr;
 		worldStatsPending = false;
 		vector<Cell*> placeholder;
 		onVisibleCellUpdate(placeholder, placeholder, placeholder, placeholder);
 	};
-	virtual void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) override {
+	void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) {
 		leaderboardPending = true;
 		lbType = type;
 
@@ -69,8 +70,9 @@ public:
 		if (lbSelfData) delete lbSelfData;
 		lbSelfData = selfEntry;
 	};
-	virtual void onSpectatePosition(ViewArea* area) {
+	void onSpectatePosition(ViewArea* area) {
 		spectateAreaPending = area;
 	}
-	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) override;
+	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
+	Protocol* clone() { return new ModernProtocol(*this); };
 };

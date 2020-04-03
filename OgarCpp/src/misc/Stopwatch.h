@@ -12,13 +12,13 @@ public:
 	void begin() {
 		reset();
 	}
-	double lap() {
-		double v = duration<double, std::milli>(steady_clock::now() - _lap).count();
+	float lap() {
+		float v = duration<float, std::milli>(steady_clock::now() - _lap).count();
 		_lap = steady_clock::now();
 		return v;
 	}
-	double elapsed() {
-		return duration<double, std::milli>(steady_clock::now() - _start).count();
+	float elapsed() {
+		return duration<float, std::milli>(steady_clock::now() - _start).count();
 	}
 	void stop() {}
 	void reset() {

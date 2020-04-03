@@ -11,7 +11,7 @@ class QuadItem : public Point {
 public:
 	QuadNode* root;
 	Rect range;
-	QuadItem(const double x, const double y) : Point(x, y), root(nullptr) {};
+	QuadItem(const float x, const float y) : Point(x, y), root(nullptr) {};
 };
 
 class QuadTree {
