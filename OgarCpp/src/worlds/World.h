@@ -31,6 +31,7 @@ public:
 	ServerHandle* handle;
 	unsigned int id;
 	bool frozen = false;
+	bool toBeRemoved = false;
 	unsigned int _nextCellId = 1;
 	
 	std::vector<Cell*> cells;

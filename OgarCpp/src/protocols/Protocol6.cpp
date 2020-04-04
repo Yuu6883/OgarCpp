@@ -97,7 +97,6 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 	writer.writeUInt8(16);
 
 	writer.writeUInt16(eat.size());
-
 	for (auto cell : eat) {
 		writer.writeUInt32(cell->id);
 		writer.writeUInt32(cell->eatenBy->id);
@@ -105,9 +104,10 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 
 	for (auto cell : add) {
 		writer.writeUInt32(cell->id);
-		writer.writeFloat32(cell->x);
-		writer.writeFloat32(cell->y);
-		writer.writeUInt16(cell->size);
+		writer.writeInt32(cell->getX());
+		writer.writeInt32(cell->getY());
+		writer.writeUInt16(cell->getSize());
+
 		unsigned char flags = 0;
 		if (cell->isSpiked()) flags |= 0x01;
 		flags |= 0x02;
@@ -117,16 +117,16 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 		if (cell->getType() == CellType::MOTHER_CELL) flags |= 0x20;
 		writer.writeUInt8(flags);
 
-		writer.writeColor(cell->color);
+		writer.writeColor(cell->getColor());
 		writer.writeStringUTF8(cell->getSkin().data());
 		writer.writeStringUTF8(cell->getName().data());
 	}
 
 	for (auto cell : upd) {
 		writer.writeUInt32(cell->id);
-		writer.writeFloat32(cell->x);
-		writer.writeFloat32(cell->y);
-		writer.writeUInt16(cell->size);
+		writer.writeInt32(cell->getX());
+		writer.writeInt32(cell->getY());
+		writer.writeUInt16(cell->getSize());
 		unsigned char flags = 0;
 		if (cell->isSpiked()) flags |= 0x01;
 		if (cell->colorChanged) flags |= 0x02;
@@ -136,7 +136,7 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 		if (cell->getType() == CellType::MOTHER_CELL) flags |= 0x20;
 		writer.writeUInt8(flags);
 
-		if (cell->colorChanged) writer.writeColor(cell->color);
+		if (cell->colorChanged) writer.writeColor(cell->getColor());
 		if (cell->skinChanged)  writer.writeStringUTF8(cell->getSkin().data());
 		if (cell->nameChanged)  writer.writeStringUTF8(cell->getName().data());
 	}
@@ -147,16 +147,22 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 	send(writer.finalize());
 }
 
-static const string STATS_JSON_FORMAT = "{\"mode\":{}, \"update\":{}, \"playersTotal\":{}, \"playersAlive\":{}, \"playersSpect\":{}, \"playersLimit\":{} }";
+static thread_local char stats_buffer[200];
+static const char STATS_JSON_FORMAT[] = "{\"mode\":\"%s\", \"update\":%f, \"playersTotal\":%i, \"playersAlive\":%i, \"playersSpect\":%i, \"playersLimit\":%i }";
 
 void Protocol6::onStatsRequest() {
 	Writer writer;
 	writer.writeUInt8(254);
 	auto stats = &connection->player->world->stats;
-	string jsonString = string_format(STATS_JSON_FORMAT, stats->gamemode, stats->loadTime, 
+	int written = sprintf_s(stats_buffer, sizeof(stats_buffer), STATS_JSON_FORMAT, stats->gamemode.c_str(), stats->loadTime,
 		stats->external, stats->playing, stats->spectating, stats->limit);
-	writer.writeStringUTF8(jsonString.data());
-	send(writer.finalize());
+	if (written) {
+		string_view jsonString(stats_buffer, written);
+		writer.writeStringUTF8(jsonString.data());
+		send(writer.finalize());
+	} else {
+		Logger::warn("Failed to write stats string");
+	}
 }
 
 void Protocol6::onNewOwnedCell(PlayerCell* cell) {
@@ -169,13 +175,13 @@ void Protocol6::onNewOwnedCell(PlayerCell* cell) {
 void Protocol6::onNewWorldBounds(Rect* border, bool includeServerInfo) {
 	Writer writer;
 	writer.writeUInt8(64);
-	writer.writeFloat64(border->x - border->w);
-	writer.writeFloat64(border->y - border->h);
-	writer.writeFloat64(border->x + border->w);
-	writer.writeFloat64(border->y + border->h);
+	writer.writeFloat64(border->getX() - border->w);
+	writer.writeFloat64(border->getY() - border->h);
+	writer.writeFloat64(border->getX() + border->w);
+	writer.writeFloat64(border->getY() + border->h);
 	if (includeServerInfo) {
 		writer.writeUInt32(connection->listener->handle->gamemode->getType());
-		writer.writeStringUTF8((string("OgarCpp ") + OGAR_VERSION_STRING).data());
+		writer.writeStringUTF8((string("OgarII(CPP)") + OGAR_VERSION_STRING).data());
 	}
 	send(writer.finalize());
 };
@@ -216,8 +222,8 @@ void Protocol6::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEn
 void Protocol6::onSpectatePosition(ViewArea* area) {
 	Writer writer;
 	writer.writeUInt8(17);
-	writer.writeFloat32(area->x);
-	writer.writeFloat32(area->y);
+	writer.writeFloat32(area->getX());
+	writer.writeFloat32(area->getY());
 	writer.writeFloat32(area->s);
 	send(writer.finalize());
 }

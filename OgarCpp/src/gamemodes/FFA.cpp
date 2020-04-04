@@ -10,7 +10,6 @@ void FFA::onPlayerSpawnRequest(Player* player, string name, string skin) {
 	if (player->state == PlayerState::ALIVE || !player->hasWorld) return;
 	float size = player->router->type == RouterType::MINION ?
 		handle->runtime.minionSpawnSize : handle->runtime.playerSpawnSize;
-	Logger::info(string("Spawn size: ") + std::to_string(size));
 	auto spawnResult = player->world->getPlayerSpawn(size);
 	unsigned int color = spawnResult.color || randomColor();
 	player->cellName = player->chatName = player->leaderboardName = name;

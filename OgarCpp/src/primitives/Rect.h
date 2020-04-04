@@ -21,10 +21,15 @@ struct Quadrant {
 };
 
 class Point {
-public:
+protected:
 	float x, y;
+public:
 	Point() : x(0), y(0) {};
 	Point(float x, float y) : x(x), y(y) {};
+	float getX() { return x; };
+	float getY() { return y; };
+	void setX(float x) { this->x = x; };
+	void setY(float y) { this->y = y; };
 };
 
 class Rect : public Point {
@@ -62,7 +67,7 @@ public:
 		return Quadrant{
 			.t = y - h < other.y && y + h < other.y,
 			.b = y - h > other.y && y + h > other.y,
-			.l = x - w > other.x && x + w < other.x,
+			.l = x - w < other.x && x + w < other.x,
 			.r = x - w > other.x && x + w > other.x,
 		};
 	}
@@ -76,7 +81,7 @@ class ViewArea : public Rect {
 public:
 	float s;
 	ViewArea() : Rect(), s(0) {};
-	ViewArea(float x, float y, float w, float h, float s) : Rect(x, y, w, y), s(s) {};
+	ViewArea(float x, float y, float w, float h, float s) : Rect(x, y, w, h), s(s) {};
 
 	void print(std::ostream& stream) {
 		stream << "Rect { x: " << x << ", y: " << y << ", w: " << w << ", h: " << h << ", s:" << s << " }" << std::endl;

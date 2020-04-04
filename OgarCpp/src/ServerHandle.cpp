@@ -33,6 +33,7 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_BOOL(chatEnabled);
 	LOAD_STR(serverName);
 	LOAD_INT(worldMaxPlayers);
+	LOAD_INT(worldMinCount);
 	LOAD_INT(worldMaxCount);
 	LOAD_INT(chatCooldown);
 	LOAD_INT(matchmakerBulkSize);
@@ -127,8 +128,16 @@ void ServerHandle::onTick() {
 	stopwatch.begin();
 	tick++;
 
-	for (auto pair : worlds)
+	vector<unsigned int> removingIds;
+	for (auto pair : worlds) {
 		pair.second->update();
+		if (pair.second->toBeRemoved)
+			removingIds.push_back(pair.first);
+	}
+
+	for (auto id : removingIds)
+		removeWorld(id);
+
 	listener.update();
 	matchmaker.update();
 	gamemode->onHandleTick();

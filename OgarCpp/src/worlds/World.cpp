@@ -48,7 +48,7 @@ void World::setBorder(Rect& rect) {
 
 void World::addCell(Cell* cell) {
 	cell->exist = true;
-	cell->range = { cell->x, cell->y, cell->size, cell->size };
+	cell->range = { cell->getX(), cell->getY(), cell->getSize(), cell->getSize() };
 	cells.push_back(cell);
 	finder->insert(cell);
 	cell->onSpawned();
@@ -79,10 +79,10 @@ bool World::setCellAsNotBoosting(Cell* cell) {
 
 void World::updateCell(Cell* cell) {
 	cell->range = {
-		cell->x,
-		cell->y,
-		cell->size,
-		cell->size
+		cell->getX(),
+		cell->getY(),
+		cell->getSize(),
+		cell->getSize()
 	};
 	finder->update(cell);
 }
@@ -112,6 +112,8 @@ void World::addPlayer(Player* player) {
 	if (player->router->type == RouterType::PLAYER)
 		worldChat->add((Connection*) player->router);
 
+	handle->gamemode->onPlayerJoinWorld(player, this);
+	player->router->onWorldSet();
 	Logger::debug(string("player ") + to_string(player->id) + " has been added to world " + to_string(id));
 	if (!player->router->isExternal()) return;
 	int minionsPerPlayer = handle->getSettingInt("worldMinionsPerPlayer");
@@ -144,8 +146,8 @@ void World::removePlayer(Player* player) {
 
 Point World::getRandomPos(float cellSize) {
 	return {
-		(float) (border.x - border.w + cellSize + randomZeroToOne * (2 * border.w - cellSize)),
-		(float) (border.y - border.h + cellSize + randomZeroToOne * (2 * border.h - cellSize))
+		(float) (border.getX() - border.w + cellSize + randomZeroToOne * (2 * border.w - cellSize)),
+		(float) (border.getY() - border.h + cellSize + randomZeroToOne * (2 * border.h - cellSize))
 	};
 }
 
@@ -157,7 +159,7 @@ Point World::getSafeSpawnPos(float cellSize) {
 	int tries = handle->runtime.worldSafeSpawnTries;
 	while (--tries >= 0) {
 		auto pos = getRandomPos(cellSize);
-		Rect rect(pos.x, pos.y, cellSize, cellSize);
+		Rect rect(pos.getX(), pos.getY(), cellSize, cellSize);
 		if (isSafeSpawnPos(rect))
 			return Point(pos);
 	}
@@ -175,10 +177,10 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 			std::mt19937 engine{ random_device() };
 			std::uniform_int_distribution<int> dist(0, ejectedCells.size() - 1);
 			auto cell = ejectedCells[dist(engine)];
-			Rect rect(cell->x, cell->y, cellSize, cellSize);
+			Rect rect(cell->getX(), cell->getY(), cellSize, cellSize);
 			if (isSafeSpawnPos(rect)) {
 				removeCell(cell);
-				return { cell->color, { cell->x, cell->y } };
+				return { cell->getColor(), { cell->getX(), cell->getX() } };
 			}
 		}
 	}
@@ -186,10 +188,7 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 }
 
 void World::spawnPlayer(Player* player, Point& pos, float size) {
-	Logger::info(string("Spawning ") + player->leaderboardName + " at " 
-		+ std::to_string(pos.x) + " ," + std::to_string(pos.y));
-
-	auto playerCell = new PlayerCell(player, pos.x, pos.y, size);
+	auto playerCell = new PlayerCell(player, pos.getX(), pos.getY(), size);
 	addCell(playerCell);
 	player->updateState(PlayerState::ALIVE);
 }
@@ -228,17 +227,17 @@ void World::liveUpdate() {
 
 	while (pelletCount < handle->runtime.pelletCount) {
 		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize);
-		addCell(new Pellet(this, this, pos.x, pos.y));
+		addCell(new Pellet(this, this, pos.getX(), pos.getY()));
 	}
 
 	while (virusCount < handle->runtime.virusMinCount) {
 		auto pos = getSafeSpawnPos(handle->runtime.virusSize);
-		addCell(new Virus(this, pos.x, pos.y));
+		addCell(new Virus(this, pos.getX(), pos.getY()));
 	}
 
 	while (motherCellCount < handle->runtime.mothercellCount) {
 		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize);
-		addCell(new MotherCell(this, pos.x, pos.y));
+		addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
 	
 	for (int i = 0, l = boostingCells.size(); i < l;) {
@@ -355,26 +354,26 @@ void World::liveUpdate() {
 	handle->gamemode->compileLeaderboard(this);
 
 	if (stats.external <= 0) {
-		if (handle->worlds.size() > handle->getSettingInt("worldMinCount"))
-			handle->removeWorld(id);
+		if (handle->worlds.size() > handle->runtime.worldMinCount)
+			toBeRemoved = true;
 	}
 }
 
 void World::resolveRegidCheck(Cell* a, Cell* b) {
-	float dx = b->x - a->x;
-	float dy = b->y - a->y;
+	float dx = b->getX() - a->getX();
+	float dy = b->getY() - a->getY();
 	float d = sqrt(dx * dx + dy * dy);
-	float m = a->size + b->size - d;
+	float m = a->getSize() + b->getSize() - d;
 	if (m <= 0) return;
 	if (!d) d = 1, dx = 1, dy = 0;
 	else dx /= d, dy /= d;
 	float M = a->getSquareSize() + b->getSquareSize();
 	float aM = b->getSquareSize() / M;
 	float bM = b->getSquareSize() / M;
-	a->x -= dx * m * aM;
-	a->y -= dy * m * aM;
-	b->x += dx * m * bM;
-	b->y += dy * m * bM;
+	a->setX(a->getX() - dx * m * aM);
+	a->setY(a->getY() - dy * m * aM);
+	b->setX(b->getX() + dx * m * bM);
+	b->setY(b->getY() + dy * m * bM);
 	bounceCell(a);
 	bounceCell(b);
 	updateCell(a);
@@ -383,10 +382,10 @@ void World::resolveRegidCheck(Cell* a, Cell* b) {
 
 void World::resolveEatCheck(Cell* a, Cell* b) {
 	if (!a->exist || !b->exist) return;
-	float dx = b->x - a->x;
-	float dy = b->y - a->y;
+	float dx = b->getX() - a->getX();
+	float dy = b->getY() - a->getY();
 	float d = sqrt(dx * dx + dy * dy);
-	if (d > a->size - b->size / handle->runtime.worldEatOverlapDiv) return;
+	if (d > a->getSize() - b->getSize() / handle->runtime.worldEatOverlapDiv) return;
 	if (!handle->gamemode->canEat(a, b)) return;
 	a->whenAte(b);
 	b->whenEatenBy(a);
@@ -396,8 +395,8 @@ void World::resolveEatCheck(Cell* a, Cell* b) {
 
 bool World::boostCell(Cell* cell) {
 	float d = cell->boost.d / 9 * handle->stepMult;
-	cell->x += cell->boost.dx * d;
-	cell->y += cell->boost.dy * d;
+	cell->setX(cell->getX() + cell->boost.dx * d);
+	cell->setY(cell->getY() + cell->boost.dy * d);
 	bounceCell(cell, true);
 	updateCell(cell);
 	if ((cell->boost.d -= d) >= 1) return true;
@@ -406,27 +405,27 @@ bool World::boostCell(Cell* cell) {
 }
 
 void World::bounceCell(Cell* cell, bool bounce) {
-	float r = cell->size / 2.0;
-	if (cell->x <= border.x - border.w + r) {
-		cell->x = border.x - border.w + r;
+	float r = cell->getSize() / 2.0;
+	if (cell->getX() <= border.getX() - border.w + r) {
+		cell->setX(border.getX() - border.w + r);
 		if (bounce) cell->boost.dx = -cell->boost.dx;
 	}
-	if (cell->x >= border.x + border.w - r) {
-		cell->x = border.x + border.w - r;
+	if (cell->getX() >= border.getX() + border.w - r) {
+		cell->setX(border.getX() + border.w - r);
 		if (bounce) cell->boost.dx = -cell->boost.dx;
 	}
-	if (cell->y <= border.y - border.h + r) {
-		cell->y = border.y - border.h + r;
+	if (cell->getY() <= border.getY() - border.h + r) {
+		cell->setY(border.getY() - border.h + r);
 		if (bounce) cell->boost.dy = -cell->boost.dy;
 	}
-	if (cell->y >= border.y + border.h - r) {
-		cell->y = border.y + border.h - r;
+	if (cell->getY() >= border.getY() + border.h - r) {
+		cell->setY(border.getY() + border.h - r);
 		if (bounce) cell->boost.dy = -cell->boost.dy;
 	}
 }
 
 void World::splitVirus(Virus* virus) {
-	auto newVirus = new Virus(this, virus->x, virus->y);
+	auto newVirus = new Virus(this, virus->getX(), virus->getY());
 	newVirus->boost.dx = sin(virus->splitAngle);
 	newVirus->boost.dy = cos(virus->splitAngle);
 	newVirus->boost.d = handle->runtime.virusSplitBoost;
@@ -437,26 +436,26 @@ void World::splitVirus(Virus* virus) {
 void World::movePlayerCell(PlayerCell* cell) {
 	auto router = cell->owner->router;
 	if (router->disconnected) return;
-	float dx = router->mouseX - cell->x;
-	float dy = router->mouseY - cell->y;
+	float dx = router->mouseX - cell->getX();
+	float dy = router->mouseY - cell->getY();
 	float d = sqrt(dx * dx + dy * dy);
 	if (d < 1) return;
 	dx /= d; dy /= d;
 	float m = std::min(cell->getMoveSpeed(), d) * handle->stepMult;
-	cell->x += dx * m;
-	cell->y += dy * m;
+	cell->setX(cell->getX() + dx * m);
+	cell->setY(cell->getY() + dy * m);
 }
 
 void World::decayPlayerCell(PlayerCell* cell) {
-	float newSize = cell->size - cell->size * handle->gamemode->getDecayMult(cell) / 50 * handle->stepMult;
+	float newSize = cell->getSize() - cell->getSize() * handle->gamemode->getDecayMult(cell) / 50 * handle->stepMult;
 	float minSize = handle->runtime.playerMinSize;
-	cell->size = std::max(newSize, minSize);
+	cell->setSize(std::max(newSize, minSize));
 }
 
 void World::launchPlayerCell(PlayerCell* cell, float size, Boost& boost) {
 	cell->setSquareSize(cell->getSquareSize() - size * size);
-	float x = cell->x + handle->runtime.playerSplitDistance * boost.dx;
-	float y = cell->y + handle->runtime.playerSplitDistance * boost.dy;
+	float x = cell->getX() + handle->runtime.playerSplitDistance * boost.dx;
+	float y = cell->getY() + handle->runtime.playerSplitDistance * boost.dy;
 	auto newCell = new PlayerCell(cell->owner, x, y, size);
 	newCell->boost = boost;
 	addCell(newCell);
@@ -476,7 +475,7 @@ void World::autosplitPlayerCell(PlayerCell* cell) {
 		Boost boost { sin(angle), cos(angle), handle->runtime.playerSplitBoost };
 		launchPlayerCell(cell, splitSize, boost);
 	}
-	cell->size = splitSize;
+	cell->setSize(splitSize);
 }
 
 void World::splitPlayer(Player* player) {
@@ -484,14 +483,14 @@ void World::splitPlayer(Player* player) {
 
 	auto router = player->router;
 	for (auto cell : player->ownedCells) {
-		if (cell->size < handle->runtime.playerMinSplitSize) continue;
-		float dx = router->mouseX - cell->x;
-		float dy = router->mouseY - cell->y;
+		if (cell->getSize() < handle->runtime.playerMinSplitSize) continue;
+		float dx = router->mouseX - cell->getX();
+		float dy = router->mouseY - cell->getY();
 		float d = sqrt(dx * dx + dy * dy);
 		if (d < 1) dx = 1, dy = 0, d = 1;
 		else dx /= d, dy /= d;
 		Boost boost {dx, dy, handle->runtime.playerSplitBoost };
-		launchPlayerCell(cell, cell->size / handle->runtime.playerSplitSizeDiv, boost);
+		launchPlayerCell(cell, cell->getSize() / handle->runtime.playerSplitSizeDiv, boost);
 	}
 }
 
@@ -500,15 +499,15 @@ void World::ejectFromPlayer(Player* player) {
 	float loss = handle->runtime.ejectingLoss * handle->runtime.ejectingLoss;
 	auto router = player->router;
 	for (auto cell : player->ownedCells) {
-		if (cell->size < handle->runtime.playerMinEjectSize) continue;
-		float dx = router->mouseX - cell->x;
-		float dy = router->mouseY - cell->y;
+		if (cell->getSize() < handle->runtime.playerMinEjectSize) continue;
+		float dx = router->mouseX - cell->getX();
+		float dy = router->mouseY - cell->getX();
 		float d = sqrt(dx * dx + dy * dy);
 		if (d < 1) dx = 1, dy = 0, d = 1;
 		else dx /= d, dy /= d;
-		float sx = cell->x + dx * cell->size;
-		float sy = cell->y + dy * cell->size;
-		auto newCell = new EjectedCell(this, player, sx, sy, cell->color);
+		float sx = cell->getX() + dx * cell->getSize();
+		float sy = cell->getX() + dy * cell->getSize();
+		auto newCell = new EjectedCell(this, player, sx, sy, cell->getColor());
 		float a = atan2(dx, dy) - dispersion + randomZeroToOne * 2 * dispersion;
 		newCell->boost.dx = sin(a);
 		newCell->boost.dy = cos(a);

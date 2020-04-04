@@ -39,7 +39,7 @@ public:
 	map<unsigned int, Cell*> visibleCells;
 	map<unsigned int, Cell*> lastVisibleCells;
 	
-	ViewArea viewArea { 0, 0, 1920 / 2, 1080 / 2, 1 };
+	ViewArea viewArea = ViewArea(0, 0, 1920 / 2, 1080 / 2, 1);
 
 	Player(ServerHandle* handle, unsigned int id, Router* router);
 

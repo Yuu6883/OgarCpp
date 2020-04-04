@@ -31,13 +31,13 @@ EatResult PlayerCell::getEatResult(Cell* other) {
 		return getDefaultEatResult(other);
 	}
 	if (other->getType() == MOTHER_CELL &&
-		other->size > size* world->handle->runtime.worldEatMult) return EatResult::EATINVD;
+		other->getSize() > size* world->handle->runtime.worldEatMult) return EatResult::EATINVD;
 	if (other->getType() == PELLET) return EatResult::EAT;
 	return getDefaultEatResult(other);
 }
 
 EatResult PlayerCell::getDefaultEatResult(Cell* other) {
-	return other->size * world->handle->runtime.worldEatMult > size ? EatResult::NONE : EatResult::EAT;
+	return other->getSize() * world->handle->runtime.worldEatMult > size ? EatResult::NONE : EatResult::EAT;
 }
 
 void PlayerCell::onTick() {

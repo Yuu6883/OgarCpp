@@ -32,8 +32,11 @@ enum class EatResult : unsigned char {
 };
 
 class Cell : public QuadItem {
-public:
+protected:
 	unsigned int color;
+	float size;
+public:
+
 	World* world;
 
 	unsigned int id;
@@ -45,7 +48,6 @@ public:
 	bool isBoosting = false;
 
 	Player* owner = nullptr;
-	float size;
 
 	bool posChanged   = false;
 	bool sizeChanged  = false;
@@ -54,6 +56,40 @@ public:
 	bool skinChanged  = false;
 
 	Cell(World* world, float x, float y, float size, unsigned int color);
+
+	void setX(float x) {
+		if (x != this->x) {
+			this->x = x;
+			posChanged = true;
+		}
+	}
+
+	void setY(float y) {
+		if (y != this->y) {
+			this->y = y;
+			posChanged = true;
+		}
+	}
+
+	float getSize() { return size; };
+	void setSize(float size) {
+		if (size != this->size) {
+			this->size = size;
+			sizeChanged = true;
+		}
+	}
+
+	unsigned int getColor() {
+		return color;
+	}
+
+	void setColor(unsigned int color) {
+		if (color != this->color) {
+			this->color = color;
+			colorChanged = true;
+		}
+	}
+
 	virtual CellType getType() = 0;
 	virtual bool isSpiked() = 0;
 	virtual bool isAgitated() = 0;

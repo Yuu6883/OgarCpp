@@ -33,17 +33,17 @@ void Player::updateViewArea() {
 			break;
 		case PlayerState::ALIVE:
 			for (auto cell : ownedCells) {
-				x += cell->x;
-				y += cell->y;
-				size += cell->size;
+				x += cell->getX();
+				y += cell->getX();
+				size += cell->getSize();
 				score += cell->getMass();
 			}
-			viewArea.x = x / ownedCells.size();
-			viewArea.y = y / ownedCells.size();
+			viewArea.setX(x / ownedCells.size());
+			viewArea.setY(y / ownedCells.size());
 			this->score = score;
 			size = viewArea.s = pow(std::min(64.0 / size, 1.0), 0.4);
 			viewArea.w = 1920 / size / 2 * handle->runtime.playerViewScaleMult;
-			viewArea.w = 1080 / size / 2 * handle->runtime.playerViewScaleMult;
+			viewArea.h = 1080 / size / 2 * handle->runtime.playerViewScaleMult;
 			break;
 		case PlayerState::SPEC:
 			this->score = -1;
@@ -51,18 +51,18 @@ void Player::updateViewArea() {
 			break;
 		case PlayerState::ROAM:
 			score = -1;
-			float dx = router->mouseX - viewArea.x;
-			float dy = router->mouseY - viewArea.y;
+			float dx = router->mouseX - viewArea.getX();
+			float dy = router->mouseY - viewArea.getY();
 			float d = sqrt(dx * dx + dy * dy);
 			float D = std::min(d, handle->runtime.playerRoamSpeed);
 			if (D < 1) break;
 			dx /= d; dy /= d;
 			auto b = &world->border;
-			viewArea.x = std::max(b->x - b->w, std::min(viewArea.x + dx * D, b->x + b->w));
-			viewArea.y = std::max(b->y - b->h, std::min(viewArea.y + dy * D, b->y + b->h));
+			viewArea.setX(std::max(b->getX() - b->w, std::min(viewArea.getX() + dx * D, b->getX() + b->w)));
+			viewArea.setY(std::max(b->getY() - b->h, std::min(viewArea.getY() + dy * D, b->getY() + b->h)));
 			size = viewArea.s = handle->runtime.playerRoamSpeed;
 			viewArea.w = 1920 / size / 2 * handle->runtime.playerViewScaleMult;
-			viewArea.w = 1080 / size / 2 * handle->runtime.playerViewScaleMult;
+			viewArea.h = 1080 / size / 2 * handle->runtime.playerViewScaleMult;
 			break;
 	}
 }

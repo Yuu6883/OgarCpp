@@ -7,7 +7,10 @@
 using std::function;
 
 class QuadNode;
+class QuadTree;
+
 class QuadItem : public Point {
+	friend QuadTree;
 public:
 	QuadNode* root;
 	Rect range;

@@ -26,6 +26,7 @@ struct RuntimeSettings {
 	string serverName;
 	bool chatEnabled;
 	int worldMaxPlayers;
+	int worldMinCount;
 	int worldMaxCount;
 	int listenerMaxConnections;
 	int chatCooldown;

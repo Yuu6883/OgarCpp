@@ -27,7 +27,10 @@ private:
 
 	~QuadNode() {
 		if (!hasSplit()) return;
-		delete[] branches;
+		delete branches;
+		delete (branches + 1);
+		delete (branches + 2);
+		delete (branches + 3);
 	}
 
 	bool hasSplit() {
@@ -79,9 +82,9 @@ private:
 	};
 
 	void split() {
-		if (hasSplit() || level > maxLevel || items.size() < maxItem) return;
-		float x = range.x;
-		float y = range.y;
+		if (hasSplit() || (level > maxLevel) || (items.size() < maxItem)) return;
+		float x = range.getX();
+		float y = range.getY();
 		float hw = range.w / 2;
 		float hh = range.h / 2;
 		branches = new QuadNode[4]{
@@ -91,7 +94,8 @@ private:
 			QuadNode(Rect(x + hw, y + hh, hw, hh), maxLevel, maxItem, this),
 		};
 		auto iter = items.begin();
-		while (iter != items.end()) {
+		auto cend = items.cend();
+		while (iter != cend) {
 			int quadrant = getQuadrant((*iter)->range);
 			if (quadrant == -1) {
 				iter++;
@@ -188,7 +192,7 @@ private:
 
 std::ostream& operator<<(std::ostream& stream, QuadNode& quad) {
 	stream << "items " << quad.items.size() << "/" << quad.maxItem << "/" << \
-		quad.getItemCount() << " level " << quad.level << " x " << quad.range.x << " y " << quad.range.y << \
+		quad.getItemCount() << " level " << quad.level << " x " << quad.range.getX() << " y " << quad.range.getY() << \
 		" w " << quad.range.w << " h " << quad.range.h << std::endl;
 	if (quad.hasSplit()) {
 		for (int i = 0; i < 4; i++)

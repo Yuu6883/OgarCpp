@@ -13,22 +13,22 @@
 bool exitCLI = false;
 Setting* settings = loadConfig();
 
-void registerStuff(ServerHandle* handle) {
+void registerGamemodes(ServerHandle* handle) {
 	auto ffa = new FFA(handle);
 	handle->gamemodes->registerGamemode(ffa);
 	handle->gamemodes->setGamemode("FFA");
+}
+
+void registerProtocols(ServerHandle* handle) {
 	Protocol* ptc = new ModernProtocol(nullptr);
 	handle->protocols->registerProtocol(ptc);
 	ptc = new Protocol6(nullptr);
 	handle->protocols->registerProtocol(ptc);
 }
 
-int main() {
-	
-	auto handle = new ServerHandle(settings);
-	registerStuff(handle);
+void registerCommands(ServerHandle* handle) {
 
-	Command<ServerHandle*> startCommand("start", "start the handle", "", 
+	Command<ServerHandle*> startCommand("start", "start the handle", "",
 		[handle](ServerHandle* handle, auto context, vector<string>& args) {
 		if (!handle->start()) Logger::info("Handle already running");
 	});
@@ -59,19 +59,32 @@ int main() {
 		saveConfig();
 	});
 	handle->commands.registerCommand(saveCommand);
+}
 
-	handle->start();
-	
+void promptInput(ServerHandle* handle) {
 	string input;
 	while (!exitCLI) {
+		std::cout << "> ";
 		std::getline(std::cin, input);
 		input = trim(input);
 		if (!input.length()) continue;
 		if (!handle->commands.execute(nullptr, input))
 			Logger::info("Unknown command");
 	}
+}
 
-	delete handle;
+int main() {
+	
+	ServerHandle handle(settings);
+
+	registerGamemodes(&handle);
+	registerProtocols(&handle);
+	registerCommands(&handle);
+	
+	handle.start();
+
+	std::this_thread::sleep_for(seconds{ 1 });
+	promptInput(&handle);
 
 	return EXIT_SUCCESS;
 }

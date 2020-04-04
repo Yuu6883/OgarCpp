@@ -95,17 +95,17 @@ void ModernProtocol::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd,
 	writer.writeUInt16(globalFlags);
 
 	if (spectateAreaPending) {
-		writer.writeFloat32(spectateAreaPending->x);
-		writer.writeFloat32(spectateAreaPending->y);
+		writer.writeFloat32(spectateAreaPending->getX());
+		writer.writeFloat32(spectateAreaPending->getY());
 		writer.writeFloat32(spectateAreaPending->s);
 		spectateAreaPending = nullptr;
 	}
 	if (worldBorderPending) {
 		auto r = worldBorderPending;
-		writer.writeFloat32(r->x - r->w);
-		writer.writeFloat32(r->x + r->w);
-		writer.writeFloat32(r->y - r->h);
-		writer.writeFloat32(r->y + r->h);
+		writer.writeFloat32(r->getX() - r->w);
+		writer.writeFloat32(r->getX() + r->w);
+		writer.writeFloat32(r->getY() - r->h);
+		writer.writeFloat32(r->getY() + r->h);
 		worldBorderPending = nullptr;
 	}
 	if (serverInfoPending) {
@@ -169,10 +169,10 @@ void ModernProtocol::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd,
 		for (auto cell : add) {
 			writer.writeUInt32(cell->id);
 			writer.writeUInt8(cell->getType());
-			writer.writeFloat32(cell->x);
-			writer.writeFloat32(cell->y);
-			writer.writeUInt16(cell->size);
-			writer.writeColor(cell->color);
+			writer.writeFloat32(cell->getX());
+			writer.writeFloat32(cell->getY());
+			writer.writeUInt16(cell->getSize());
+			writer.writeColor(cell->getColor());
 			flags = 0;
 			if (cell->getType() == PLAYER && cell->owner == connection->player)
 				flags |= 1;
@@ -206,13 +206,13 @@ void ModernProtocol::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd,
 			writer.writeUInt32(cell->id);
 			writer.writeUInt8(flags);
 			if (cell->posChanged) {
-				writer.writeFloat32(cell->x);
-				writer.writeFloat32(cell->y);
+				writer.writeFloat32(cell->getX());
+				writer.writeFloat32(cell->getY());
 			}
 			if (cell->sizeChanged)
-				writer.writeUInt16(cell->size);
+				writer.writeUInt16(cell->getSize());
 			if (cell->colorChanged)
-				writer.writeColor(cell->color);
+				writer.writeColor(cell->getColor());
 			if (cell->nameChanged)
 				writer.writeStringUTF8(cell->getName().data());
 			if (cell->skinChanged)
