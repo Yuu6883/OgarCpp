@@ -60,20 +60,18 @@ void PlayerCell::onSpawned() {
 }
 
 void PlayerCell::onRemoved() {
-	auto iter = world->playerCells.rbegin();
-	auto cend = world->playerCells.crend();
-	while (iter != cend) {
+	auto iter = world->playerCells.begin();
+	while (iter != world->playerCells.cend()) {
 		if (*iter == this) {
-			world->playerCells.erase(iter.base());
+			world->playerCells.erase(iter);
 			break;
 		}
 		iter++;
 	}
-	iter = owner->ownedCells.rbegin();
-	cend = owner->ownedCells.crend();
-	while (iter != cend) {
+	iter = owner->ownedCells.begin();
+	while (iter != owner->ownedCells.cend()) {
 		if (*iter == this) {
-			owner->ownedCells.erase(iter.base());
+			owner->ownedCells.erase(iter);
 			break;
 		}
 		iter++;
@@ -147,11 +145,10 @@ void EjectedCell::onSpawned() {
 }
 
 void EjectedCell::onRemoved() {
-	auto iter = world->ejectedCells.rbegin();
-	auto cend = world->ejectedCells.crend();
-	while (iter != cend) {
+	auto iter = world->ejectedCells.begin();
+	while (iter != world->ejectedCells.cend()) {
 		if (*iter == this) {
-			world->ejectedCells.erase(iter.base());
+			iter = world->ejectedCells.erase(iter);
 			break;
 		}
 		iter++;

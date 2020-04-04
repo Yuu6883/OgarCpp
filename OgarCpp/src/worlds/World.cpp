@@ -1,4 +1,5 @@
 #include "World.h"
+#include "../sockets/Router.h"
 #include "../ServerHandle.h"
 #include "../cells/Cell.h"
 #include <random>
@@ -25,9 +26,9 @@ void World::afterCreation() {
 World::~World() {
 	delete worldChat;
 	while (players.size())
-		removePlayer(players[0]);
+		removePlayer(players.front());
 	while (cells.size())
-		removeCell(cells[0]);
+		removeCell(cells.front());
 }
 
 void World::setBorder(Rect& rect) {
@@ -66,8 +67,7 @@ bool World::setCellAsNotBoosting(Cell* cell) {
 	if (!cell->isBoosting) return false;
 	cell->isBoosting = false;
 	auto iter = boostingCells.begin();
-	auto cend = boostingCells.cend();
-	while (iter < cend) {
+	while (iter != boostingCells.cend()) {
 		if (*iter == cell) {
 			boostingCells.erase(iter);
 			return true;
@@ -88,20 +88,31 @@ void World::updateCell(Cell* cell) {
 }
 
 void World::removeCell(Cell* cell) {
-	handle->gamemode->onCellRemove(cell);
-	cell->onRemoved();
-	finder->remove(cell);
-	setCellAsNotBoosting(cell);
 	auto iter = cells.begin();
-	auto cend = cells.cend();
-	while (iter < cend) {
+	while (iter != cells.cend()) {
 		if (*iter == cell) {
-			cells.erase(iter); 
+			cells.erase(iter);
+			cell->deadTick = handle->tick;
+			gcTruck.push_back(cell);
+			handle->gamemode->onCellRemove(cell);
+			cell->onRemoved();
+			finder->remove(cell);
+			setCellAsNotBoosting(cell);
 			break;
 		}
 		iter++;
 	}
-	delete cell;
+}
+
+void World::clearTruck() {
+	auto iter = gcTruck.begin();
+	while (iter != gcTruck.end()) {
+		auto cell = *iter;
+		if (handle->tick - cell->deadTick > 10) {
+			delete cell;
+			iter = gcTruck.erase(iter);
+		} else break;
+	}
 }
 
 void World::addPlayer(Player* player) {
@@ -125,21 +136,22 @@ void World::addPlayer(Player* player) {
 void World::removePlayer(Player* player) {
 	auto iter = players.begin();
 	auto cend = players.cend();
-	while (iter < cend) {
+	while (iter != cend) {
 		if (*iter == player) {
 			players.erase(iter);
 			break;
 		}
+		iter++;
 	}
 	handle->gamemode->onPlayerLeaveWorld(player, this);
 	player->world = nullptr;
 	player->hasWorld = false;
 
-	if (player->router->type == RouterType::PLAYER)
+	if (player->router && player->router->type == RouterType::PLAYER)
 		worldChat->remove((Connection*) player->router);
 
 	while (player->ownedCells.size())
-		removeCell(player->ownedCells[0]);
+		removeCell(player->ownedCells.front());
 	player->router->onWorldReset();
 	Logger::debug(string("player ") + to_string(player->id) + " has been removed from world " + to_string(id));
 };
@@ -176,7 +188,7 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 			std::random_device random_device;
 			std::mt19937 engine{ random_device() };
 			std::uniform_int_distribution<int> dist(0, ejectedCells.size() - 1);
-			auto cell = ejectedCells[dist(engine)];
+			auto cell = *std::next(ejectedCells.begin(), dist(engine));
 			Rect rect(cell->getX(), cell->getY(), cellSize, cellSize);
 			if (isSafeSpawnPos(rect)) {
 				removeCell(cell);
@@ -240,9 +252,12 @@ void World::liveUpdate() {
 		addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
 	
-	for (int i = 0, l = boostingCells.size(); i < l;) {
-		if (!boostCell(boostingCells[i])) l--;
-		else i++;
+	auto c_iter = boostingCells.begin();
+	auto c_cend = boostingCells.cend();
+	while (c_iter != c_cend) {
+		if (!boostCell(*c_iter)) {
+			c_iter = boostingCells.erase(c_iter);
+		} else c_iter++;
 	}
 
 	for (auto c : boostingCells) {
@@ -285,12 +300,12 @@ void World::liveUpdate() {
 					rigid->push_back(other);
 					break;
 				case EatResult::EAT:
-					eat->push_back(c);
 					eat->push_back(other);
+					eat->push_back(c);
 					break;
 				case EatResult::EATINVD:
-					eat->push_back(other);
 					eat->push_back(c);
+					eat->push_back(other);
 					break;
 			}
 		});
@@ -309,16 +324,22 @@ void World::liveUpdate() {
 		if (p->score > 0 && (!largestPlayer || p->score > largestPlayer->score))
 			largestPlayer = p;
 
-	for (int i = 0, l = players.size(); i < l; i++) {
+	auto p_iter = players.begin();
+	while (p_iter != players.cend()) {
 
-		auto player = players[i];
+		auto player = *p_iter;
+		p_iter++;
+
 		player->checkExistence();
-		if (!player->exists) { i--; l--; continue; }
+		if (!player->exists)
+			continue;
 
 		if (player->state == PlayerState::SPEC && !largestPlayer)
 			player->updateState(PlayerState::ROAM);
 
 		auto router = player->router;
+		if (!router) continue;
+
 		for (int j = 0, k = handle->runtime.playerSplitCap; (j < k) && (router->splitAttempts) > 0; j++) {
 			router->attemptSplit();
 			router->splitAttempts--;
@@ -400,7 +421,7 @@ bool World::boostCell(Cell* cell) {
 	bounceCell(cell, true);
 	updateCell(cell);
 	if ((cell->boost.d -= d) >= 1) return true;
-	setCellAsNotBoosting(cell);
+	cell->isBoosting = false;
 	return false;
 }
 
@@ -435,7 +456,7 @@ void World::splitVirus(Virus* virus) {
 
 void World::movePlayerCell(PlayerCell* cell) {
 	auto router = cell->owner->router;
-	if (router->disconnected) return;
+	if (!router || router->disconnected) return;
 	float dx = router->mouseX - cell->getX();
 	float dy = router->mouseY - cell->getY();
 	float d = sqrt(dx * dx + dy * dy);
@@ -566,6 +587,7 @@ void World::distributeCellMass(PlayerCell* cell, std::vector<float>& dist) {
 void World::compileStatistics() {
 	unsigned short internal = 0, external = 0, playing = 0, spectating = 0;
 	for (auto p : players) {
+		if (!p->router) continue;
 		if (!p->router->isExternal()) { internal++; continue; }
 		external++;
 		if (p->state == PlayerState::ALIVE) playing++;

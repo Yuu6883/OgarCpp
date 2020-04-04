@@ -142,6 +142,9 @@ void ServerHandle::onTick() {
 	matchmaker.update();
 	gamemode->onHandleTick();
 
+	for (auto pair : worlds)
+		pair.second->clearTruck();
+
 	averageTickTime = stopwatch.elapsed();
 	stopwatch.stop();
 };

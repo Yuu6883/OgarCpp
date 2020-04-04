@@ -75,9 +75,7 @@ private:
 
 	void remove(QuadItem* item) {
 		const auto quad = item->root;
-		auto iter = quad->items.begin();
-		while (*iter != item) iter++;
-		quad->items.erase(iter);
+		quad->items.remove(item);
 		quad->merge();
 	};
 
@@ -117,7 +115,10 @@ private:
 			for (int i = 0; i < 4; i++)
 				if ((branch = &quad->branches[i])->hasSplit() || branch->items.size() > 0)
 					return;
-			delete[] quad->branches;
+			delete quad->branches;
+			delete (quad->branches + 1);
+			delete (quad->branches + 2);
+			delete (quad->branches + 3);
 			quad->branches = nullptr;
 		}
 	}

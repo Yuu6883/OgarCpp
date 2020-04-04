@@ -98,8 +98,8 @@ void Protocol6::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vect
 
 	writer.writeUInt16(eat.size());
 	for (auto cell : eat) {
-		writer.writeUInt32(cell->id);
 		writer.writeUInt32(cell->eatenBy->id);
+		writer.writeUInt32(cell->id);
 	}
 
 	for (auto cell : add) {

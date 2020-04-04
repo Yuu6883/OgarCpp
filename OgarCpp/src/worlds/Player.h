@@ -1,13 +1,13 @@
 #pragma once
 #include <string>
 #include <map>
-#include <vector>
+#include <list>
 #include "../primitives/Rect.h"
 #include "../cells/Cell.h"
 
 using std::string;
 using std::map;
-using std::vector;
+using std::list;
 
 class ServerHandle;
 class PlayerCell;
@@ -35,7 +35,7 @@ public:
 	World* world = nullptr;
 	short team = -1;
 	float score = 0;
-	vector<PlayerCell*> ownedCells;
+	list<PlayerCell*> ownedCells;
 	map<unsigned int, Cell*> visibleCells;
 	map<unsigned int, Cell*> lastVisibleCells;
 	

@@ -39,8 +39,7 @@ public:
 
 	void removeRouter(Router* router) {
 		auto iter = routers.begin();
-		auto end  = routers.cend();
-		while (iter != end) {
+		while (iter != routers.cend()) {
 			if (*iter == router) {
 				routers.erase(iter);
 				return;

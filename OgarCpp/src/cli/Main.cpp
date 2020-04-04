@@ -80,10 +80,10 @@ int main() {
 	registerGamemodes(&handle);
 	registerProtocols(&handle);
 	registerCommands(&handle);
-	
-	handle.start();
 
+	handle.start();
 	std::this_thread::sleep_for(seconds{ 1 });
+
 	promptInput(&handle);
 
 	return EXIT_SUCCESS;

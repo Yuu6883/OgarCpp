@@ -34,7 +34,7 @@ void Player::updateViewArea() {
 		case PlayerState::ALIVE:
 			for (auto cell : ownedCells) {
 				x += cell->getX();
-				y += cell->getX();
+				y += cell->getY();
 				size += cell->getSize();
 				score += cell->getMass();
 			}
@@ -84,7 +84,7 @@ void Player::updateVisibleCells() {
 }
 
 void Player::checkExistence() {
-	if (!router->disconnected) return;
+	if (!router || !router->disconnected) return;
 	if (state != PlayerState::ALIVE) {
 		handle->removePlayer(this->id);
 		return;

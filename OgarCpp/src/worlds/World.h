@@ -34,11 +34,12 @@ public:
 	bool toBeRemoved = false;
 	unsigned int _nextCellId = 1;
 	
-	std::vector<Cell*> cells;
-	std::vector<Cell*> boostingCells;
-	std::vector<EjectedCell*> ejectedCells;
-	std::vector<PlayerCell*> playerCells;
-	std::vector<Player*> players;
+	list<Cell*> gcTruck;
+	list<Cell*> cells;
+	list<Cell*> boostingCells;
+	list<EjectedCell*> ejectedCells;
+	list<PlayerCell*> playerCells;
+	list<Player*> players;
 	Player* largestPlayer = nullptr;
 
 	ChatChannel* worldChat;
@@ -84,4 +85,5 @@ public:
 	void popPlayerCell(PlayerCell* cell);
 	void distributeCellMass(PlayerCell* cell, std::vector<float>& ref);
 	void compileStatistics();
+	void clearTruck();
 };

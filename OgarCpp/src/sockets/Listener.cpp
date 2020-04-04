@@ -170,7 +170,7 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 	while (iter != cend) {
 		if (*iter == connection) {
 			connections.erase(iter);
-			return;
+			break;
 		}
 		iter++;
 	}

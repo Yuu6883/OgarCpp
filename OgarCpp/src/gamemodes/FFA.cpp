@@ -40,7 +40,7 @@ void FFA::sendLeaderboard(Connection* connection) {
 		auto entry = new FFAEntry();
 		entry->position = position++;
 		entry->name = player->leaderboardName;
-		entry->cellId = player->ownedCells[0]->id;
+		entry->cellId = player->ownedCells.front()->id;
 		if (connection->player == player) {
 			entry->highlighted = true;
 			lbSelfData = entry;

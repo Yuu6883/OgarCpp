@@ -41,7 +41,8 @@ public:
 
 	unsigned int id;
 	unsigned long birthTick;
-	bool exist = false;
+	unsigned long deadTick = 0;
+	bool exist = true;
 
 	Cell* eatenBy = nullptr;
 	Boost boost = Boost();
