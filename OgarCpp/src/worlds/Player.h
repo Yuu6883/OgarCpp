@@ -23,7 +23,6 @@ public:
 	ServerHandle* handle;
 	unsigned int id;
 	Router* router;
-	bool exists = true;
 	string leaderboardName = "";
 	string cellName = "";
 	string chatName = "Spectator";
@@ -48,5 +47,5 @@ public:
 	void updateState(PlayerState state);
 	void updateViewArea();
 	void updateVisibleCells();
-	void checkExistence();
+	bool exist();
 };

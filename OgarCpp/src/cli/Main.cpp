@@ -59,6 +59,14 @@ void registerCommands(ServerHandle* handle) {
 		saveConfig();
 	});
 	handle->commands.registerCommand(saveCommand);
+
+
+	Command<ServerHandle*> cellsCommand("cells", "print how many cells we have lmao", "",
+		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		if (handle->worlds.size())
+			printf("Cell count: %i", (*handle->worlds.begin()).second->cells.size());
+	});
+	handle->commands.registerCommand(cellsCommand);
 }
 
 void promptInput(ServerHandle* handle) {
@@ -85,6 +93,5 @@ int main() {
 	std::this_thread::sleep_for(seconds{ 1 });
 
 	promptInput(&handle);
-
 	return EXIT_SUCCESS;
 }

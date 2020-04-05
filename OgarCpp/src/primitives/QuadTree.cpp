@@ -27,14 +27,12 @@ private:
 
 	~QuadNode() {
 		if (!hasSplit()) return;
-		delete branches;
-		delete (branches + 1);
-		delete (branches + 2);
-		delete (branches + 3);
+		delete[] branches;
+		branches = nullptr;
 	}
 
 	bool hasSplit() {
-		return branches != nullptr;
+ 		return branches != nullptr;
 	}
 
 	void insert(QuadItem* item) {
@@ -51,7 +49,7 @@ private:
 	};
 
 	void update(QuadItem* item) {
-		const auto oldQuad = item->root;
+		auto oldQuad = item->root;
 		auto newQuad = item->root;
 		while (true) {
 			if (!newQuad->root) break;
@@ -66,16 +64,17 @@ private:
 		}
 		if (oldQuad == newQuad) return;
 
-		remove(item);
-
+		oldQuad->items.remove(item);
 		newQuad->items.push_back(item);
 		item->root = newQuad;
+		oldQuad->merge();
 		newQuad->split();
 	};
 
 	void remove(QuadItem* item) {
-		const auto quad = item->root;
+		auto quad = item->root;
 		quad->items.remove(item);
+		item->root = nullptr;
 		quad->merge();
 	};
 
@@ -92,8 +91,7 @@ private:
 			QuadNode(Rect(x + hw, y + hh, hw, hh), maxLevel, maxItem, this),
 		};
 		auto iter = items.begin();
-		auto cend = items.cend();
-		while (iter != cend) {
+		while (iter != items.cend()) {
 			int quadrant = getQuadrant((*iter)->range);
 			if (quadrant == -1) {
 				iter++;
@@ -111,14 +109,10 @@ private:
 				quad = quad->root;
 				continue;
 			}
-			QuadNode* branch;
 			for (int i = 0; i < 4; i++)
-				if ((branch = &quad->branches[i])->hasSplit() || branch->items.size() > 0)
+				if (quad->branches[i].hasSplit() || quad->branches[i].items.size() > 0)
 					return;
-			delete quad->branches;
-			delete (quad->branches + 1);
-			delete (quad->branches + 2);
-			delete (quad->branches + 3);
+			delete[] quad->branches;
 			quad->branches = nullptr;
 		}
 	}

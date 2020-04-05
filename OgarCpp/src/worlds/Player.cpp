@@ -2,7 +2,7 @@
 #include "../worlds/World.h"
 #include "../ServerHandle.h"
 
-Player::Player (ServerHandle* handle, unsigned int id, Router* router) :
+Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 	handle(handle), id(id), router(router) {
 	viewArea.w /= handle->runtime.playerViewScaleMult;
 	viewArea.h /= handle->runtime.playerViewScaleMult;
@@ -10,7 +10,11 @@ Player::Player (ServerHandle* handle, unsigned int id, Router* router) :
 
 Player::~Player() {
 	if (hasWorld) world->removePlayer(this);
-	exists = false;
+	if (router->disconnected) {
+		router->hasPlayer = false;
+		router->player = nullptr;
+		delete (Connection*) router;
+	}
 };
 
 void Player::updateState(PlayerState targetState) {
@@ -83,13 +87,16 @@ void Player::updateVisibleCells() {
 	});
 }
 
-void Player::checkExistence() {
-	if (!router || !router->disconnected) return;
+bool Player::exist() {
+	if (!router->disconnected) return true;
 	if (state != PlayerState::ALIVE) {
 		handle->removePlayer(this->id);
-		return;
+		return false;
 	}
 	int delay = handle->runtime.worldPlayerDisposeDelay;
-	if (delay > 0 && handle->tick - router->disconnectedTick >= delay)
+	if (router->disconnectedTick && delay > 0 && handle->tick - router->disconnectedTick >= delay) {
 		handle->removePlayer(this->id);
+		return false;
+	}
+	return true;
 }

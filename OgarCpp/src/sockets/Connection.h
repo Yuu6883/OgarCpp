@@ -1,5 +1,5 @@
 #pragma once
-
+#include <atomic>
 #include <chrono>
 #include <vector>
 #include <uwebsockets/App.h>
@@ -10,6 +10,7 @@ class Protocol;
 class Minion;
 
 using namespace std::chrono;
+using std::atomic;
 using std::vector;
 using std::string;
 using std::string_view;
@@ -32,7 +33,7 @@ public:
 	uWS::WebSocket<false, true>* socket;
 	time_point<steady_clock> lastChatTime = steady_clock::now();
 	Protocol* protocol = nullptr;
-	bool socketDisconnected = false;
+	atomic<bool> socketDisconnected = false;
 	int closeCode = 0;
 	string closeReason = "";
 	vector<Minion*> minions;
@@ -43,10 +44,7 @@ public:
 		Router(listener), ipv4(ipv4), socket(socket) {
 		type = RouterType::PLAYER;
 	};
-	~Connection() {
-		Logger::info("Deleting Connection&Protocol");
-		delete protocol;
-	}
+	~Connection() { delete protocol; }
 	bool isExternal() { return true; };
 	void close();
 	void onSocketClose(int code, string_view reason);

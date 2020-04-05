@@ -49,15 +49,16 @@ void MatchMaker::update() {
 	}
 }
 
+World* bestWorld = nullptr;
 World* MatchMaker::getSuitableWorld() {
-	World* bestWorld = nullptr;
-	for (auto pair : handle->worlds) {
+	std::for_each(handle->worlds.begin(), handle->worlds.end(), [this](auto pair) {
 		auto world = pair.second;
-		if (!handle->gamemode->canJoinWorld(world)) continue;
-		if (world->stats.external >= handle->runtime.worldMaxPlayers) continue;
+		if (!handle->gamemode->canJoinWorld(world)) return;
+		if (world->stats.external >= handle->runtime.worldMaxPlayers) return;
 		if (!bestWorld || world->stats.external < bestWorld->stats.external)
 			bestWorld = world;
-	}
+	});
+
 	if (bestWorld) return bestWorld;
 	else if (handle->worlds.size() < handle->runtime.worldMaxCount)
 		return handle->createWorld();

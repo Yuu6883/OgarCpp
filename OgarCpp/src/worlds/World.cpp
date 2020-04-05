@@ -24,11 +24,12 @@ void World::afterCreation() {
 }
 
 World::~World() {
+	Logger::debug(string("Deallocating world (id: ") + std::to_string(id) + ")");
 	delete worldChat;
+	delete finder;
 	while (players.size())
-		removePlayer(players.front());
-	while (cells.size())
-		removeCell(cells.front());
+		delete players.front();
+	for (auto c : cells) delete c;
 }
 
 void World::setBorder(Rect& rect) {
@@ -134,20 +135,11 @@ void World::addPlayer(Player* player) {
 }
 
 void World::removePlayer(Player* player) {
-	auto iter = players.begin();
-	auto cend = players.cend();
-	while (iter != cend) {
-		if (*iter == player) {
-			players.erase(iter);
-			break;
-		}
-		iter++;
-	}
 	handle->gamemode->onPlayerLeaveWorld(player, this);
 	player->world = nullptr;
 	player->hasWorld = false;
 
-	if (player->router && player->router->type == RouterType::PLAYER)
+	if (player->router->type == RouterType::PLAYER)
 		worldChat->remove((Connection*) player->router);
 
 	while (player->ownedCells.size())
@@ -328,11 +320,11 @@ void World::liveUpdate() {
 	while (p_iter != players.cend()) {
 
 		auto player = *p_iter;
-		p_iter++;
-
-		player->checkExistence();
-		if (!player->exists)
+		if (!player->exist()) {
+			p_iter = players.erase(p_iter);
 			continue;
+		}
+		p_iter++;
 
 		if (player->state == PlayerState::SPEC && !largestPlayer)
 			player->updateState(PlayerState::ROAM);
@@ -456,7 +448,7 @@ void World::splitVirus(Virus* virus) {
 
 void World::movePlayerCell(PlayerCell* cell) {
 	auto router = cell->owner->router;
-	if (!router || router->disconnected) return;
+	if (router->disconnected) return;
 	float dx = router->mouseX - cell->getX();
 	float dy = router->mouseY - cell->getY();
 	float d = sqrt(dx * dx + dy * dy);
@@ -500,17 +492,20 @@ void World::autosplitPlayerCell(PlayerCell* cell) {
 }
 
 void World::splitPlayer(Player* player) {
-	if (player->ownedCells.size() >= handle->runtime.playerMaxCells) return;
-
 	auto router = player->router;
+	int index = 0;
+	auto originalLength = player->ownedCells.size();
 	for (auto cell : player->ownedCells) {
+		if (++index > originalLength) break;
+		if (player->ownedCells.size() >= handle->runtime.playerMaxCells) return;
 		if (cell->getSize() < handle->runtime.playerMinSplitSize) continue;
 		float dx = router->mouseX - cell->getX();
 		float dy = router->mouseY - cell->getY();
 		float d = sqrt(dx * dx + dy * dy);
 		if (d < 1) dx = 1, dy = 0, d = 1;
 		else dx /= d, dy /= d;
-		Boost boost {dx, dy, handle->runtime.playerSplitBoost };
+		dx = 1, dy = 0, d = 1;
+		Boost boost { dx, dy, handle->runtime.playerSplitBoost };
 		launchPlayerCell(cell, cell->getSize() / handle->runtime.playerSplitSizeDiv, boost);
 	}
 }
@@ -587,18 +582,18 @@ void World::distributeCellMass(PlayerCell* cell, std::vector<float>& dist) {
 void World::compileStatistics() {
 	unsigned short internal = 0, external = 0, playing = 0, spectating = 0;
 	for (auto p : players) {
-		if (!p->router) continue;
 		if (!p->router->isExternal()) { internal++; continue; }
 		external++;
 		if (p->state == PlayerState::ALIVE) playing++;
 		else if (p->state == PlayerState::SPEC || p->state == PlayerState::ROAM)
 			spectating++;
 	}
-	stats.limit = handle->runtime.listenerMaxConnections - handle->listener.connections.size() + external;
-	stats.internal = internal;
-	stats.external = external;
-	stats.playing = playing;
+	stats.limit      = handle->runtime.listenerMaxConnections;
+	stats.internal   = internal;
+	stats.external   = external;
+	stats.playing    = playing;
 	stats.spectating = spectating;
+
 	stats.name = handle->runtime.serverName;
 	stats.gamemode = handle->gamemode->getName();
 	stats.loadTime = handle->averageTickTime / handle->stepMult;

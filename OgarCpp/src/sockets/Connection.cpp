@@ -1,5 +1,4 @@
 
-
 #include "Listener.h"
 #include "Connection.h"
 #include "../misc/Misc.h"
@@ -19,21 +18,23 @@ void Connection::close() {
 		closeSocket(CLOSE_GOING_AWAY, "Manual connection close call");
 		return;
 	}
-	Router::close();
 	disconnected = true;
 	disconnectedTick = listener->getTick();
 	listener->onDisconnection(this, closeCode, closeReason);
 }
 
+// Called in socket thread
 void Connection::onSocketClose(int code, string_view reason) {
 	if (socketDisconnected) return;
-	socketDisconnected = true;
 	closeCode = code;
 	closeReason = string(reason);
+	socketDisconnected = true;
 }
 
 void Connection::closeSocket(int code, string_view str) {
 	if (socketDisconnected) return;
+	disconnected = true;
+	disconnectedTick = listener->getTick();
 	socketDisconnected = true;
 	closeCode = code;
 	closeReason = string(str);

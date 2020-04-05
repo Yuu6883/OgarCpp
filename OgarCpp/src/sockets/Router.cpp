@@ -2,8 +2,10 @@
 #include "../ServerHandle.h"
 
 Router::Router(Listener* listener) : listener(listener), ejectTick(listener->handle->tick) {
-	this->listener->addRouter(this);
 };
+
+Router::~Router() {
+}
 
 void Router::createPlayer() {
 	if (hasPlayer) return;
@@ -19,7 +21,7 @@ void Router::destroyPlayer() {
 };
 
 void Router::onSpawnRequest() {
-	int playerMaxNameLength = listener->handle->getSettingInt("playerMaxNameLength");
+	int playerMaxNameLength = listener->handle->runtime.playerMaxNameLength;
 	std::string name = spawningName.substr(0, playerMaxNameLength);
 	std::string skin = "";
 	if (listener->handle->runtime.playerAllowSkinInName) {
@@ -55,5 +57,4 @@ void Router::attemptEject() {
 }
 
 void Router::close() {
-	listener->removeRouter(this);
 }

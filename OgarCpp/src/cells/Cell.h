@@ -1,7 +1,7 @@
 #pragma once
 
 struct Spawner {
-	int pelletCount = 0;
+	unsigned int pelletCount = 0;
 };
 
 #include <math.h>
@@ -123,7 +123,7 @@ public:
 	virtual void onRemoved() = 0;
 };
 
-class PlayerCell  : public Cell {
+class PlayerCell : public Cell {
 public:
 	Player* owner;
 	bool _canMerge = false;
@@ -145,7 +145,7 @@ public:
 	void onRemoved();
 };
 
-class Virus       : public Cell {
+class Virus : public Cell {
 public:
 	int fedTimes = 0;
 	float splitAngle = 0;

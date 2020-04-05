@@ -1,5 +1,8 @@
 #pragma once
 #include <regex>
+#include <atomic>
+
+using std::atomic;
 
 class Listener;
 class Player;
@@ -17,23 +20,24 @@ public:
 
 	bool disconnected = false;
 	unsigned long disconnectedTick = 0;
-
-	float mouseX = 0;
-	float mouseY = 0;
-
 	RouterType type = RouterType::NONE;
 
 	std::string spawningName = "";
-	bool requestingSpectate = false;
-	bool isPressingQ = false;
-	bool hasPressedQ = false;
-	unsigned short splitAttempts = 0;
-	unsigned short ejectAttempts = 0;
+
+	atomic<float> mouseX = 0;
+	atomic<float> mouseY = 0;
+	atomic<bool> requestingSpectate = false;
+	atomic<bool> isPressingQ = false;
+	atomic<bool> hasPressedQ = false;
+	atomic<unsigned short> splitAttempts = 0;
+	atomic<unsigned short> ejectAttempts = 0;
+
 	unsigned long ejectTick;
 	bool hasPlayer = false;
 	Player* player = nullptr;
 	
 	Router(Listener* listener);
+	~Router();
 	virtual bool isExternal() = 0;
 	void createPlayer();
 	void destroyPlayer();

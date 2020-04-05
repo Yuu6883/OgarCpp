@@ -25,9 +25,8 @@ bool Listener::open(int threads = 1) {
 	threads = 1;
 #endif
 
-	if (!globalChat) {
+	if (!globalChat)
 		globalChat = new ChatChannel(this);
-	}
 
 	Logger::debug(std::to_string(threads) + " listener(s) opening at port " + std::to_string(port));
 
@@ -66,8 +65,7 @@ bool Listener::open(int threads = 1) {
 				.pong = [](auto* ws) {},
 				.close = [this](auto* ws, int code, std::string_view message) {
 					auto data = (SocketData*)ws->getUserData();
-					data->connection->socketDisconnected = true;
-					onDisconnection(data->connection, code, message);
+					data->connection->onSocketClose(code, message);
 				}
 			}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
 				if (listenerSocket) {
@@ -119,7 +117,7 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* sock
 	} */
 
 	// check connection list length
-	if (connections.size() >= handle->getSettingInt("listenerMaxConnections")) {
+	if (externalRouters >= handle->runtime.listenerMaxConnections) {
 		Logger::warn("CONNECTION MAXED");
 		socket->end(CONNECTION_MAXED, "Server max connection reached");
 		return false;
@@ -149,6 +147,7 @@ unsigned long Listener::getTick() {
 	return handle->tick;
 }
 
+// Called in socket thread
 Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket) {
 	auto connection = new Connection(this, ipv4, socket);
 	if (connectionsByIP.contains(ipv4)) {
@@ -156,7 +155,8 @@ Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<false, true
 	} else {
 		connectionsByIP.insert(std::make_pair(ipv4, 1));
 	}
-	connections.push_back(connection);
+	externalRouters++;
+	routers.push_back(connection);
 	return connection;
 };
 
@@ -165,28 +165,31 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 	if (--connectionsByIP[connection->ipv4] <= 0)
 		connectionsByIP.erase(connection->ipv4);
 	globalChat->remove(connection);
-	auto iter = connections.begin();
-	auto cend = connections.cend();
-	while (iter != cend) {
-		if (*iter == connection) {
-			connections.erase(iter);
-			break;
-		}
-		iter++;
-	}
-	if (connection->hasPlayer) {
-		connection->player->router = nullptr;
-	}
-	delete connection;
 };
 
 void Listener::update() {
-	int i, l;
-	for (i = 0, l = routers.size(); i < l; i++) {
-		auto r = routers[i];
-		if (!r->shouldClose()) continue;
-		r->close(); i--; l--;
+
+	auto iter = routers.begin();
+	while (iter != routers.cend()) {
+		auto r = *iter;
+		if (!r->shouldClose()) {
+			iter++; 
+			continue;
+		}
+		iter = routers.erase(iter);
+		if (r->isExternal())
+			externalRouters--;
+		if (r->type == RouterType::PLAYER) {
+			auto c = (Connection*) r;
+			onDisconnection(c, c->closeCode, c->closeReason);
+			if (c->socketDisconnected && !c->disconnected) {
+				c->disconnected = true;
+				c->disconnectedTick = handle->tick;
+			}
+		}
+		r->close();
 	}
+
 	for (auto r : routers) r->update();
 };
 

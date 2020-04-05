@@ -52,7 +52,7 @@ void Protocol6::onSocketMessage(Reader& reader) {
 		case 17:
 			if (connection->controllingMinions) {
 				// TODO split minions
-			} else connection->splitAttempts++;
+			} else connection->splitAttempts+=100;
 			break;
 		case 18: connection->isPressingQ = true; break;
 		case 19: connection->isPressingQ = connection->hasPressedQ = false; break;

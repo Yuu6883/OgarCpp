@@ -21,13 +21,12 @@ public:
 
 	Protocol* decide(Connection* connection, Reader& reader) {
 		for (auto protocol : store) {
-			auto copy = protocol->clone();
-			copy->connection = connection;
-			if (!copy->distinguishes(reader)) {
+			protocol->connection = connection;
+			if (!protocol->distinguishes(reader)) {
 				reader.reset();
 				continue;
 			}
-			return connection->socketDisconnected ? nullptr : copy;
+			return connection->socketDisconnected ? nullptr : protocol->clone();
 		}
 		return nullptr;
 	}

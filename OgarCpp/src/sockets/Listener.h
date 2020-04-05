@@ -1,9 +1,13 @@
 #pragma once
 
 #include <uwebsockets/App.h>
+#include <atomic>
 #include <regex>
 #include <vector>
+#include <list>
 #include <map>
+
+using std::atomic;
 
 class ChatChannel;
 class ServerHandle;
@@ -24,8 +28,8 @@ public:
 	
 	ChatChannel* globalChat = nullptr;
 
-	std::vector<Router*> routers;
-	std::vector<Connection*> connections;
+	atomic<unsigned int> externalRouters = 0;
+	std::list<Router*> routers;
 	std::map<unsigned int, unsigned int> connectionsByIP;
 
 	Listener(ServerHandle* handle) : handle(handle) {};
@@ -34,19 +38,6 @@ public:
 	bool open(int);
 	bool close();
 	bool verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* socket, std::string origin);
-
-	void addRouter(Router* router) { routers.push_back(router); };
-
-	void removeRouter(Router* router) {
-		auto iter = routers.begin();
-		while (iter != routers.cend()) {
-			if (*iter == router) {
-				routers.erase(iter);
-				return;
-			}
-			iter++;
-		}
-	}
 
 	unsigned long getTick();
 	Connection* onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket);
