@@ -26,8 +26,9 @@
     <ClCompile Include="src\gamemodes\GamemodeList.cpp" />
     <ClCompile Include="src\misc\Ticker.h" />
     <ClCompile Include="src\primitives\QuadTree.cpp" />
-    <ClCompile Include="src\protocols\ModernProtocol.cpp" />
+    <ClCompile Include="src\protocols\ProtocolModern.cpp" />
     <ClCompile Include="src\protocols\Protocol6.cpp" />
+    <ClCompile Include="src\protocols\ProtocolVanis.cpp" />
     <ClCompile Include="src\ServerHandle.cpp" />
     <ClCompile Include="src\sockets\ChatChannel.cpp" />
     <ClCompile Include="src\sockets\Connection.cpp" />
@@ -50,10 +51,11 @@
     <ClInclude Include="src\primitives\Reader.h" />
     <ClInclude Include="src\primitives\Rect.h" />
     <ClInclude Include="src\primitives\Writer.h" />
-    <ClInclude Include="src\protocols\ModernProtocol.h" />
+    <ClInclude Include="src\protocols\ProtocolModern.h" />
     <ClInclude Include="src\protocols\Protocol.h" />
     <ClInclude Include="src\protocols\Protocol6.h" />
     <ClInclude Include="src\protocols\ProtocolStore.h" />
+    <ClInclude Include="src\protocols\ProtocolVanis.h" />
     <ClInclude Include="src\ServerHandle.h" />
     <ClInclude Include="src\Settings.h" />
     <ClInclude Include="src\sockets\ChatChannel.h" />
@@ -184,6 +186,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

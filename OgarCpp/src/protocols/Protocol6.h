@@ -32,9 +32,11 @@ public:
 		}
 		return true;
 	}
+	void onDistinguished() {};
 	void onSocketMessage(Reader& reader);
 	void onChatMessage(ChatSource& source, string_view message);
 	void onNewOwnedCell(PlayerCell* cell);
+	void onPlayerSpawned(Player* player) {};
 	void onNewWorldBounds(Rect* border, bool includeServerInfo);
 	void onWorldReset();
 	void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry);

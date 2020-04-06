@@ -27,6 +27,7 @@ void Protocol6::onSocketMessage(Reader& reader) {
 	switch (messageId) {
 		case 0:
 			connection->spawningName = reader.readStringUTF8();
+			connection->requestSpawning = true;
 			break;
 		case 1:
 			connection->requestingSpectate = true;
@@ -52,7 +53,7 @@ void Protocol6::onSocketMessage(Reader& reader) {
 		case 17:
 			if (connection->controllingMinions) {
 				// TODO split minions
-			} else connection->splitAttempts+=100;
+			} else connection->splitAttempts++;
 			break;
 		case 18: connection->isPressingQ = true; break;
 		case 19: connection->isPressingQ = connection->hasPressedQ = false; break;

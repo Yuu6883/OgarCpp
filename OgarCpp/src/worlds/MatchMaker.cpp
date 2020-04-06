@@ -22,14 +22,7 @@ void MatchMaker::enqueue(Connection* connection) {
 void MatchMaker::dequeue(Connection* connection) {
 	if (!handle->runtime.matchmakerNeedsQueuing)
 		handle->listener.globalChat->directMessage(nullptr, connection, "left the queue");
-	auto iter = queued.begin();
-	while (iter != queued.cend()) {
-		if (*iter == connection) {
-			queued.erase(iter);
-			break;
-		}
-		iter++;
-	}
+	queued.remove(connection);
 	broadcastQueueLength();
 }
 

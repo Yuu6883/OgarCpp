@@ -8,25 +8,24 @@ class Cell;
 using std::pair;
 using std::make_pair;
 
-class ModernProtocol : public Protocol {
+class ProtocolModern : public Protocol {
 public:
 	unsigned int protocol = -1;
+
 	bool leaderboardPending = false;
+	bool serverInfoPending = false;
+	bool worldStatsPending = false;
+	bool clearCellsPending = false;
 
 	LBType lbType = LBType::NONE;
 	vector<LBEntry*> lbData;
 	LBEntry* lbSelfData = nullptr;
 
 	vector<pair<ChatSource*, string>> chatPending;
-
 	Rect* worldBorderPending = nullptr;
 	ViewArea* spectateAreaPending = nullptr;
 
-	bool serverInfoPending = false;
-	bool worldStatsPending = false;
-	bool clearCellsPending = false;
-
-	ModernProtocol(Connection* connection) : Protocol(connection) {};
+	ProtocolModern(Connection* connection) : Protocol(connection) {};
 	string getType() { return "Modern"; };
 	string getSubtype() { return string("m") + (protocol > 0 ? std::to_string(protocol) : "//"); };
 	bool distinguishes(Reader& reader) {
@@ -41,10 +40,12 @@ public:
 		connection->createPlayer();
 		return true;
 	}
+	void onDistinguished() {};
 	void onSocketMessage(Reader& reader);
 	void onChatMessage(ChatSource& source, string_view message) {
 		chatPending.push_back(make_pair(new ChatSource(source), string(message)));
 	}
+	void onPlayerSpawned(Player* player) {};
 	void onNewOwnedCell(PlayerCell* cell) { /* ignores it */ };
 	void onNewWorldBounds(Rect* border, bool includeServerInfo) {
 		worldBorderPending = border;
@@ -74,5 +75,5 @@ public:
 		spectateAreaPending = area;
 	}
 	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
-	Protocol* clone() { return new ModernProtocol(*this); };
+	Protocol* clone() { return new ProtocolModern(*this); };
 };

@@ -6,8 +6,9 @@
 #include "../ServerHandle.h"
 #include "../Settings.h"
 
-#include "../protocols/ModernProtocol.h"
+#include "../protocols/ProtocolModern.h"
 #include "../protocols/Protocol6.h"
+#include "../protocols/ProtocolVanis.h"
 #include "../gamemodes/FFA.h"
 
 bool exitCLI = false;
@@ -20,9 +21,11 @@ void registerGamemodes(ServerHandle* handle) {
 }
 
 void registerProtocols(ServerHandle* handle) {
-	Protocol* ptc = new ModernProtocol(nullptr);
+	Protocol* ptc = new ProtocolModern(nullptr);
 	handle->protocols->registerProtocol(ptc);
 	ptc = new Protocol6(nullptr);
+	handle->protocols->registerProtocol(ptc);
+	ptc = new ProtocolVanis(nullptr);
 	handle->protocols->registerProtocol(ptc);
 }
 
@@ -64,7 +67,7 @@ void registerCommands(ServerHandle* handle) {
 	Command<ServerHandle*> cellsCommand("cells", "print how many cells we have lmao", "",
 		[handle](ServerHandle* handle, auto context, vector<string>& args) {
 		if (handle->worlds.size())
-			printf("Cell count: %i", (*handle->worlds.begin()).second->cells.size());
+			printf("Cell count: %ui\n", (*handle->worlds.begin()).second->cells.size());
 	});
 	handle->commands.registerCommand(cellsCommand);
 }
@@ -89,7 +92,13 @@ int main() {
 	registerProtocols(&handle);
 	registerCommands(&handle);
 
+	handle.ticker.every(40, [&handle] {
+		if (handle.worlds.size()) {
+			printf("Load: %.2f%\n", (*handle.worlds.begin()).second->stats.loadTime);
+		}
+	});
 	handle.start();
+
 	std::this_thread::sleep_for(seconds{ 1 });
 
 	promptInput(&handle);

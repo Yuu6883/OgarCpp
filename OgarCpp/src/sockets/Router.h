@@ -3,6 +3,7 @@
 #include <atomic>
 
 using std::atomic;
+using std::string;
 
 class Listener;
 class Player;
@@ -22,13 +23,18 @@ public:
 	unsigned long disconnectedTick = 0;
 	RouterType type = RouterType::NONE;
 
-	std::string spawningName = "";
+	atomic<bool> requestSpawning = false;
+	string spawningName = "";
+	string spawningSkin = "";
+	string spawningTag  = "";
 
 	atomic<float> mouseX = 0;
 	atomic<float> mouseY = 0;
 	atomic<bool> requestingSpectate = false;
 	atomic<bool> isPressingQ = false;
 	atomic<bool> hasPressedQ = false;
+	atomic<bool> ejectMacro  = false;
+	atomic<bool> linelocked  = false;
 	atomic<unsigned short> splitAttempts = 0;
 	atomic<unsigned short> ejectAttempts = 0;
 

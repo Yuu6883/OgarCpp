@@ -21,6 +21,7 @@ void Router::destroyPlayer() {
 };
 
 void Router::onSpawnRequest() {
+	requestSpawning = false;
 	int playerMaxNameLength = listener->handle->runtime.playerMaxNameLength;
 	std::string name = spawningName.substr(0, playerMaxNameLength);
 	std::string skin = "";
@@ -31,12 +32,16 @@ void Router::onSpawnRequest() {
 			skin = sm[1];
 			name = sm[2];
 		}
+		else skin = spawningSkin;
+	} else {
+		skin = spawningSkin;
 	}
 	Logger::debug(string("Name: ") + name + " Skin: " + skin);
 	listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
 };
 
 void Router::onSpectateRequest() {
+	requestingSpectate = false;
 	if (!hasPlayer) return;
 	player->updateState(PlayerState::SPEC);
 }

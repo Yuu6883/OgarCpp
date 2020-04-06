@@ -44,7 +44,7 @@ public:
 		Router(listener), ipv4(ipv4), socket(socket) {
 		type = RouterType::PLAYER;
 	};
-	~Connection() { delete protocol; }
+	~Connection() { if (protocol) delete protocol; }
 	bool isExternal() { return true; };
 	void close();
 	void onSocketClose(int code, string_view reason);

@@ -82,9 +82,9 @@ struct RuntimeSettings {
 	float playerSplitDistance = 40;
 	float playerSplitBoost = 780;
 	float playerNoCollideDelay = 13;
-	int playerNoMergeDelay = 15;
+	float playerNoMergeDelay = 15.0;
 	bool playerMergeNewVersion = false;
-	int playerMergeTime = 30;
+	float playerMergeTime = 30;
 	float playerMergeTimeIncrease = 0.02;
 	float playerDecayMult = 0.001;
 };

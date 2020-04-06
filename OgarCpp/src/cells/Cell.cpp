@@ -21,13 +21,13 @@ float PlayerCell::getMoveSpeed() {
 EatResult PlayerCell::getEatResult(Cell* other) {
 	if (other->getType() == PLAYER) {
 		auto delay = world->handle->runtime.playerNoCollideDelay;
-		if (((PlayerCell*)other)->id == id) {
+		if (((PlayerCell*)other)->owner->id == owner->id) {
 			if (other->getAge() < delay || getAge() < delay) return EatResult::NONE;
 			if (canMerge() && ((PlayerCell*)other)->canMerge()) return EatResult::EAT;
 			return EatResult::COLLIDE;
 		}
-		if (((PlayerCell*)other)->owner->team == owner->team && owner->team >= 0) {}
-		return (other->getAge() < delay || getAge() < delay) ? EatResult::NONE : EatResult::COLLIDE;
+		if (owner->team >= 0 && ((PlayerCell*)other)->owner->team == owner->team)
+			return (other->getAge() < delay || getAge() < delay) ? EatResult::NONE : EatResult::COLLIDE;
 		return getDefaultEatResult(other);
 	}
 	if (other->getType() == MOTHER_CELL &&
@@ -46,7 +46,7 @@ void PlayerCell::onTick() {
 	auto delay = world->handle->runtime.playerNoMergeDelay;
 	if (world->handle->runtime.playerMergeTime > 0) {
 		auto initial = 25 * world->handle->runtime.playerMergeTime;
-		auto increase = (int)round(25 * size * world->handle->runtime.playerMergeTimeIncrease);
+		auto increase = round(25 * size * world->handle->runtime.playerMergeTimeIncrease);
 		auto sumOrMax = world->handle->runtime.playerMergeNewVersion ? std::max(initial, increase) : initial + increase;
 		delay = std::max(delay, sumOrMax);
 	}
@@ -101,15 +101,13 @@ void Virus::whenAte(Cell* cell) {
 		boost.dy = (boost.dy * boost.d + cell->boost.dy * runtime->virusPushBoost) / d;
 		boost.d = d;
 		world->setCellAsBoosting(this);
-	}
-	else {
+	} else {
 		float angle = atan2(cell->boost.dx, cell->boost.dy);
 		if (++fedTimes >= runtime->virusFeedTimes) {
 			fedTimes = 0;
 			size = runtime->virusSize;
 			world->splitVirus(this);
-		}
-		else Cell::whenAteDefault(cell);
+		} else Cell::whenAteDefault(cell);
 	}
 }
 

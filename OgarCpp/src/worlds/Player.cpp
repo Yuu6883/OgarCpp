@@ -9,7 +9,9 @@ Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 };
 
 Player::~Player() {
-	if (hasWorld) world->removePlayer(this);
+	if (hasWorld) {
+		Logger::warn("Player should not have world reference when it's being deallocated");
+	}
 	if (router->disconnected) {
 		router->hasPlayer = false;
 		router->player = nullptr;

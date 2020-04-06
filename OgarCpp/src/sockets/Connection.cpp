@@ -53,6 +53,7 @@ void Connection::onSocketMessage(string_view buffer) {
 	else {
 		protocol = listener->handle->protocols->decide(this, reader);
 		if (!protocol) closeSocket(CloseCodes::CLOSE_UNSUPPORTED, "Ambiguous protocol");
+		else protocol->onDistinguished();
 	}
 }
 
@@ -103,16 +104,20 @@ void Connection::onNewOwnedCell(PlayerCell* cell) {
 }
 
 void Connection::send(string_view message) {
-	if (socketDisconnected) return;
+	if (socketDisconnected) {
+		Logger::warn("Sending buffer but socket is disconnected");
+		return;
+	}
 	socket->send(message);
 }
 
 void Connection::update() {
 	if (!hasPlayer) return;
 	if (!player->hasWorld) {
-		if (spawningName.size())
+		if (requestSpawning)
 			listener->handle->matchmaker.toggleQueued(this);
 		spawningName = "";
+		spawningSkin = "";
 		splitAttempts = 0;
 		ejectAttempts = 0;
 		requestingSpectate = false;

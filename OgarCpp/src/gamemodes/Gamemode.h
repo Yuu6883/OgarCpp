@@ -29,7 +29,7 @@ public:
 
 	virtual void onNewPlayer(Player* player) = 0;
 	void onPlayerPressQ(Player* player);
-	virtual void onPlayerEject(Player* player) = 0;
+	void onPlayerEject(Player* player);
 	void onPlayerSplit(Player* player);
 	virtual void onPlayerSpawnRequest(Player* player, string name, string skin) = 0;
 	virtual void onPlayerDestroy(Player* player) = 0;

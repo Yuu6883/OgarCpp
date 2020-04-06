@@ -88,9 +88,9 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_FLOAT(playerSplitDistance);
 	LOAD_FLOAT(playerSplitBoost);
 	LOAD_FLOAT(playerNoCollideDelay);
-	LOAD_INT(playerNoMergeDelay);
+	LOAD_FLOAT(playerNoMergeDelay);
 	LOAD_BOOL(playerMergeNewVersion);
-	LOAD_INT(playerMergeTime);
+	LOAD_FLOAT(playerMergeTime);
 	LOAD_FLOAT(playerMergeTimeIncrease);
 	LOAD_FLOAT(playerDecayMult);
 }

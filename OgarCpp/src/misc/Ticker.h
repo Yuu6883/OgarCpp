@@ -1,11 +1,14 @@
 #include <chrono>
 #include <thread>
-#include <vector>
+#include <list>
 #include <algorithm>
 #include <stdexcept>
 #include <functional>
 
 using namespace std::chrono;
+using std::list;
+using std::pair;
+using std::make_pair;
 
 typedef std::function<void(void)> Callback;
 
@@ -14,7 +17,8 @@ class Ticker {
 	unsigned int step;
 	unsigned long ticked = 0;
 	time_point<steady_clock> _start;
-	std::vector<Callback> callbacks;
+	list<Callback> callbacks;
+	list<pair<Callback, int>> intervals;
 	std::thread* th = nullptr;
 
 public:
@@ -29,6 +33,14 @@ public:
 
 	void add(Callback cb) {
 		callbacks.push_back(cb);
+	}
+
+	void every(int interval, Callback cb) {
+		intervals.push_back(make_pair(cb, interval));
+	}
+
+	void clearInterval() {
+		intervals.clear();
 	}
 
 	void clear() {
@@ -55,6 +67,9 @@ public:
 		while (running) {
 			for_each(callbacks.begin(), callbacks.end(), [](Callback cb) {
 				cb();
+			}); 
+			for_each(intervals.begin(), intervals.end(), [this](pair<Callback, int> p) {
+				if (!(ticked % p.second)) p.first();
 			});
 			std::this_thread::sleep_until(_start + ticked++ * milliseconds{ step });
 		}

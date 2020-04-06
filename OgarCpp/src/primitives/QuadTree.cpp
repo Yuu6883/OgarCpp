@@ -49,6 +49,7 @@ private:
 	};
 
 	void update(QuadItem* item) {
+		if (!item->root) return;
 		auto oldQuad = item->root;
 		auto newQuad = item->root;
 		while (true) {

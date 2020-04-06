@@ -71,7 +71,7 @@ public:
 	void update() { frozen ? frozenUpdate() : liveUpdate(); };
 	void frozenUpdate();
 	void liveUpdate();
-	void resolveRegidCheck(Cell* a, Cell* b);
+	void resolveRigidCheck(Cell* a, Cell* b);
 	void resolveEatCheck(Cell* a, Cell* b);
 	bool boostCell(Cell* cell);
 	void bounceCell(Cell* cell, bool bounce = false);

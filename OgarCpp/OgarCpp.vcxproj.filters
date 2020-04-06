@@ -51,7 +51,7 @@
     <ClCompile Include="src\gamemodes\GamemodeList.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\protocols\ModernProtocol.cpp">
+    <ClCompile Include="src\protocols\ProtocolModern.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\gamemodes\Gamemode.cpp">
@@ -64,6 +64,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\worlds\MatchMaker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\protocols\ProtocolVanis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -131,7 +134,7 @@
     <ClInclude Include="src\misc\Misc.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\protocols\ModernProtocol.h">
+    <ClInclude Include="src\protocols\ProtocolModern.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\gamemodes\FFA.h">
@@ -141,6 +144,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\worlds\MatchMaker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\protocols\ProtocolVanis.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

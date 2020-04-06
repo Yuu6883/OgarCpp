@@ -7,6 +7,7 @@
 #include "../primitives/Reader.h"
 
 class Connection;
+class ChatSource;
 class Reader;
 class Cell;
 
@@ -43,8 +44,10 @@ public:
 	virtual string getType() = 0;
 	virtual string getSubtype() = 0;
 	virtual bool distinguishes(Reader& reader) = 0;
+	virtual void onDistinguished() = 0;
 	virtual void onSocketMessage(Reader& reader) = 0;
 	virtual void onChatMessage(ChatSource& source, string_view message) = 0;
+	virtual void onPlayerSpawned(Player* player) = 0;
 	virtual void onNewOwnedCell(PlayerCell* cell) = 0;
 	virtual void onNewWorldBounds(Rect* border, bool includeServerInfo) = 0;
 	virtual void onWorldReset() = 0;

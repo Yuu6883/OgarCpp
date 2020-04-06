@@ -12,6 +12,11 @@ void Gamemode::onPlayerSplit(Player* player) {
 	player->world->splitPlayer(player);
 }
 
+void Gamemode::onPlayerEject(Player* player) {
+	if (!player->hasWorld) return;
+	player->world->ejectFromPlayer(player);
+}
+
 float Gamemode::getDecayMult(Cell* cell) {
 	return cell->world->handle->runtime.playerDecayMult;
 }
