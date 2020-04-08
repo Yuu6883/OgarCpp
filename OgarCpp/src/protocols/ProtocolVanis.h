@@ -29,7 +29,9 @@ public:
 	Rect* worldBorderPending = nullptr;
 	ViewArea* spectateAreaPending = nullptr;
 
-	ProtocolVanis(Connection* connection) : Protocol(connection) {};
+	ProtocolVanis(Connection* connection) : Protocol(connection) {
+		noDelDup = true;
+	};
 	string getType() { return "Vanis"; };
 	string getSubtype() { return "(XDDDD)"; };
 	bool distinguishes(Reader& reader) {

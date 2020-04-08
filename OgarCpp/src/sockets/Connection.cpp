@@ -140,7 +140,7 @@ void Connection::update() {
 	for (auto pair : player->lastVisibleCells) {
 		if (player->visibleCells.contains(pair.first)) continue;
 		if (pair.second->eatenBy) eat.push_back(pair.second);
-		del.push_back(pair.second);
+		if (!protocol->noDelDup || !pair.second->eatenBy) del.push_back(pair.second);
 	}
 	
 	if (player->state == PlayerState::SPEC || player->state == PlayerState::ROAM)

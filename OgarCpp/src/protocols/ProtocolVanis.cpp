@@ -30,6 +30,7 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 		// toggle linelock
 		case 15:
 			connection->linelocked = !connection->linelocked;
+			break;
 		// mouse
 		case 16:
 			connection->mouseX = reader.readInt32();

@@ -39,6 +39,7 @@ struct TEXTENtry : LBEntry {
 
 class Protocol {
 public:
+	bool noDelDup = false;
 	Connection* connection;
 	Protocol(Connection* connection) : connection(connection) {};
 	virtual string getType() = 0;

@@ -555,21 +555,26 @@ void World::distributeCellMass(PlayerCell* cell, std::vector<float>& dist) {
 	float splitMin = handle->runtime.playerMinSplitSize;
 	splitMin = splitMin * splitMin / 100;
 	float cellMass = cell->getMass();
+
 	if (handle->runtime.virusMonotonePops) {
 		float amount = std::min(floor(cellMass / splitMin), cellsLeft);
 		float perPiece = cellMass / (amount + 1.0);
 		while (--amount >= 0) dist.push_back(perPiece);
 		return;
 	}
+
 	if (cellMass / cellsLeft < splitMin) {
 		float amount = 2.0, perPiece = 0;
 		while ((perPiece = cellMass / (amount + 1.0)) >= splitMin && amount * 2 <= cellsLeft)
 			amount *= 2.0;
-		while (--amount >= 0) dist.push_back(perPiece);
+		while (--amount >= 0) 
+			dist.push_back(perPiece);
 		return;
 	}
+
 	float nextMass = cellMass / 2.0;
 	float massLeft = cellMass / 2.0;
+
 	while (cellsLeft > 0) {
 		if (nextMass / cellsLeft < splitMin) break;
 		while (nextMass >= massLeft && cellsLeft > 1)
