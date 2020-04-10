@@ -102,7 +102,7 @@ void Virus::whenAte(Cell* cell) {
 		boost.d = d;
 		world->setCellAsBoosting(this);
 	} else {
-		float angle = atan2(cell->boost.dx, cell->boost.dy);
+		splitAngle = atan2(cell->boost.dx, cell->boost.dy);
 		if (++fedTimes >= runtime->virusFeedTimes) {
 			fedTimes = 0;
 			size = runtime->virusSize;

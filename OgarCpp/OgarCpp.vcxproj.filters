@@ -69,6 +69,9 @@
     <ClCompile Include="src\protocols\ProtocolVanis.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\primitives\SimplePool.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Settings.h">
@@ -147,6 +150,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\protocols\ProtocolVanis.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\primitives\SimplePool.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

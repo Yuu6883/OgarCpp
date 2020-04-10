@@ -9,14 +9,14 @@ Router::~Router() {
 
 void Router::createPlayer() {
 	if (hasPlayer) return;
-	hasPlayer = true;
 	player = listener->handle->createPlayer(this);
+	hasPlayer = true;
 };
 
 void Router::destroyPlayer() {
 	if (!hasPlayer) return;
-	hasPlayer = false;
 	listener->handle->removePlayer(player->id);
+	hasPlayer = false;
 	player = nullptr;
 };
 

@@ -155,7 +155,7 @@ void Protocol6::onStatsRequest() {
 	Writer writer;
 	writer.writeUInt8(254);
 	auto stats = &connection->player->world->stats;
-	int written = sprintf_s(stats_buffer, sizeof(stats_buffer), STATS_JSON_FORMAT, stats->gamemode.c_str(), stats->loadTime,
+	int written = snprintf(stats_buffer, sizeof(stats_buffer), STATS_JSON_FORMAT, stats->gamemode.c_str(), stats->loadTime,
 		stats->external, stats->playing, stats->spectating, stats->limit);
 	if (written) {
 		string_view jsonString(stats_buffer, written);

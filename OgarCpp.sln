@@ -7,18 +7,35 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OgarCpp", "OgarCpp\OgarCpp.
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Debug|ARM64 = Debug|ARM64
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		LinuxTest|ARM = LinuxTest|ARM
+		LinuxTest|ARM64 = LinuxTest|ARM64
+		LinuxTest|x64 = LinuxTest|x64
+		LinuxTest|x86 = LinuxTest|x86
+		Release|ARM = Release|ARM
+		Release|ARM64 = Release|ARM64
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|ARM.ActiveCfg = Debug|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|ARM64.ActiveCfg = Debug|Win32
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|x64.ActiveCfg = Debug|x64
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|x64.Build.0 = Debug|x64
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|x86.ActiveCfg = Debug|Win32
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Debug|x86.Build.0 = Debug|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|ARM.ActiveCfg = LinuxTest|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|ARM64.ActiveCfg = LinuxTest|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|x64.ActiveCfg = Release|x64
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|x64.Build.0 = Release|x64
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|x86.ActiveCfg = LinuxTest|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.LinuxTest|x86.Build.0 = LinuxTest|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|ARM.ActiveCfg = Release|Win32
+		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|ARM64.ActiveCfg = Release|Win32
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|x64.ActiveCfg = Release|x64
-		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|x64.Build.0 = Release|x64
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|x86.ActiveCfg = Release|Win32
 		{8C57B2E0-5C45-4B2B-B371-EED23F252AD4}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection

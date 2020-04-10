@@ -3,11 +3,15 @@
 #include "../ServerHandle.h"
 #include "../cells/Cell.h"
 #include <random>
+#include <thread>
+#include <mutex>
 
 using std::to_string;
+using std::thread;
 
 World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 	worldChat = new ChatChannel(&handle->listener);
+	physicsPool = new ThreadPool(handle->getSettingInt("worldThreads"));
 	float x = handle->getSettingInt("worldMapX");
 	float y = handle->getSettingInt("worldMapY");
 	float w = handle->getSettingInt("worldMapW");
@@ -218,18 +222,15 @@ void World::liveUpdate() {
 
 	handle->gamemode->onWorldTick(this);
 
-	auto rigid = new vector<Cell*>;
-	auto eat   = new vector<Cell*> ;
+	Stopwatch bench;
+	bench.begin();
 
 	for (auto c : cells)
 		c->onTick();
 
-	/*
-	Logger::info(string("Pellet: ") + std::to_string(pelletCount));
-	Logger::info(string("Virus: ") +  std::to_string(virusCount));
-	Logger::info(string("MCell: ") +  std::to_string(motherCellCount));
-	Logger::info(string("Boost: ") +  std::to_string(boostingCells.size()));
-	Logger::info(string("PCell: ") +  std::to_string(playerCells.size())); */
+	bool pog = handle->bench;
+	if (pog)
+		printf("\nonTickTime: %2.5fms\n", bench.lap());
 
 	while (pelletCount < handle->runtime.pelletCount) {
 		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize);
@@ -245,6 +246,9 @@ void World::liveUpdate() {
 		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize);
 		addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
+
+	if (pog)
+		printf("newCellTime: %2.5fms\n", bench.lap());
 	
 	auto c_iter = boostingCells.begin();
 	auto c_cend = boostingCells.cend();
@@ -254,27 +258,33 @@ void World::liveUpdate() {
 		} else c_iter++;
 	}
 
+	if (pog)
+		printf("boostTime: %2.5fms\n", bench.lap());
+
+	list<pair<Cell*, Cell*>> rigid;
+	list<pair<Cell*, Cell*>> eat;
+
 	for (auto c : boostingCells) {
 		if (c->getType() != VIRUS && c->getType() != EJECTED_CELL) continue;
-		finder->search(c->range, [c, rigid, eat](auto o) {
+		finder->search(c->range, [c, &rigid, &eat](auto o) {
 			auto other = (Cell*) o;
 			if (c->id == other->id) return;
 			switch (c->getEatResult(other)) {
 				case EatResult::COLLIDE: 
-					rigid->push_back(c);
-					rigid->push_back(other);
+					rigid.push_back(std::make_pair(c, other));
 					break;
 				case EatResult::EAT:
-					eat->push_back(c);
-					eat->push_back(other);
+					eat.push_back(std::make_pair(c, other));
 					break;
 				case EatResult::EATINVD:
-					eat->push_back(other);
-					eat->push_back(c);
+					eat.push_back(std::make_pair(other, c));
 					break;
 			}
 		});
 	}
+
+	if (pog)
+		printf("boostCheckTime: %2.5fms\n", bench.lap());
 
 	for (auto c : playerCells) {
 		movePlayerCell(c);
@@ -284,34 +294,90 @@ void World::liveUpdate() {
 		updateCell(c);
 	}
 
+	if (pog)
+		printf("playerCellUpdateTime: %2.5fms\n", bench.lap());
+	
+	std::mutex mtx;
+	static const unsigned int BATCH_SIZE = 250;
+	int offset = 0;
+	auto pc_iter = playerCells.cbegin();
+
+	while (offset < playerCells.size()) {
+		auto incre = std::min(BATCH_SIZE, (unsigned int)(playerCells.size() - offset));
+		std::advance(pc_iter, incre);
+		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
+
+			auto count = incre;
+			list<pair<Cell*, Cell*>> thread_rigid;
+			list<pair<Cell*, Cell*>> thread_eat;
+
+			auto start = playerCells.cbegin();
+			std::advance(start, offset);
+
+			while (count--) {
+				auto c = *start;
+				finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
+					auto other = (Cell*) o;
+					if (c->id == other->id) return;
+					switch (c->getEatResult(other)) {
+					case EatResult::COLLIDE:
+						thread_rigid.push_back(std::make_pair(c, other));
+						break;
+					case EatResult::EAT:
+						thread_eat.push_back(std::make_pair(c, other));
+						break;
+					case EatResult::EATINVD:
+						thread_eat.push_back(std::make_pair(other, c));
+						break;
+					}
+				});
+				std::advance(start, 1);
+			}
+
+			mtx.lock();
+			rigid.splice(rigid.begin(), thread_rigid);
+			eat.splice(eat.begin(), thread_eat);
+			mtx.unlock();
+		});
+		offset += incre;
+	}
+
+	physicsPool->waitFinished();
+
+	/*
 	for (auto c : playerCells) {
-		finder->search(c->range, [c, rigid, eat](auto o) {
+		finder->search(c->range, [c, &rigid, &eat](auto o) {
 			auto other = (Cell*)o;
 			if (c->id == other->id) return;
 			switch (c->getEatResult(other)) {
 				case EatResult::COLLIDE:
-					rigid->push_back(c);
-					rigid->push_back(other);
+					rigid.push_back(std::make_pair(c, other));
 					break;
 				case EatResult::EAT:
-					eat->push_back(other);
-					eat->push_back(c);
+					eat.push_back(std::make_pair(c, other));
 					break;
 				case EatResult::EATINVD:
-					eat->push_back(c);
-					eat->push_back(other);
+					eat.push_back(std::make_pair(other, c));
 					break;
 			}
 		});
 	}
+	*/
 
-	for (int i = 0, l = rigid->size(); i < l;)
-		resolveRigidCheck(rigid->at(i++), rigid->at(i++));
-	for (int i = 0, l = eat->size(); i < l;)
-		resolveEatCheck(eat->at(i++), eat->at(i++));
+	if (pog)
+		printf("playerCellRigidEatUpdateTime: %2.5fms\n", bench.lap());
 
-	delete rigid;
-	delete eat;
+	for (auto rigidPair : rigid)
+		resolveRigidCheck(rigidPair.first, rigidPair.second);
+
+	if (pog)
+		printf("resolveRigidTime: %2.5fms\n", bench.lap());
+
+	for (auto eatPair : eat)
+		resolveEatCheck(eatPair.first, eatPair.second);
+
+	if (pog)
+		printf("resolveEatTime: %2.5fms\n", bench.lap());
 
 	auto r_iter = cells.begin();
 	while (r_iter != cells.cend())
@@ -367,13 +433,17 @@ void World::liveUpdate() {
 		player->updateViewArea();
 	}
 
+	if (pog)
+		printf("playerUpdateTime: %2.5fms\n", bench.lap());
+
 	compileStatistics();
 	handle->gamemode->compileLeaderboard(this);
 
-	if (stats.external <= 0) {
+	if (stats.external <= 0)
 		if (handle->worlds.size() > handle->runtime.worldMinCount)
 			toBeRemoved = true;
-	}
+
+	if (pog) handle->bench = false;
 }
 
 void World::resolveRigidCheck(Cell* a, Cell* b) {

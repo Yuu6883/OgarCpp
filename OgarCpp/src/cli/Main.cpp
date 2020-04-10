@@ -67,9 +67,15 @@ void registerCommands(ServerHandle* handle) {
 	Command<ServerHandle*> cellsCommand("cells", "print how many cells we have lmao", "",
 		[handle](ServerHandle* handle, auto context, vector<string>& args) {
 		if (handle->worlds.size())
-			printf("Cell count: %ui\n", (*handle->worlds.begin()).second->cells.size());
+			printf("Cell count: %u\n", (*handle->worlds.begin()).second->cells.size());
 	});
 	handle->commands.registerCommand(cellsCommand);
+
+	Command<ServerHandle*> benchCommand("bench", "print out how long each part of function takes to execute", "",
+		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		handle->bench = true;
+	});
+	handle->commands.registerCommand(benchCommand);
 }
 
 void promptInput(ServerHandle* handle) {
@@ -92,11 +98,13 @@ int main() {
 	registerProtocols(&handle);
 	registerCommands(&handle);
 
-	handle.ticker.every(40, [&handle] {
+	handle.ticker.every(20, [&handle] {
 		if (handle.worlds.size()) {
-			printf("Load: %.2f%\n", (*handle.worlds.begin()).second->stats.loadTime);
+			printf("Load: %2.2f%% ", (*handle.worlds.begin()).second->stats.loadTime);
+			printf("cells: %i\n", (*handle.worlds.begin()).second->cells.size());
 		}
 	});
+
 	handle.start();
 
 	std::this_thread::sleep_for(seconds{ 1 });

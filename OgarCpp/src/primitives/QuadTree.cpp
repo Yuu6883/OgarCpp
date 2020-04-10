@@ -118,7 +118,7 @@ private:
 		}
 	}
 
-	int getItemCount() {
+	unsigned int getItemCount() {
 		if (!hasSplit()) return items.size();
 		return items.size() +
 			branches[0].getItemCount() + \

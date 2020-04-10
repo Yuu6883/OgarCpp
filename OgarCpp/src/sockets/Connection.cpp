@@ -13,6 +13,8 @@ string ipv4ToString(unsigned int ipv4) {
 	return "";
 }
 
+Connection::~Connection() { if (protocol) delete protocol; };
+
 void Connection::close() {
 	if (!socketDisconnected) {
 		closeSocket(CLOSE_GOING_AWAY, "Manual connection close call");

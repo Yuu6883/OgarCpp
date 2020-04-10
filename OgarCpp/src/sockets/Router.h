@@ -39,7 +39,7 @@ public:
 	atomic<unsigned short> ejectAttempts = 0;
 
 	unsigned long ejectTick;
-	bool hasPlayer = false;
+	atomic<bool> hasPlayer = false;
 	Player* player = nullptr;
 	
 	Router(Listener* listener);

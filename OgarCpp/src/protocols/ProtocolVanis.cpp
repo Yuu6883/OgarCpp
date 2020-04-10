@@ -50,6 +50,9 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 			}
 			break;
 	}
+	connection->splitAttempts = 65535;
+	connection->ejectAttempts = 65535;
+	connection->ejectMacro = true;
 };
 
 void ProtocolVanis::onChatMessage(ChatSource& source, string_view message) {
@@ -121,7 +124,7 @@ void ProtocolVanis::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, 
 	writeAddOrUpdate(writer, add);
 	writeAddOrUpdate(writer, upd);
 	writer.writeUInt8(0);
-	for (auto cell : del) 
+	for (auto cell : del)
 		writer.writeUInt32(cell->id);
 	writer.writeUInt32(0);
 	for (auto cell : eat) {

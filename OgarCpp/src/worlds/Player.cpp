@@ -81,11 +81,13 @@ void Player::updateVisibleCells() {
 	visibleCells.clear();
 
 	for (auto cell : ownedCells)
-		visibleCells.insert(std::make_pair(cell->id, cell));
+		if (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1)
+			visibleCells.insert(std::make_pair(cell->id, cell));
 
 	world->finder->search(viewArea, [this](auto c) {
 		auto cell = (Cell*) c;
-		visibleCells.insert(std::make_pair(cell->id, cell));
+		if (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1)
+			visibleCells.insert(std::make_pair(cell->id, cell));
 	});
 }
 

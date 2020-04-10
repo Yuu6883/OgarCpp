@@ -1,7 +1,7 @@
 #pragma once
 
 struct Spawner {
-	unsigned int pelletCount = 0;
+	int pelletCount = 0;
 };
 
 #include <math.h>

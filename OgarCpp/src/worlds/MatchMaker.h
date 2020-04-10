@@ -1,5 +1,8 @@
 #pragma once
+
 #include <list>
+#include <algorithm>
+
 using std::list;
 
 class Connection;

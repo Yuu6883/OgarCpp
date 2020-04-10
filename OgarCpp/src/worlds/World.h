@@ -4,6 +4,7 @@
 #include <list>
 #include "../sockets/ChatChannel.h"
 #include "../primitives/Rect.h"
+#include "../primitives/SimplePool.h"
 
 struct SpawnResult {
 	unsigned int color;
@@ -14,7 +15,7 @@ struct SpawnResult {
 #include "../cells/Cell.h"
 #include "Player.h"
 
-static struct WorldStats {
+struct WorldStats {
 	unsigned short limit = 0;
 	unsigned short internal = 0;
 	unsigned short external = 0;
@@ -29,6 +30,7 @@ static struct WorldStats {
 class World : public Spawner {
 public:
 	ServerHandle* handle;
+	ThreadPool* physicsPool;
 	unsigned int id;
 	bool frozen = false;
 	bool toBeRemoved = false;
