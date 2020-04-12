@@ -8,8 +8,14 @@ Cell::Cell(World* world, float x, float y, float size, unsigned int color) :
 
 unsigned long Cell::getAge() { return (world->handle->tick - birthTick) * world->handle->stepMult; };
 
+CellData* Cell::getData() {
+	return new CellData(x, y, getType(), id, owner ? owner->id : 0, getAge(), size, deadTick ? 1 : 0);
+}
+
 PlayerCell::PlayerCell(Player* owner, float x, float y, float size):
-	Cell(owner->world, x, y, size, owner->cellColor), owner(owner) {};
+	Cell(owner->world, x, y, size, owner->cellColor) {
+	this->owner = owner;
+};
 
 string_view PlayerCell::getName() { return owner->cellName; };
 string_view PlayerCell::getSkin() { return owner->cellSkin; };

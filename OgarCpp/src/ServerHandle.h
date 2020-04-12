@@ -28,6 +28,7 @@ struct RuntimeSettings {
 	int worldMaxPlayers;
 	int worldMinCount;
 	int worldMaxCount;
+	int physicsThreads;
 	int listenerMaxConnections;
 	int chatCooldown;
 	int matchmakerBulkSize;

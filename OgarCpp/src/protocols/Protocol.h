@@ -40,6 +40,7 @@ struct TEXTENtry : LBEntry {
 class Protocol {
 public:
 	bool noDelDup = false;
+	bool threadedUpdate = false;
 	Connection* connection;
 	Protocol(Connection* connection) : connection(connection) {};
 	virtual string getType() = 0;
@@ -55,6 +56,8 @@ public:
 	virtual void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) = 0;
 	virtual void onSpectatePosition(ViewArea* viewArea) = 0;
 	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) = 0;
+	virtual void onVisibleCellThreadedUpdate() = 0;
+	virtual void onDead() = 0;
 	void send(string_view data) { connection->send(data); };
 	void fail(int code, string_view reason) {
 		connection->closeSocket(code || CLOSE_UNSUPPORTED, reason.size() ? reason : "Unspecified protocol fail");

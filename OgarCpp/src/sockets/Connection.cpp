@@ -113,6 +113,10 @@ void Connection::send(string_view message) {
 	socket->send(message);
 }
 
+bool Connection::isThreaded() {
+	return protocol ? protocol->threadedUpdate : false;
+}
+
 void Connection::update() {
 	if (!hasPlayer) return;
 	if (!player->hasWorld) {
@@ -127,27 +131,71 @@ void Connection::update() {
 		hasPressedQ = false;
 		return;
 	}
-	player->updateVisibleCells();
 
-	vector<Cell*> add;
-	vector<Cell*> upd;
-	vector<Cell*> eat;
-	vector<Cell*> del;
+	if (!protocol) return;
+	if (protocol->threadedUpdate) {
+		// No need to do thread update, spectate target will send buffer to this router
+		if (player->state == PlayerState::SPEC) return;
+		// Buffering from last frame is not done, skip this frame
+		if (busy || !player->world->lockedFinder) {
+			return;
+		}
+		if (player->world->lockedFinder && player->lastThreadedTreeID == player->world->lockedFinder->id) {
+			printf("Same LTT at 0x%p\n", player->world->lockedFinder);
+			Logger::warn("Trying to query the same tree, aborting");
+			return;
+		}
+		player->lastThreadedTreeID = player->world->lockedFinder->id;
 
-	for (auto pair : player->visibleCells) {
-		if (!player->lastVisibleCells.contains(pair.first)) add.push_back(pair.second);
-		else if (pair.second->shouldUpdate()) upd.push_back(pair.second);
+		busy = true;
+
+		auto iter = spectators.begin();
+		while (iter != spectators.end()) {
+			auto router = *iter;
+			if (router->hasPlayer && router->spectateTarget != this)
+				iter = spectators.erase(iter);
+			iter++;
+		}
+
+		player->world->socketsPool->enqueue([this] {
+			player->updateVisibleCells(true);
+			protocol->onVisibleCellThreadedUpdate();
+			player->world->lockedFinder->reference--;
+			if (player->world->lockedFinder->reference.load() <= 0) {
+				// printf("Deallocating QT: 0x%p (id:%i)\n", player->world->lockedFinder, player->world->lockedFinder->id);
+				delete player->world->lockedFinder;
+				player->world->lockedFinder = nullptr;
+			}
+			busy = false;
+		});
+	} else {
+
+		player->updateVisibleCells();
+
+		vector<Cell*> add;
+		vector<Cell*> upd;
+		vector<Cell*> eat;
+		vector<Cell*> del;
+
+		for (auto [id, cell] : player->visibleCells) {
+			if (!player->lastVisibleCells.contains(id)) add.push_back(cell);
+			else if (cell->shouldUpdate()) upd.push_back(cell);
+		}
+
+		for (auto [id, cell] : player->lastVisibleCells) {
+			if (player->visibleCells.contains(id)) continue;
+			if (cell->eatenBy) eat.push_back(cell);
+			if (!protocol->noDelDup || !cell->eatenBy) del.push_back(cell);
+		}
+
+		if (player->state == PlayerState::SPEC || player->state == PlayerState::ROAM)
+			protocol->onSpectatePosition(&player->viewArea);
+		if (listener->handle->tick % 4 == 0)
+			listener->handle->gamemode->sendLeaderboard(this);
+		protocol->onVisibleCellUpdate(add, upd, eat, del);
 	}
+}
 
-	for (auto pair : player->lastVisibleCells) {
-		if (player->visibleCells.contains(pair.first)) continue;
-		if (pair.second->eatenBy) eat.push_back(pair.second);
-		if (!protocol->noDelDup || !pair.second->eatenBy) del.push_back(pair.second);
-	}
-	
-	if (player->state == PlayerState::SPEC || player->state == PlayerState::ROAM)
-		protocol->onSpectatePosition(&player->viewArea);
-	if (listener->handle->tick % 4 == 0)
-		listener->handle->gamemode->sendLeaderboard(this);
-	protocol->onVisibleCellUpdate(add, upd, eat, del);
+void Connection::onDead() {
+	if (protocol) protocol->onDead();
 }

@@ -35,6 +35,7 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_INT(worldMaxPlayers);
 	LOAD_INT(worldMinCount);
 	LOAD_INT(worldMaxCount);
+	LOAD_INT(physicsThreads);
 	LOAD_INT(chatCooldown);
 	LOAD_INT(matchmakerBulkSize);
 	LOAD_BOOL(minionEnableQBasedControl);
@@ -129,10 +130,10 @@ void ServerHandle::onTick() {
 	tick++;
 
 	vector<unsigned int> removingIds;
-	for (auto pair : worlds) {
-		pair.second->update();
-		if (pair.second->toBeRemoved)
-			removingIds.push_back(pair.first);
+	for (auto [id, world] : worlds) {
+		world->update();
+		if (world->toBeRemoved)
+			removingIds.push_back(id);
 	}
 
 	for (auto id : removingIds)
@@ -142,8 +143,8 @@ void ServerHandle::onTick() {
 	matchmaker.update();
 	gamemode->onHandleTick();
 
-	for (auto pair : worlds)
-		pair.second->clearTruck();
+	for (auto [_, world] : worlds)
+		world->clearTruck();
 
 	averageTickTime = stopwatch.elapsed();
 	stopwatch.stop();
@@ -158,7 +159,7 @@ bool ServerHandle::start() {
 	averageTickTime = tick = 0;
 	running = true;
 
-	listener.open(std::thread::hardware_concurrency());
+	listener.open(std::min(getSettingInt("listenerThreads"), (int) std::thread::hardware_concurrency()));
 	ticker.start();
 	gamemode->onHandleStart();
 

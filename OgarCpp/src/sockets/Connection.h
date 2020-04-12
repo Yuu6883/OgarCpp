@@ -59,4 +59,6 @@ public:
 	void onWorldReset();
 	void send(string_view data);
 	void closeSocket(int code, string_view reason);
+	bool isThreaded();
+	void onDead();
 };

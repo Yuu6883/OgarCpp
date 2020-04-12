@@ -1,9 +1,11 @@
 #pragma once
+#include <list>
 #include <regex>
 #include <atomic>
 
 using std::atomic;
 using std::string;
+using std::list;
 
 class Listener;
 class Player;
@@ -14,6 +16,8 @@ static std::regex nameSkinRegex{ "<(.*)>(.*)" };
 enum class RouterType {
 	NONE, PLAYER, MINION
 };
+
+class Router;
 
 class Router {
 public:
@@ -28,9 +32,13 @@ public:
 	string spawningSkin = "";
 	string spawningTag  = "";
 
+	atomic<bool> busy = false;
 	atomic<float> mouseX = 0;
 	atomic<float> mouseY = 0;
 	atomic<bool> requestingSpectate = false;
+	atomic<unsigned int> spectatePID = 0;
+	Router* spectateTarget;
+	list<Router*> spectators;
 	atomic<bool> isPressingQ = false;
 	atomic<bool> hasPressedQ = false;
 	atomic<bool> ejectMacro  = false;
@@ -58,4 +66,6 @@ public:
 	void close();
 	virtual bool shouldClose() = 0;
 	virtual void update() = 0;
+	virtual bool isThreaded() = 0;
+	virtual void onDead() = 0;
 };

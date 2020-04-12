@@ -15,6 +15,13 @@ using std::string;
 using std::to_string;
 
 bool Listener::open(int threads = 1) {
+	if (threads < 1) {
+		threads = 1;
+		Logger::warn("Socket thread number is set to 1");
+	} else if (threads > std::thread::hardware_concurrency()) {
+		threads = std::thread::hardware_concurrency();
+		Logger::warn(string("Socket thread number is set to ") + to_string(threads));
+	}
 	if (sockets.size() || socketThreads.size()) return false;
 
 	originRegex = std::regex(handle->getSettingString("listenerAcceptedOriginRegex"));
@@ -58,14 +65,16 @@ bool Listener::open(int threads = 1) {
 				},
 				.message = [](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
 					auto data = (SocketData*)ws->getUserData();
-					data->connection->onSocketMessage(buffer);
+					if (data->connection)
+						data->connection->onSocketMessage(buffer);
 				},
 				.drain = [](auto* ws) { /* Check getBufferedAmount here */ },
 				.ping = [](auto* ws) {},
 				.pong = [](auto* ws) {},
 				.close = [this](auto* ws, int code, std::string_view message) {
 					auto data = (SocketData*)ws->getUserData();
-					data->connection->onSocketClose(code, message);
+					if (data->connection)
+						data->connection->onSocketClose(code, message);
 				}
 			}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
 				if (listenerSocket) {

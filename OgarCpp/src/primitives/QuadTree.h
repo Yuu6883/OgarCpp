@@ -2,9 +2,15 @@
 
 #include <string>
 #include <functional>
+#include <atomic>
+#include <iostream>
+#include <list>
+#include <algorithm>
+#include <string>
 #include "Rect.h"
 
 using std::function;
+using std::atomic;
 
 class QuadNode;
 class QuadTree;
@@ -19,14 +25,16 @@ public:
 
 class QuadTree {
 	friend std::ostream& operator<<(std::ostream& stream, QuadTree& quad);
-private:
+public:
 	QuadNode* root;
 	int maxLevel;
 	int maxItem;
-public:
-	QuadTree(Rect& range, int maxLevel, int maxItem);
+	unsigned long id = 0;
+	atomic<unsigned int> reference = 0;
+	QuadTree(Rect& range, int maxLevel, int maxItem, bool cleanup = false);
 	~QuadTree();
-	void insert(QuadItem*);
+	void insert(QuadItem*, bool nosplit = false);
+	void split();
 	void update(QuadItem*);
 	void remove(QuadItem*);
 	void search(Rect&, function<void(QuadItem*)> callback);

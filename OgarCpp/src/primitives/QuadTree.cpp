@@ -1,38 +1,33 @@
 #include "QuadTree.h"
-#include <iostream>
-#include <list>
-#include <algorithm>
-#include <string>
 
 class QuadNode {
-
-	friend QuadTree;
-	friend std::ostream& operator<<(std::ostream& stream, QuadNode& quad);
-
-private:
-
+public:
 	int& maxLevel;
 	int& maxItem;
 	int level;
+	bool cleanup;
 
 	Rect range;
 	QuadNode* root;
 	QuadNode* branches;
 	std::list<QuadItem*> items;
 
-	QuadNode(Rect range, int& maxLevel, int& maxItem, QuadNode* root) : 
-		maxLevel(maxLevel), maxItem(maxItem), range(range), root(root), branches(nullptr) {
+	QuadNode(Rect range, int& maxLevel, int& maxItem, QuadNode* root, bool cleanup = false) :
+		maxLevel(maxLevel), maxItem(maxItem), cleanup(cleanup), range(range), root(root), branches(nullptr) {
 		level = root ? root->level + 1 : 1;
 	}
 
 	~QuadNode() {
+		if (cleanup)
+			for (auto item : items)
+				delete item;
 		if (!hasSplit()) return;
 		delete[] branches;
 		branches = nullptr;
 	}
 
 	bool hasSplit() {
- 		return branches != nullptr;
+		return branches != nullptr;
 	}
 
 	void insert(QuadItem* item) {
@@ -86,10 +81,10 @@ private:
 		float hw = range.w / 2;
 		float hh = range.h / 2;
 		branches = new QuadNode[4]{
-			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x + hw, y - hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x - hw, y + hh, hw, hh), maxLevel, maxItem, this),
-			QuadNode(Rect(x + hw, y + hh, hw, hh), maxLevel, maxItem, this),
+			QuadNode(Rect(x - hw, y - hh, hw, hh), maxLevel, maxItem, this, cleanup),
+			QuadNode(Rect(x + hw, y - hh, hw, hh), maxLevel, maxItem, this, cleanup),
+			QuadNode(Rect(x - hw, y + hh, hw, hh), maxLevel, maxItem, this, cleanup),
+			QuadNode(Rect(x + hw, y + hh, hw, hh), maxLevel, maxItem, this, cleanup),
 		};
 		auto iter = items.begin();
 		while (iter != items.cend()) {
@@ -141,7 +136,7 @@ private:
 		if (quad.t) {
 			if (quad.l) return 0;
 			if (quad.r) return 1;
-		} 
+		}
 		if (quad.b) {
 			if (quad.l) return 2;
 			if (quad.r) return 3;
@@ -151,7 +146,7 @@ private:
 
 	void search(Rect& r, function<void(QuadItem*)> callback) {
 		for (auto item : items) {
-			if (r.intersects(item->range)) 
+			if (r.intersects(item->range))
 				callback(item);
 		}
 		if (!hasSplit()) return;
@@ -200,27 +195,34 @@ std::ostream& operator<<(std::ostream& stream, QuadNode& quad) {
 std::ostream& operator<<(std::ostream& stream, QuadTree& tree) {
 	if (tree.root) {
 		return stream << *tree.root;
-	} else {
+	}
+	else {
 		return stream << "[ROOTLESS TREE]" << std::endl;
 	}
 }
 
-QuadTree::QuadTree(Rect& range, int maxLevel, int maxItem) : 
-	maxLevel(maxLevel), maxItem(maxItem){
-	root = new QuadNode(range, this->maxLevel, this->maxItem, nullptr);
+static unsigned long quadtree_id = 1;
+
+QuadTree::QuadTree(Rect& range, int maxLevel, int maxItem, bool cleanup) :
+	maxLevel(maxLevel), maxItem(maxItem) {
+	root = new QuadNode(range, this->maxLevel, this->maxItem, nullptr, cleanup);
+	id = quadtree_id++;
 }
 
 QuadTree::~QuadTree() {
 	if (root) delete root;
 }
 
-void QuadTree::insert(QuadItem* item) { if (root) root->insert(item); };
+void QuadTree::insert(QuadItem* item, bool nosplit) { 
+	if (root) nosplit ? root->items.push_back(item) : root->insert(item);
+};
+void QuadTree::split() { if (root) root->split(); };
 void QuadTree::update(QuadItem* item) { if (root) root->update(item); };
 void QuadTree::remove(QuadItem* item) { if (root) root->remove(item); };
-void QuadTree::search(Rect& rect, function<void(QuadItem*)> callback) { 
-	if (root) root->search(rect, callback); 
+void QuadTree::search(Rect& rect, function<void(QuadItem*)> callback) {
+	if (root) root->search(rect, callback);
 }
-bool QuadTree::containAny(Rect& rect, function<bool(QuadItem*)> selector) { 
-	if (root) return root->containAny(rect, selector); 
-	return false; 
+bool QuadTree::containAny(Rect& rect, function<bool(QuadItem*)> selector) {
+	if (root) return root->containAny(rect, selector);
+	return false;
 };

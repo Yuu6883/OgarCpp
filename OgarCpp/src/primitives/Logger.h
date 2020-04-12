@@ -32,6 +32,7 @@ public:
 		else {
 			*out << "[debug]" << string << std::endl;
 		}
+		out->flush();
 	}
 
 	static void verbose(std::string_view string) {
@@ -42,6 +43,7 @@ public:
 		else {
 			*out << "[verbose]" << string << std::endl;
 		}
+		out->flush();
 	}
 
 	static void info(std::string_view string) {
@@ -52,6 +54,7 @@ public:
 		else {
 			*out << "[info]" << string << std::endl;
 		}
+		out->flush();
 	}
 
 	static void warn(std::string_view string) {
@@ -62,6 +65,7 @@ public:
 		else {
 			*out << "[warn]" << string << std::endl;
 		}
+		out->flush();
 	}
 
 	static void error(std::string_view string) {
@@ -72,5 +76,6 @@ public:
 		else {
 			*out << "[error]" << string << std::endl;
 		}
+		out->flush();
 	}
 };

@@ -16,7 +16,7 @@ static const float PI = atan(1) * 4;
 class World;
 class Player;
 
-enum CellType : char {
+enum CellType : unsigned char {
 	PLAYER,
 	PELLET,
 	VIRUS,
@@ -29,6 +29,21 @@ enum class EatResult : unsigned char {
 	COLLIDE,
 	EAT,
 	EATINVD
+};
+
+struct CellData : public QuadItem {
+public:
+	CellData(float x, float y, CellType type, unsigned int id, unsigned int pid,
+		unsigned int age, float size, bool dead) : QuadItem(x, y),
+		type(type), id(id), pid(pid), age(age), size(size), dead(dead) {
+		range = Rect(x, y, size, size);
+	};
+	CellType type;
+	unsigned int id;
+	unsigned int pid;
+	unsigned int age;
+	float size;
+	bool dead = false;
 };
 
 class Cell : public QuadItem {
@@ -121,11 +136,12 @@ public:
 
 	virtual void onSpawned() = 0;
 	virtual void onRemoved() = 0;
+
+	CellData* getData();
 };
 
 class PlayerCell : public Cell {
 public:
-	Player* owner;
 	bool _canMerge = false;
 	PlayerCell(Player* owner, float x, float y, float size);
 	float getMoveSpeed(); 

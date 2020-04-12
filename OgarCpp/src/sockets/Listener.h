@@ -16,7 +16,7 @@ class Connection;
 
 struct SocketData {
 	uWS::Loop* loop;
-	Connection* connection;
+	Connection* connection = nullptr;
 };
 
 class Listener {

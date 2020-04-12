@@ -34,9 +34,17 @@ public:
 	World* world = nullptr;
 	short team = -1;
 	float score = 0;
+	
+	// For sequential buffering
 	list<PlayerCell*> ownedCells;
 	map<unsigned int, Cell*> visibleCells;
 	map<unsigned int, Cell*> lastVisibleCells;
+
+	// For threaded buffering
+	list<CellData*> ownedCellData;
+	map<unsigned int, CellData*> visibleCellData;
+	map<unsigned int, CellData*> lastVisibleCellData;
+	unsigned long lastThreadedTreeID = 0;
 	
 	ViewArea viewArea = ViewArea(0, 0, 1920 / 2, 1080 / 2, 1);
 
@@ -46,6 +54,6 @@ public:
 
 	void updateState(PlayerState state);
 	void updateViewArea();
-	void updateVisibleCells();
+	void updateVisibleCells(bool threaded = false);
 	bool exist();
 };

@@ -31,6 +31,7 @@ public:
 
 	ProtocolVanis(Connection* connection) : Protocol(connection) {
 		noDelDup = true;
+		threadedUpdate = true;
 	};
 	string getType() { return "Vanis"; };
 	string getSubtype() { return "(XDDDD)"; };
@@ -53,5 +54,7 @@ public:
 	void onSpectatePosition(ViewArea* area);
 	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
 	void onStatsRequest();
+	void onVisibleCellThreadedUpdate();
 	Protocol* clone() { return new ProtocolVanis(*this); };
+	void onDead();
 };

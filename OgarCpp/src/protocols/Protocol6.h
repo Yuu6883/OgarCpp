@@ -42,6 +42,8 @@ public:
 	void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry);
 	void onSpectatePosition(ViewArea* area);
 	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
+	void onVisibleCellThreadedUpdate() {};
 	Protocol* clone() { return new Protocol6(*this); };
 	void onStatsRequest();
+	void onDead() {};
 };

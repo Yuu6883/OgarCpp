@@ -44,6 +44,21 @@ void Router::onSpectateRequest() {
 	requestingSpectate = false;
 	if (!hasPlayer) return;
 	player->updateState(PlayerState::SPEC);
+	if (spectatePID && player->hasWorld) {
+		auto iter = std::find_if(player->world->players.begin(), player->world->players.end(), [this](Player* p) { return p->id == spectatePID; });
+		if (iter != player->world->players.end()) {
+			auto toSpec = *iter;
+			toSpec->router->spectators.remove(this);
+			toSpec->router->spectators.push_back(this);
+			spectateTarget = toSpec->router;
+		}
+		spectatePID = 0;
+	}
+	if (player->hasWorld && player->world->largestPlayer) {
+		player->world->largestPlayer->router->spectators.remove(this);
+		player->world->largestPlayer->router->spectators.push_back(this);
+		spectateTarget = player->world->largestPlayer->router;
+	}
 }
 
 void Router::onQPress() {

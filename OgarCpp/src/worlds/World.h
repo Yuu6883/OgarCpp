@@ -31,6 +31,7 @@ class World : public Spawner {
 public:
 	ServerHandle* handle;
 	ThreadPool* physicsPool;
+	ThreadPool* socketsPool;
 	unsigned int id;
 	bool frozen = false;
 	bool toBeRemoved = false;
@@ -49,7 +50,9 @@ public:
 	int motherCellCount = 0;
 	int virusCount = 0;
 	Rect border;
+
 	QuadTree* finder = nullptr;
+	QuadTree* lockedFinder = nullptr;
 
 	WorldStats stats;
 

@@ -20,6 +20,10 @@ public:
 
 	~Writer() {}
 
+	void reset() {
+		ptr = (char*)pool;
+	}
+
 	int offset() {
 		return ptr - pool;
 	}

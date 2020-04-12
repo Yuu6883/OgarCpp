@@ -75,5 +75,7 @@ public:
 		spectateAreaPending = area;
 	}
 	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
+	void onVisibleCellThreadedUpdate() {};
 	Protocol* clone() { return new ProtocolModern(*this); };
+	void onDead() {};
 };

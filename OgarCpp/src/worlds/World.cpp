@@ -11,7 +11,8 @@ using std::thread;
 
 World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 	worldChat = new ChatChannel(&handle->listener);
-	physicsPool = new ThreadPool(handle->getSettingInt("worldThreads"));
+	physicsPool = new ThreadPool(handle->getSettingInt("physicsThreads"));
+	socketsPool = new ThreadPool(handle->getSettingInt("socketsThreads"));
 	float x = handle->getSettingInt("worldMapX");
 	float y = handle->getSettingInt("worldMapY");
 	float w = handle->getSettingInt("worldMapW");
@@ -34,6 +35,8 @@ World::~World() {
 	for (auto c : cells) delete c;
 	delete worldChat;
 	delete finder;
+	delete physicsPool;
+	delete socketsPool;
 }
 
 void World::setBorder(Rect& rect) {
@@ -41,8 +44,6 @@ void World::setBorder(Rect& rect) {
 	if (finder) delete finder;
 	int maxLevel = handle->getSettingInt("worldFinderMaxLevel");
 	int maxItems = handle->getSettingInt("worldFinderMaxItems");
-	/* Logger::debug(string("QuadTree maxLevel: ") + std::to_string(maxLevel) +
-				                ", maxItems: "  + std::to_string(maxItems)); */
 	finder = new QuadTree(border, maxLevel, maxItems);
 	for (auto cell : cells) {
 		if (cell->getType() == PLAYER) continue;
@@ -192,9 +193,13 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 
 void World::spawnPlayer(Player* player, Point& pos, float size) {
 
-	for (auto player : players) {
-		if (player->router->type == RouterType::PLAYER) {
-			((Connection*)player->router)->protocol->onPlayerSpawned(player);
+	if (player->router->type == RouterType::PLAYER)
+		((Connection*)player->router)->protocol->onPlayerSpawned(player);
+
+	for (auto other : players) {
+		if (other->router->type == RouterType::PLAYER) {
+			((Connection*)player->router)->protocol->onPlayerSpawned(other);
+			((Connection*)other->router)->protocol->onPlayerSpawned(player);
 		}
 	}
 
@@ -298,12 +303,12 @@ void World::liveUpdate() {
 		printf("playerCellUpdateTime: %2.5fms\n", bench.lap());
 	
 	std::mutex mtx;
-	static const unsigned int BATCH_SIZE = 250;
+	int batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
 	int offset = 0;
 	auto pc_iter = playerCells.cbegin();
 
 	while (offset < playerCells.size()) {
-		auto incre = std::min(BATCH_SIZE, (unsigned int)(playerCells.size() - offset));
+		auto incre = std::min(batch_size, (int) playerCells.size() - offset);
 		std::advance(pc_iter, incre);
 		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
 
@@ -344,6 +349,7 @@ void World::liveUpdate() {
 
 	physicsPool->waitFinished();
 
+	// Old single threaded physics update
 	/*
 	for (auto c : playerCells) {
 		finder->search(c->range, [c, &rigid, &eat](auto o) {
@@ -389,6 +395,12 @@ void World::liveUpdate() {
 		if (p->score > 0 && (!largestPlayer || p->score > largestPlayer->score))
 			largestPlayer = p;
 
+	bool skipFrame = false;
+	if (lockedFinder) {
+		Logger::warn("Skipping frame");
+		skipFrame = true;
+	}
+
 	auto p_iter = players.begin();
 	while (p_iter != players.cend()) {
 
@@ -429,8 +441,32 @@ void World::liveUpdate() {
 		if (router->requestSpawning)
 			router->onSpawnRequest();
 
+		if (skipFrame) continue;
 
+		if (router->isThreaded()) {
+
+			if (router->busy) {
+				continue;
+			};
+
+			for (auto d : player->ownedCellData) delete d;
+			player->ownedCellData.clear();
+			for (auto cell : player->ownedCells)
+				player->ownedCellData.push_back(cell->getData());
+			if (!lockedFinder) {
+				lockedFinder = new QuadTree(border, finder->maxLevel, finder->maxLevel, true);
+				// printf("Allocated QT at: 0x%p (id:%i)\n", lockedFinder, lockedFinder->id);
+			}
+			lockedFinder->reference++;
+		}
 		player->updateViewArea();
+	}
+
+	// Build threaded tree if it exists so players can query it in other threads
+	if (lockedFinder && !skipFrame) {
+		for (auto cell : cells)
+			lockedFinder->insert(cell->getData(), true);
+		lockedFinder->split();
 	}
 
 	if (pog)
@@ -676,5 +712,9 @@ void World::compileStatistics() {
 	stats.gamemode = handle->gamemode->getName();
 	stats.loadTime = handle->averageTickTime / handle->stepMult;
 	stats.uptime = duration_cast<seconds>(system_clock::now() - handle->startTime).count();
+
+	if (stats.loadTime > 80.0f) {
+		Logger::warn(string("Server can't keep up! Load: ") + std::to_string(stats.loadTime) + "%");
+	}
 }
 
