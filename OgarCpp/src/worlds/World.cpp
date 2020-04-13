@@ -269,6 +269,56 @@ void World::liveUpdate() {
 	list<pair<Cell*, Cell*>> rigid;
 	list<pair<Cell*, Cell*>> eat;
 
+	std::mutex mtx;
+	int batch_size = boostingCells.size() / handle->runtime.physicsThreads + 1;
+	int offset = 0;
+	auto bc_iter = boostingCells.cbegin();
+
+	while (offset < boostingCells.size()) {
+		auto incre = std::min(batch_size, (int) boostingCells.size() - offset);
+		std::advance(bc_iter, incre);
+		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
+
+			auto count = incre;
+			list<pair<Cell*, Cell*>> thread_rigid;
+			list<pair<Cell*, Cell*>> thread_eat;
+
+			auto start = boostingCells.cbegin();
+			std::advance(start, offset);
+
+			while (count-- && start != boostingCells.cend()) {
+				auto c = *start;
+				if (c != NULL && c->getType() == VIRUS || c->getType() == EJECTED_CELL) {
+					finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
+						auto other = (Cell*)o;
+						if (c->id == other->id) return;
+						switch (c->getEatResult(other)) {
+						case EatResult::COLLIDE:
+							thread_rigid.push_back(std::make_pair(c, other));
+							break;
+						case EatResult::EAT:
+							thread_eat.push_back(std::make_pair(c, other));
+							break;
+						case EatResult::EATINVD:
+							thread_eat.push_back(std::make_pair(other, c));
+							break;
+						}
+					});
+				}
+				std::advance(start, 1);
+			}
+
+			mtx.lock();
+			rigid.splice(rigid.begin(), thread_rigid);
+			eat.splice(eat.begin(), thread_eat);
+			mtx.unlock();
+		});
+		offset += incre;
+	}
+
+	physicsPool->waitFinished();
+
+	/*
 	for (auto c : boostingCells) {
 		if (c->getType() != VIRUS && c->getType() != EJECTED_CELL) continue;
 		finder->search(c->range, [c, &rigid, &eat](auto o) {
@@ -286,7 +336,7 @@ void World::liveUpdate() {
 					break;
 			}
 		});
-	}
+	} */
 
 	if (pog)
 		printf("boostCheckTime: %2.5fms\n", bench.lap());
@@ -302,9 +352,8 @@ void World::liveUpdate() {
 	if (pog)
 		printf("playerCellUpdateTime: %2.5fms\n", bench.lap());
 	
-	std::mutex mtx;
-	int batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
-	int offset = 0;
+	batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
+	offset = 0;
 	auto pc_iter = playerCells.cbegin();
 
 	while (offset < playerCells.size()) {
@@ -319,7 +368,7 @@ void World::liveUpdate() {
 			auto start = playerCells.cbegin();
 			std::advance(start, offset);
 
-			while (count--) {
+			while (count-- && start != playerCells.cend()) {
 				auto c = *start;
 				finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
 					auto other = (Cell*) o;
@@ -395,11 +444,8 @@ void World::liveUpdate() {
 		if (p->score > 0 && (!largestPlayer || p->score > largestPlayer->score))
 			largestPlayer = p;
 
-	bool skipFrame = false;
-	if (lockedFinder) {
-		Logger::warn("Skipping frame");
-		skipFrame = true;
-	}
+	unsigned int threadPlayerCount = 0;
+	lockedFinder = new QuadTree(border, finder->maxLevel, finder->maxLevel, true);
 
 	auto p_iter = players.begin();
 	while (p_iter != players.cend()) {
@@ -441,8 +487,6 @@ void World::liveUpdate() {
 		if (router->requestSpawning)
 			router->onSpawnRequest();
 
-		if (skipFrame) continue;
-
 		if (router->isThreaded()) {
 
 			if (router->busy) {
@@ -453,21 +497,14 @@ void World::liveUpdate() {
 			player->ownedCellData.clear();
 			for (auto cell : player->ownedCells)
 				player->ownedCellData.push_back(cell->getData());
-			if (!lockedFinder) {
-				lockedFinder = new QuadTree(border, finder->maxLevel, finder->maxLevel, true);
-				// printf("Allocated QT at: 0x%p (id:%i)\n", lockedFinder, lockedFinder->id);
-			}
-			lockedFinder->reference++;
+			player->lockedFinder = lockedFinder;
 		}
 		player->updateViewArea();
 	}
 
-	// Build threaded tree if it exists so players can query it in other threads
-	if (lockedFinder && !skipFrame) {
-		for (auto cell : cells)
-			lockedFinder->insert(cell->getData(), true);
-		lockedFinder->split();
-	}
+	for (auto cell : cells)
+		lockedFinder->insert(cell->getData(), true);
+	lockedFinder->split();
 
 	if (pog)
 		printf("playerUpdateTime: %2.5fms\n", bench.lap());
@@ -702,10 +739,10 @@ void World::compileStatistics() {
 		else if (p->state == PlayerState::SPEC || p->state == PlayerState::ROAM)
 			spectating++;
 	}
-	stats.limit      = handle->runtime.listenerMaxConnections;
-	stats.internal   = internal;
-	stats.external   = external;
-	stats.playing    = playing;
+	stats.limit = handle->runtime.listenerMaxConnections;
+	stats.internal = internal;
+	stats.external = external;
+	stats.playing = playing;
 	stats.spectating = spectating;
 
 	stats.name = handle->runtime.serverName;
@@ -715,6 +752,7 @@ void World::compileStatistics() {
 
 	if (stats.loadTime > 80.0f) {
 		Logger::warn(string("Server can't keep up! Load: ") + std::to_string(stats.loadTime) + "%");
+		handle->bench = true;
 	}
 }
 

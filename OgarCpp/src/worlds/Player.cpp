@@ -9,13 +9,14 @@ Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 };
 
 Player::~Player() {
-	if (hasWorld) {
-		Logger::warn("Player should not have world reference when it's being deallocated");
+	if (hasWorld || world) {
+		world->removePlayer(this);
 	}
 	if (router->disconnected) {
 		router->hasPlayer = false;
 		router->player = nullptr;
 		delete (Connection*) router;
+		router = nullptr;
 	}
 };
 
@@ -91,9 +92,9 @@ void Player::updateViewArea() {
 }
 
 void Player::updateVisibleCells(bool threaded) {
-	if (!world) return;
+	if (!hasWorld || !world) return;
 
-	if (threaded && world->lockedFinder) {
+	if (threaded && lockedFinder) {
 		lastVisibleCellData.clear();
 		lastVisibleCellData = visibleCellData;
 		visibleCellData.clear();
@@ -102,9 +103,7 @@ void Player::updateVisibleCells(bool threaded) {
 			if (data->type != CellType::EJECTED_CELL || data->age > 1)
 				visibleCellData.insert(std::make_pair(data->id, data));
 
-		// printf("Searching QT at 0x%p\n", threadedFinder);
-		if (!world->lockedFinder) return;
-		world->lockedFinder->search(viewArea, [this](auto c) {
+		lockedFinder->search(viewArea, [this](auto c) {
 			auto data = (CellData*)c;
 			if (data->type != CellType::EJECTED_CELL || data->age > 1)
 				visibleCellData.insert(std::make_pair(data->id, data));

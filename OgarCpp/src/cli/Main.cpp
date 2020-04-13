@@ -110,5 +110,7 @@ int main() {
 	std::this_thread::sleep_for(seconds{ 1 });
 
 	promptInput(&handle);
+
+	FREE_QUADTREES();
 	return EXIT_SUCCESS;
 }

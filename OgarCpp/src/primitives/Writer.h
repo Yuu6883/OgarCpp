@@ -5,7 +5,7 @@
 #include <thread>
 #include <map>
 
-constexpr auto POOL_SIZE = 1024 * 1024;
+constexpr auto POOL_SIZE = 10 * 1024 * 1024;
 static const thread_local char* pool = (char*) malloc(POOL_SIZE);
 
 class Writer {
@@ -24,7 +24,7 @@ public:
 		ptr = (char*)pool;
 	}
 
-	int offset() {
+	unsigned int offset() {
 		return ptr - pool;
 	}
 
@@ -92,7 +92,10 @@ public:
 	}
 
 	std::string_view finalize() {
-		int offset = this->offset();
+		auto offset = this->offset();
+		if (offset > POOL_SIZE * 0.9f) {
+			printf("WARNING: OFFSET = %i", offset);
+		}
 		return std::string_view(pool, offset);
 	}
 };

@@ -74,6 +74,7 @@ void PlayerCell::onRemoved() {
 		}
 		iter++;
 	}
+	if (!owner) return;
 	iter = owner->ownedCells.begin();
 	while (iter != owner->ownedCells.cend()) {
 		if (*iter == this) {

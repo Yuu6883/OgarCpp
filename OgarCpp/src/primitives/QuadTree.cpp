@@ -207,6 +207,14 @@ QuadTree::QuadTree(Rect& range, int maxLevel, int maxItem, bool cleanup) :
 	maxLevel(maxLevel), maxItem(maxItem) {
 	root = new QuadNode(range, this->maxLevel, this->maxItem, nullptr, cleanup);
 	id = quadtree_id++;
+
+	if (cleanup) {
+		if (cleanupQueue.size() > 5) {
+			delete cleanupQueue.front();
+			cleanupQueue.pop_front();
+		}
+		cleanupQueue.push_back(this);
+	}
 }
 
 QuadTree::~QuadTree() {

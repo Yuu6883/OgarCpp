@@ -15,6 +15,15 @@ using std::atomic;
 class QuadNode;
 class QuadTree;
 
+static std::list<QuadTree*> cleanupQueue;
+
+static inline void FREE_QUADTREES() {
+	while (cleanupQueue.size()) {
+		delete cleanupQueue.front();
+		cleanupQueue.pop_front();
+	}
+}
+
 class QuadItem : public Point {
 	friend QuadTree;
 public:

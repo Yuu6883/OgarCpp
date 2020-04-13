@@ -44,7 +44,7 @@ public:
 	list<CellData*> ownedCellData;
 	map<unsigned int, CellData*> visibleCellData;
 	map<unsigned int, CellData*> lastVisibleCellData;
-	unsigned long lastThreadedTreeID = 0;
+	QuadTree* lockedFinder = nullptr;
 	
 	ViewArea viewArea = ViewArea(0, 0, 1920 / 2, 1080 / 2, 1);
 

@@ -140,12 +140,14 @@ void Connection::update() {
 		if (busy || !player->world->lockedFinder) {
 			return;
 		}
-		if (player->world->lockedFinder && player->lastThreadedTreeID == player->world->lockedFinder->id) {
+
+		/*
+		if (player->world->lockedFinder && player->lockedFinder->id == player->world->lockedFinder->id) {
 			printf("Same LTT at 0x%p\n", player->world->lockedFinder);
 			Logger::warn("Trying to query the same tree, aborting");
 			return;
 		}
-		player->lastThreadedTreeID = player->world->lockedFinder->id;
+		*/
 
 		busy = true;
 
@@ -160,12 +162,7 @@ void Connection::update() {
 		player->world->socketsPool->enqueue([this] {
 			player->updateVisibleCells(true);
 			protocol->onVisibleCellThreadedUpdate();
-			player->world->lockedFinder->reference--;
-			if (player->world->lockedFinder->reference.load() <= 0) {
-				// printf("Deallocating QT: 0x%p (id:%i)\n", player->world->lockedFinder, player->world->lockedFinder->id);
-				delete player->world->lockedFinder;
-				player->world->lockedFinder = nullptr;
-			}
+			player->world->lockedFinder = nullptr;
 			busy = false;
 		});
 	} else {
