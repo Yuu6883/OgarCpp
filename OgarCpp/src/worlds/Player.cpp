@@ -103,8 +103,10 @@ void Player::updateVisibleCells(bool threaded) {
 			if (data->type != CellType::EJECTED_CELL || data->age > 1)
 				visibleCellData.insert(std::make_pair(data->id, data));
 
+		// printf("Querying player#%u viewArea 0x%p\n", id, &viewArea);
 		lockedFinder->search(viewArea, [this](auto c) {
 			auto data = (CellData*)c;
+			// if (data->type == CellType::EJECTED_CELL) printf("Cell#%u belongs to %u (%u) \n", data->id, data->pid, id);
 			if (data->type != CellType::EJECTED_CELL || data->age > 1)
 				visibleCellData.insert(std::make_pair(data->id, data));
 		});
@@ -123,6 +125,19 @@ void Player::updateVisibleCells(bool threaded) {
 			if (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1)
 				visibleCells.insert(std::make_pair(cell->id, cell));
 		});
+
+		/*
+		printf("Visible Cells: ");
+		for (auto [id, _] : visibleCells) {
+			printf("%u, ", id);
+		}
+		printf("\n");
+
+		printf("Lastvisible Cells: ");
+		for (auto [id, _] : lastVisibleCells) {
+			printf("%u, ", id);
+		}
+		printf("\n"); */
 	}	
 }
 
@@ -132,10 +147,7 @@ bool Player::exist() {
 		handle->removePlayer(this->id);
 		return false;
 	}
-	int delay = handle->runtime.worldPlayerDisposeDelay;
-	if (router->disconnectedTick && delay > 0 && handle->tick - router->disconnectedTick >= delay) {
-		handle->removePlayer(this->id);
-		return false;
-	}
-	return true;
+	world->killPlayer(this);
+	handle->removePlayer(this->id);
+	return false;
 }

@@ -9,11 +9,13 @@ Cell::Cell(World* world, float x, float y, float size, unsigned int color) :
 unsigned long Cell::getAge() { return (world->handle->tick - birthTick) * world->handle->stepMult; };
 
 CellData* Cell::getData() {
-	return new CellData(x, y, getType(), id, owner ? owner->id : 0, getAge(), size, deadTick ? 1 : 0);
+	data = new CellData(x, y, getType(), id, owner ? owner->id : 0, 
+		getAge(), eatenBy ? eatenBy->id : 0, size, owner ? 0 : 1);
+	return data;
 }
 
-PlayerCell::PlayerCell(Player* owner, float x, float y, float size):
-	Cell(owner->world, x, y, size, owner->cellColor) {
+PlayerCell::PlayerCell(World* world, Player* owner, float x, float y, float size):
+	Cell (world, x, y, size, owner ? owner->cellColor : 0) {
 	this->owner = owner;
 };
 
@@ -26,16 +28,19 @@ float PlayerCell::getMoveSpeed() {
 
 EatResult PlayerCell::getEatResult(Cell* other) {
 	if (other->getType() == PLAYER) {
+		if (!owner && !other->owner) return EatResult::COLLIDE;
+		if (!owner) return EatResult::NONE;
 		auto delay = world->handle->runtime.playerNoCollideDelay;
-		if (((PlayerCell*)other)->owner->id == owner->id) {
+		if (owner && other->owner && other->owner->id == owner->id) {
 			if (other->getAge() < delay || getAge() < delay) return EatResult::NONE;
 			if (canMerge() && ((PlayerCell*)other)->canMerge()) return EatResult::EAT;
 			return EatResult::COLLIDE;
 		}
-		if (owner->team >= 0 && ((PlayerCell*)other)->owner->team == owner->team)
+		if (owner && other->owner && owner->team >= 0 && other->owner->team == owner->team)
 			return (other->getAge() < delay || getAge() < delay) ? EatResult::NONE : EatResult::COLLIDE;
 		return getDefaultEatResult(other);
 	}
+	if (!owner) return EatResult::NONE;
 	if (other->getType() == MOTHER_CELL &&
 		other->getSize() > size* world->handle->runtime.worldEatMult) return EatResult::EATINVD;
 	if (other->getType() == PELLET) return EatResult::EAT;
@@ -48,7 +53,15 @@ EatResult PlayerCell::getDefaultEatResult(Cell* other) {
 
 void PlayerCell::onTick() {
 	Cell::onTickDefault();
-	if (color != owner->cellColor) color = owner->cellColor;
+	if (!owner) {
+		deadTick++;
+		if (deadTick > world->handle->runtime.worldPlayerDisposeDelay) world->removeCell(this);
+		return;
+	}
+	if (color != owner->cellColor) {
+		color = owner->cellColor;
+		colorChanged = true;
+	}
 	auto delay = world->handle->runtime.playerNoMergeDelay;
 	if (world->handle->runtime.playerMergeTime > 0) {
 		auto initial = 25 * world->handle->runtime.playerMergeTime;
@@ -60,8 +73,10 @@ void PlayerCell::onTick() {
 }
 
 void PlayerCell::onSpawned() {
-	owner->router->onNewOwnedCell(this);
-	owner->ownedCells.push_back(this);
+	if (owner) {
+		owner->router->onNewOwnedCell(this);
+		owner->ownedCells.push_back(this);
+	}
 	world->playerCells.push_back(this);
 }
 
@@ -133,7 +148,9 @@ void Virus::onRemoved() {
 }
 
 EjectedCell::EjectedCell(World* world, Player* owner, float x, float y, unsigned int color) :
-	Cell(world, x, y, world->handle->runtime.ejectedSize, color), owner(owner) {};
+	Cell(world, x, y, world->handle->runtime.ejectedSize, color) {
+	this->owner = owner;
+};
 
 EatResult EjectedCell::getEatResult(Cell* other) {
 	if (other->getType() == VIRUS) return ((Virus*)other)->getEjectedEatResult(false);

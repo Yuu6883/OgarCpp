@@ -121,7 +121,7 @@ void writeAddOrUpdate(Writer& writer, vector<Cell*>& cells) {
 		unsigned char type = cell->getType();
 		switch (type) {
 			case PLAYER:
-				type = ((PlayerCell*)cell)->deadTick ? 5 : 1;
+				type = cell->owner ? 1 : 5;
 				break;
 			case VIRUS:
 				type = 2;
@@ -213,12 +213,15 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 		}
 	}
 	writer.writeUInt8(0);
-	/* del (TODO: no eat for now since lastVisivibleCellData buffer 
-	   is probably freed and the value is not being updated anyways) */
-	for (auto [id, _] : player->lastVisibleCellData)
-		if (!player->visibleCellData.contains(id))
+	for (auto [id, cell] : player->lastVisibleCellData)
+		if (!cell->eatenById && !player->visibleCellData.contains(id))
 			writer.writeUInt32(id);
 	writer.writeUInt32(0);
+	for (auto [id, cell] : player->lastVisibleCellData)
+		if (cell->eatenById && !player->visibleCellData.contains(id)) {
+			writer.writeUInt32(id);
+			writer.writeUInt32(cell->eatenById);
+		}
 	writer.writeUInt32(0);
 
 	auto buffer = writer.finalize();
@@ -230,7 +233,7 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 			|| !router->hasPlayer
 			|| router->player->state != PlayerState::SPEC 
 			|| router->spectateTarget != player->router) continue;
-
+		printf("Sending buffer from player#%u to player#%u\n", player->id, router->player->id);
 		((Connection*)router)->send(buffer);
 	}
 }

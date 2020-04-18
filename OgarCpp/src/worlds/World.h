@@ -67,6 +67,7 @@ public:
 	void updateCell(Cell* cell);
 	void removeCell(Cell* cell);
 	void addPlayer(Player* player);
+	void killPlayer(Player* player);
 	void removePlayer(Player* player);
 	Point getRandomPos(float cellSize);
 	bool isSafeSpawnPos(Rect& range);

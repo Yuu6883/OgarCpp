@@ -33,17 +33,18 @@ enum class EatResult : unsigned char {
 
 struct CellData : public QuadItem {
 public:
-	CellData(float x, float y, CellType type, unsigned int id, unsigned int pid,
-		unsigned int age, float size, bool dead) : QuadItem(x, y),
-		type(type), id(id), pid(pid), age(age), size(size), dead(dead) {
-		range = Rect(x, y, size, size);
-	};
 	CellType type;
 	unsigned int id;
 	unsigned int pid;
 	unsigned int age;
+	unsigned int eatenById;
 	float size;
 	bool dead = false;
+	CellData(float x, float y, CellType type, unsigned int id, unsigned int pid,
+		unsigned int age, unsigned int eatenById, float size, bool dead) : QuadItem(x, y),
+		type(type), id(id), pid(pid), age(age), eatenById(eatenById), size(size), dead(dead) {
+		range = Rect(x, y, size, size);
+	};
 };
 
 class Cell : public QuadItem {
@@ -53,7 +54,7 @@ protected:
 public:
 
 	World* world;
-
+	CellData* data = nullptr;
 	unsigned int id;
 	unsigned long birthTick;
 	unsigned long deadTick = 0;
@@ -131,7 +132,7 @@ public:
 	void whenAteDefault(Cell* other) { setSquareSize(getSquareSize() + other->getSquareSize()); };
 	virtual void whenAte(Cell* other) = 0;
 
-	void whenEatenByDefault(Cell* other) { eatenBy = other; };
+	void whenEatenByDefault(Cell* other) { eatenBy = other; if (data) data->eatenById = other->id; };
 	virtual void whenEatenBy(Cell* other) = 0;
 
 	virtual void onSpawned() = 0;
@@ -143,7 +144,7 @@ public:
 class PlayerCell : public Cell {
 public:
 	bool _canMerge = false;
-	PlayerCell(Player* owner, float x, float y, float size);
+	PlayerCell(World* world, Player* owner, float x, float y, float size);
 	float getMoveSpeed(); 
 	bool canMerge() { return _canMerge; };
 	CellType getType() { return PLAYER; };
@@ -183,7 +184,6 @@ public:
 
 class EjectedCell : public Cell {
 public:
-	Player* owner;
 	EjectedCell(World* world, Player* owner, float x, float y, unsigned int color);
 	CellType getType() { return EJECTED_CELL; };
 	string_view getName() { return string_view(""); };

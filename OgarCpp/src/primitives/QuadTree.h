@@ -38,7 +38,6 @@ public:
 	QuadNode* root;
 	int maxLevel;
 	int maxItem;
-	unsigned long id = 0;
 	atomic<unsigned int> reference = 0;
 	QuadTree(Rect& range, int maxLevel, int maxItem, bool cleanup = false);
 	~QuadTree();

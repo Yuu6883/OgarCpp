@@ -13,6 +13,10 @@ World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 	worldChat = new ChatChannel(&handle->listener);
 	physicsPool = new ThreadPool(handle->getSettingInt("physicsThreads"));
 	socketsPool = new ThreadPool(handle->getSettingInt("socketsThreads"));
+
+	Logger::info(string("Using ") + std::to_string(handle->getSettingInt("physicsThreads")) + " threads to accelerate physics");
+	Logger::info(string("Using ") + std::to_string(handle->getSettingInt("socketsThreads")) + " threads to accelerate sockets");
+
 	float x = handle->getSettingInt("worldMapX");
 	float y = handle->getSettingInt("worldMapY");
 	float w = handle->getSettingInt("worldMapW");
@@ -33,6 +37,7 @@ World::~World() {
 	while (players.size())
 		delete players.front();
 	for (auto c : cells) delete c;
+	for (auto c : gcTruck) delete c;
 	delete worldChat;
 	delete finder;
 	delete physicsPool;
@@ -121,7 +126,7 @@ void World::addPlayer(Player* player) {
 	player->hasWorld = true;
 
 	if (player->router->type == RouterType::PLAYER)
-		worldChat->add((Connection*) player->router);
+		worldChat->add((Connection*) (player->router));
 
 	handle->gamemode->onPlayerJoinWorld(player, this);
 	player->router->onWorldSet();
@@ -147,6 +152,26 @@ void World::removePlayer(Player* player) {
 	player->router->onWorldReset();
 	Logger::debug(string("player ") + to_string(player->id) + " has been removed from world " + to_string(id));
 };
+
+void World::killPlayer(Player* player) {
+
+	for (auto c : player->ownedCells) {
+		c->owner = nullptr;
+		c->posChanged = true;
+		if (c->data) c->data->dead = true;
+	}
+
+	player->ownedCells.clear();
+
+	player->lastVisibleCells.clear();
+	player->visibleCells.clear();
+	player->lastVisibleCellData.clear();
+	player->visibleCellData.clear();
+
+	for (auto c : player->ownedCellData)
+		delete c;
+	player->ownedCellData.clear();
+}
 
 Point World::getRandomPos(float cellSize) {
 	return {
@@ -203,7 +228,7 @@ void World::spawnPlayer(Player* player, Point& pos, float size) {
 		}
 	}
 
-	auto playerCell = new PlayerCell(player, pos.getX(), pos.getY(), size);
+	auto playerCell = new PlayerCell(this, player, pos.getX(), pos.getY(), size);
 	addCell(playerCell);
 	player->updateState(PlayerState::ALIVE);
 }
@@ -370,8 +395,10 @@ void World::liveUpdate() {
 
 			while (count-- && start != playerCells.cend()) {
 				auto c = *start;
+				std::advance(start, 1);
 				finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
 					auto other = (Cell*) o;
+					if (!other->exist) return;
 					if (c->id == other->id) return;
 					switch (c->getEatResult(other)) {
 					case EatResult::COLLIDE:
@@ -385,7 +412,6 @@ void World::liveUpdate() {
 						break;
 					}
 				});
-				std::advance(start, 1);
 			}
 
 			mtx.lock();
@@ -502,9 +528,13 @@ void World::liveUpdate() {
 		player->updateViewArea();
 	}
 
-	for (auto cell : cells)
-		lockedFinder->insert(cell->getData(), true);
-	lockedFinder->split();
+	if (threadPlayerCount) {
+		for (auto cell : cells) {
+			if (!cell) printf("WTF\n");
+			lockedFinder->insert(cell->getData(), true);
+		}
+		lockedFinder->split();
+	}
 
 	if (pog)
 		printf("playerUpdateTime: %2.5fms\n", bench.lap());
@@ -594,6 +624,7 @@ void World::splitVirus(Virus* virus) {
 }
 
 void World::movePlayerCell(PlayerCell* cell) {
+	if (!cell->owner) return;
 	auto router = cell->owner->router;
 	if (router->disconnected) return;
 	float dx = router->mouseX - cell->getX();
@@ -616,13 +647,14 @@ void World::launchPlayerCell(PlayerCell* cell, float size, Boost& boost) {
 	cell->setSquareSize(cell->getSquareSize() - size * size);
 	float x = cell->getX() + handle->runtime.playerSplitDistance * boost.dx;
 	float y = cell->getY() + handle->runtime.playerSplitDistance * boost.dy;
-	auto newCell = new PlayerCell(cell->owner, x, y, size);
+	auto newCell = new PlayerCell(this, cell->owner, x, y, size);
 	newCell->boost = boost;
 	addCell(newCell);
 	setCellAsBoosting(newCell);
 }
 
 void World::autosplitPlayerCell(PlayerCell* cell) {
+	if (!cell->owner) return;
 	float minSplit = handle->runtime.playerMaxSize * handle->runtime.playerMaxSize;
 	int cellsLeft = 1 + handle->runtime.playerMaxCells - cell->owner->ownedCells.size();
 	float size = cell->getSquareSize();
@@ -693,7 +725,7 @@ void World::popPlayerCell(PlayerCell* cell) {
 
 void World::distributeCellMass(PlayerCell* cell, std::vector<float>& dist) {
 	auto player = cell->owner;
-	float cellsLeft = handle->runtime.playerMaxCells - player->ownedCells.size();
+	float cellsLeft = handle->runtime.playerMaxCells - (player ? player->ownedCells.size() : 0);
 	if (cellsLeft <= 0) return;
 	float splitMin = handle->runtime.playerMinSplitSize;
 	splitMin = splitMin * splitMin / 100;

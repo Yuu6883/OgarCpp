@@ -36,7 +36,11 @@ void Router::onSpawnRequest() {
 	} else {
 		skin = spawningSkin;
 	}
-	Logger::debug(string("Name: ") + name + " Skin: " + skin);
+
+	if (spectateTarget) spectateTarget->spectators.remove(this);
+	spectateTarget = nullptr;
+
+	Logger::debug(string("Spawning Player { Name: ") + name + ", Skin: " + skin + " }");
 	listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
 };
 
@@ -44,6 +48,10 @@ void Router::onSpectateRequest() {
 	requestingSpectate = false;
 	if (!hasPlayer) return;
 	player->updateState(PlayerState::SPEC);
+	if (spectateTarget && spectateTarget->hasPlayer && spectateTarget->player->id == spectatePID) {
+		spectatePID = 0;
+		return;
+	}
 	if (spectatePID && player->hasWorld) {
 		auto iter = std::find_if(player->world->players.begin(), player->world->players.end(), [this](Player* p) { return p->id == spectatePID; });
 		if (iter != player->world->players.end()) {

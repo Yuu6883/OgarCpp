@@ -68,7 +68,19 @@ bool Listener::open(int threads = 1) {
 					if (data->connection)
 						data->connection->onSocketMessage(buffer);
 				},
-				.drain = [](auto* ws) { /* Check getBufferedAmount here */ },
+				.drain = [](auto* ws) {
+					auto amount = ws->getBufferedAmount();
+					if (!amount) {
+						auto data = (SocketData*)ws->getUserData();
+						if (data->connection) {
+							data->connection->busy = false;
+							if (data->connection->player)
+								Logger::debug("Backpressure drained: " + data->connection->player->leaderboardName);
+						}
+					} else {
+						Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
+					}
+				},
 				.ping = [](auto* ws) {},
 				.pong = [](auto* ws) {},
 				.close = [this](auto* ws, int code, std::string_view message) {

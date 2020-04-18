@@ -55,7 +55,10 @@ void Connection::onSocketMessage(string_view buffer) {
 	else {
 		protocol = listener->handle->protocols->decide(this, reader);
 		if (!protocol) closeSocket(CloseCodes::CLOSE_UNSUPPORTED, "Ambiguous protocol");
-		else protocol->onDistinguished();
+		else {
+			protocol->onDistinguished();
+			Logger::debug(string("Client connected using protocol: ") + protocol->getType());
+		}
 	}
 }
 
@@ -110,7 +113,12 @@ void Connection::send(string_view message) {
 		Logger::warn("Sending buffer but socket is disconnected");
 		return;
 	}
-	socket->send(message);
+	bool backpressure = socket->send(message);
+	if (!backpressure) {
+		busy = true;
+		if (player)
+			Logger::info(string("Flagged ") + player->leaderboardName + " as busy (backpressure)");
+	}
 }
 
 bool Connection::isThreaded() {
@@ -132,14 +140,13 @@ void Connection::update() {
 		return;
 	}
 
+	if (busy) return;
 	if (!protocol) return;
 	if (protocol->threadedUpdate) {
 		// No need to do thread update, spectate target will send buffer to this router
 		if (player->state == PlayerState::SPEC) return;
 		// Buffering from last frame is not done, skip this frame
-		if (busy || !player->world->lockedFinder) {
-			return;
-		}
+		if (!player->world->lockedFinder) return;
 
 		/*
 		if (player->world->lockedFinder && player->lockedFinder->id == player->world->lockedFinder->id) {
@@ -148,8 +155,6 @@ void Connection::update() {
 			return;
 		}
 		*/
-
-		busy = true;
 
 		auto iter = spectators.begin();
 		while (iter != spectators.end()) {
@@ -163,7 +168,6 @@ void Connection::update() {
 			player->updateVisibleCells(true);
 			protocol->onVisibleCellThreadedUpdate();
 			player->world->lockedFinder = nullptr;
-			busy = false;
 		});
 	} else {
 

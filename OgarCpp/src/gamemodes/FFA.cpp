@@ -7,7 +7,10 @@
 #include "../ServerHandle.h"
 
 void FFA::onPlayerSpawnRequest(Player* player, string name, string skin) {
-	if (player->state == PlayerState::ALIVE || !player->hasWorld) return;
+	if (!player->hasWorld) return;
+	if (player->state == PlayerState::ALIVE && handle->runtime.respawnEnabled) {
+		player->world->killPlayer(player);
+	}
 	float size = player->router->type == RouterType::MINION ?
 		handle->runtime.minionSpawnSize : handle->runtime.playerSpawnSize;
 	auto spawnResult = player->world->getPlayerSpawn(size);

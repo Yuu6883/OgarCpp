@@ -36,6 +36,7 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_INT(worldMinCount);
 	LOAD_INT(worldMaxCount);
 	LOAD_INT(physicsThreads);
+	LOAD_BOOL(respawnEnabled);
 	LOAD_INT(chatCooldown);
 	LOAD_INT(matchmakerBulkSize);
 	LOAD_BOOL(minionEnableQBasedControl);
@@ -228,6 +229,7 @@ bool ServerHandle::removeWorld(unsigned int id) {
 	gamemode->onWorldDestroy(worlds[id]);
 	delete worlds[id];
 	worlds.erase(id);
+	if (!worlds.size()) worlds.clear();
 	Logger::debug(std::string("Removed world with ID ") + std::to_string(id));
 	return true;
 }

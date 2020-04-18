@@ -10,7 +10,6 @@ ThreadPool::ThreadPool(unsigned int n)
         Logger::error(string("Need at least 1 thread for thread pool to work"));
 
     } else {
-        Logger::info(string("Using ") + std::to_string(n) + " threads to accelerate physics");
         for (unsigned int i = 0; i < n; ++i)
             workers.emplace_back(std::bind(&ThreadPool::thread_proc, this));
     }
