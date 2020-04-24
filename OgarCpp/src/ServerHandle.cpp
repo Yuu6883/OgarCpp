@@ -4,13 +4,13 @@
 #include "worlds/World.h"
 
 #define LOAD_INT(prop) runtime.prop = getSettingInt(#prop)
-#define LOAD_FLOAT(prop) runtime.prop = getSettingDouble(#prop)
+#define LOAD_FLOAT(prop) runtime.prop = getSettingFloat(#prop)
 #define LOAD_BOOL(prop) runtime.prop = getSettingBool(#prop)
 #define LOAD_STR(prop) runtime.prop = getSettingString(#prop)
 
-ServerHandle::ServerHandle(Setting* settings) {
+ServerHandle::ServerHandle() {
+	loadSettings();
 	ticker.add([this] { onTick(); });
-	setSettings(settings);
 	protocols = new ProtocolStore();
 	gamemodes = new GamemodeList(this);
 	gamemode = nullptr;
@@ -19,12 +19,11 @@ ServerHandle::ServerHandle(Setting* settings) {
 ServerHandle::~ServerHandle() {
 	delete gamemodes;
 	delete protocols;
-	unloadConfig();
 }
 
-void ServerHandle::setSettings(Setting* settings) {
+void ServerHandle::loadSettings() {
 
-	this->settings = settings;
+	loadConfig();
 	int freq = getSettingInt("serverFrequency");
 	tickDelay = 1000 / freq;
 	ticker.setStep(tickDelay);
@@ -43,6 +42,7 @@ void ServerHandle::setSettings(Setting* settings) {
 	LOAD_BOOL(matchmakerNeedsQueuing);
 	LOAD_FLOAT(minionSpawnSize);
 	LOAD_INT(listenerMaxConnections);
+	LOAD_INT(listenerMaxConnectionsPerIP);
 	LOAD_FLOAT(worldEatMult);
 	LOAD_FLOAT(worldEatOverlapDiv);
 	LOAD_INT(worldSafeSpawnTries);
@@ -99,30 +99,43 @@ void ServerHandle::setSettings(Setting* settings) {
 
 int ServerHandle::getSettingInt(const char* key) {
 	int value = 0;
-	settings->lookupValue(key, value);
+	if (!GAME_CONFIG[key].is_number_integer()) {
+		Logger::warn(string("Failed to get integer from config (key: ") + key + ")");
+	} else {
+		value = GAME_CONFIG[key];
+	}
 	return value;
 };
 
 bool ServerHandle::getSettingBool(const char* key) {
 	bool value = false;
-	settings->lookupValue(key, value);
+	if (!GAME_CONFIG[key].is_boolean()) {
+		Logger::warn(string("Failed to get bool from config (key: ") + key + ")");
+	} else {
+		value = GAME_CONFIG[key];
+	}
 	return value;
 };
 
-float ServerHandle::getSettingDouble(const char* key) {
-	double value;
-	if (settings->lookupValue(key, value))
-		return value;
-	int v2;
-	if (settings->lookupValue(key, v2))
-		return (float) v2;
-	Logger::error(string("Failed to load prop: ") + key);
-	return 0;
+float ServerHandle::getSettingFloat(const char* key) {
+	float value = 0;
+	if (GAME_CONFIG[key].is_number_integer()) {
+		value = (int) GAME_CONFIG[key];
+	} else if (GAME_CONFIG[key].is_number_float()) {
+		value = GAME_CONFIG[key];
+	} else {
+		Logger::warn(string("Failed to get float from config (key: ") + key + ")");
+	}
+	return value;
 };
 
 std::string ServerHandle::getSettingString(const char* key) {
 	std::string value = "";
-	settings->lookupValue(key, value);
+	if (!GAME_CONFIG[key].is_string()) {
+		Logger::warn(string("Failed to get string from config (key: ") + key + ")");
+	} else {
+		value = GAME_CONFIG[key];
+	}
 	return value;
 };
 
@@ -154,7 +167,7 @@ void ServerHandle::onTick() {
 bool ServerHandle::start() {
 	if (running) return false;
 
-	gamemodes->setGamemode(getSettingString("serverGamemode"));
+	gamemodes->setGamemode(getSettingString("serverGameMode"));
 
 	startTime = system_clock::now();
 	averageTickTime = tick = 0;

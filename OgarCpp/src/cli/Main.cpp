@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "../ServerHandle.h"
-#include "../Settings.h"
 
 #include "../protocols/ProtocolModern.h"
 #include "../protocols/Protocol6.h"
@@ -12,12 +11,10 @@
 #include "../gamemodes/FFA.h"
 
 bool exitCLI = false;
-Setting* settings = loadConfig();
 
 void registerGamemodes(ServerHandle* handle) {
 	auto ffa = new FFA(handle);
 	handle->gamemodes->registerGamemode(ffa);
-	handle->gamemodes->setGamemode("FFA");
 }
 
 void registerProtocols(ServerHandle* handle) {
@@ -52,8 +49,7 @@ void registerCommands(ServerHandle* handle) {
 
 	Command<ServerHandle*> reloadCommand("reload", "reload the settings from local game.cfg", "",
 		[handle](ServerHandle* handle, auto context, vector<string>& args) {
-		settings = loadConfig();
-		handle->setSettings(settings);
+		handle->loadSettings();
 	});
 	handle->commands.registerCommand(reloadCommand);
 
@@ -62,14 +58,6 @@ void registerCommands(ServerHandle* handle) {
 		saveConfig();
 	});
 	handle->commands.registerCommand(saveCommand);
-
-
-	Command<ServerHandle*> cellsCommand("cells", "print how many cells we have lmao", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
-		if (handle->worlds.size())
-			printf("Cell count: %u\n", (*handle->worlds.begin()).second->cells.size());
-	});
-	handle->commands.registerCommand(cellsCommand);
 
 	Command<ServerHandle*> benchCommand("bench", "print out how long each part of function takes to execute", "",
 		[handle](ServerHandle* handle, auto context, vector<string>& args) {
@@ -92,7 +80,7 @@ void promptInput(ServerHandle* handle) {
 
 int main() {
 	
-	ServerHandle handle(settings);
+	ServerHandle handle;
 
 	registerGamemodes(&handle);
 	registerProtocols(&handle);

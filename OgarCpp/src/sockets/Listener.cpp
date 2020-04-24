@@ -138,8 +138,8 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* sock
 	} */
 
 	// check connection list length
-	if (externalRouters >= handle->runtime.listenerMaxConnections) {
-		Logger::warn("CONNECTION MAXED");
+	if (externalRouters.load() >= handle->runtime.listenerMaxConnections) {
+		Logger::warn(string("CONNECTION MAXED: ") + to_string(handle->runtime.listenerMaxConnections));
 		socket->end(CONNECTION_MAXED, "Server max connection reached");
 		return false;
 	}
@@ -154,7 +154,7 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* sock
 	// Maybe check IP black list (use kernal is probably better)
 
 	// check connection per IP
-	int ipLimit = handle->getSettingInt("listenerMaxConnectionsPerIP");
+	int ipLimit = handle->runtime.listenerMaxConnectionsPerIP;
 	if (ipLimit > 0 && connectionsByIP.contains(ipv4) &&
 		connectionsByIP[ipv4] >= ipLimit) {
 		socket->end(IP_LIMITED, "IP limited");

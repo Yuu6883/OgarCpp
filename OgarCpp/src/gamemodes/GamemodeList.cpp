@@ -8,6 +8,9 @@ void GamemodeList::registerGamemode(Gamemode* gamemode) {
 }
 
 void GamemodeList::setGamemode(string name) {
-	if (store.contains(name))
-		handle->gamemode = store[name]->clone();
+    if (store.contains(name)) {
+        handle->gamemode = store[name]->clone();
+        Logger::info(string("Setting gamemode to ") + name);
+    }
+    else Logger::warn(string("Unknown gamemode: ") + name);
 }

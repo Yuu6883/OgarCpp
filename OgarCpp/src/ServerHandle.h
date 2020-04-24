@@ -1,8 +1,8 @@
 #pragma once
 
-#include <libconfig.h++>
 #include <chrono>
 #include <map>
+#include "Settings.h"
 #include "primitives/Logger.h"
 #include "gamemodes/Gamemode.h"
 #include "commands/CommandList.h"
@@ -19,7 +19,6 @@
 class Gamemode;
 class GamemodeList;
 
-using namespace libconfig;
 using namespace std::chrono;
 
 struct RuntimeSettings {
@@ -31,6 +30,7 @@ struct RuntimeSettings {
 	int physicsThreads;
 	bool respawnEnabled;
 	int listenerMaxConnections;
+	int listenerMaxConnectionsPerIP;
 	int chatCooldown;
 	int matchmakerBulkSize;
 	bool minionEnableQBasedControl;
@@ -93,8 +93,6 @@ struct RuntimeSettings {
 
 class ServerHandle {
 public:
-	Setting* settings;
-
 	ProtocolStore* protocols;
 	GamemodeList*  gamemodes;
 
@@ -122,14 +120,14 @@ public:
 	std::map<unsigned int, World*>  worlds;
 	std::map<unsigned int, Player*> players;
 
-	ServerHandle(Setting* settings);
+	ServerHandle();
 	~ServerHandle();
 
-	void setSettings(Setting* settings);
+	void loadSettings();
 	
 	int getSettingInt(const char* key);
 	bool getSettingBool(const char* key);
-	float getSettingDouble(const char* key);
+	float getSettingFloat(const char* key);
 	std::string getSettingString(const char* key);
 
 	void onTick();
