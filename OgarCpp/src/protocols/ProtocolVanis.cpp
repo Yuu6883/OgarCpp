@@ -114,9 +114,10 @@ void ProtocolVanis::onWorldReset() {
 void ProtocolVanis::onDead() {
 	Writer writer2;
 	writer2.writeUInt8(0x14);
-	writer2.writeUInt16(connection->listener->handle->tick);
-	writer2.writeUInt16(0); // TODO: killcount
-	writer2.writeUInt32(0); // TODO: highscore
+	writer2.writeUInt16((connection->listener->handle->tick - 
+		connection->player->joinTick) * connection->listener->handle->tickDelay / 1000);
+	writer2.writeUInt16(connection->player->killCount);
+	writer2.writeUInt32(connection->player->maxScore);
 	send(writer2.finalize());
 }
 

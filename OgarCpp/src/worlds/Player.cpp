@@ -26,6 +26,8 @@ void Player::updateState(PlayerState targetState) {
 	else if (targetState == PlayerState::DEAD) {
 		state = PlayerState::DEAD;
 		router->onDead();
+		killCount = 0;
+		maxScore = 0;
 	} else if (!world->largestPlayer) state = PlayerState::ROAM;
 	else if (state == PlayerState::SPEC && targetState == PlayerState::ROAM) state = PlayerState::ROAM;
 	else state = PlayerState::SPEC;
@@ -56,6 +58,8 @@ void Player::updateViewArea() {
 				size  += cell->getSize();
 			}
 			this->score = score;
+			maxScore = std::max(score, maxScore);
+
 			factor = pow(ownedCells.size() + 50, 0.1);
 			viewArea.setX(x / size);
 			viewArea.setY(y / size);

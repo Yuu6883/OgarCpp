@@ -34,6 +34,9 @@ public:
 	World* world = nullptr;
 	short team = -1;
 	float score = 0;
+	unsigned short killCount = 0;
+	float maxScore = 0;
+	unsigned long joinTick = 0;
 	
 	// For sequential buffering
 	list<PlayerCell*> ownedCells;

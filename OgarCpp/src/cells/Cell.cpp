@@ -98,6 +98,9 @@ void PlayerCell::onRemoved() {
 		}
 		iter++;
 	}
+	if (!owner->ownedCells.size() && eatenBy && eatenBy->owner)
+		eatenBy->owner->killCount++;
+
 	owner->updateState(PlayerState::DEAD);
 }
 

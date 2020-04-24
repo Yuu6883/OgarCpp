@@ -19,6 +19,9 @@ ServerHandle::ServerHandle() {
 ServerHandle::~ServerHandle() {
 	delete gamemodes;
 	delete protocols;
+	while (worlds.size())
+		removeWorld(worlds.begin()->first);
+	FREE_QUADTREES();
 }
 
 void ServerHandle::loadSettings() {

@@ -158,6 +158,7 @@ void World::killPlayer(Player* player) {
 	for (auto c : player->ownedCells) {
 		c->owner = nullptr;
 		c->posChanged = true;
+		c->id = getNextCellId();
 		if (c->data) c->data->dead = true;
 	}
 
@@ -230,6 +231,7 @@ void World::spawnPlayer(Player* player, Point& pos, float size) {
 
 	auto playerCell = new PlayerCell(this, player, pos.getX(), pos.getY(), size);
 	addCell(playerCell);
+	player->joinTick = handle->tick;
 	player->updateState(PlayerState::ALIVE);
 }
 
