@@ -31,6 +31,7 @@ public:
 
 	ProtocolVanis(Connection* connection) : Protocol(connection) {
 		noDelDup = true;
+		// UTF16String = true;
 		// threadedUpdate = true;
 	};
 	string getType() { return "Vanis"; };

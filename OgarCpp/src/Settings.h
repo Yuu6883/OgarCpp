@@ -35,7 +35,7 @@ inline Json GAME_CONFIG = R"(
     "worldFinderMaxItems" : 16,
     "worldSafeSpawnTries" : 64,
     "worldSafeSpawnFromEjectedChance" : 0.8,
-    "worldPlayerDisposeDelay" : 1500,
+    "worldPlayerDisposeDelay" : 100,
     "worldEatMult" : 1.140175425099138,
     "worldEatOverlapDiv" : 3,
     "worldPlayerBotsPerWorld" : 0,

@@ -12,14 +12,13 @@ using std::string_view;
 using std::vector;
 
 struct ChatSource {
-
 	string name;
 	bool isServer;
 	unsigned int color;
-
-	ChatSource(string name, bool isServer, unsigned int color) :
-		name(name), isServer(isServer), color(color) {};
-
+	unsigned short pid;
+	bool isUTF16;
+	ChatSource(string name, bool isServer, unsigned int color, unsigned short pid = 0, bool isUTF16 = false) :
+		name(name), isServer(isServer), color(color), pid(pid), isUTF16(isUTF16) {};
 	static ChatSource from(Connection* conn);
 };
 

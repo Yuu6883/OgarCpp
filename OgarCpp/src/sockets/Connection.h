@@ -46,6 +46,7 @@ public:
 	};
 	~Connection();
 	bool isExternal() { return true; };
+	bool isUTF16();
 	void close();
 	void onSocketClose(int code, string_view reason);
 	void onSocketMessage(string_view buffer);

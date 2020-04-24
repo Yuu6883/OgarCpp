@@ -1,14 +1,18 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 #include <exception>
 #include <stdexcept>
+
+using std::string;
+using std::string_view;
 
 class Reader {
 
 	const char* origin;
 	char* charPtr;
-	unsigned int size;
+	size_t size;
 
 	void checkBound(int limit) {
 		if (offset() + limit > size) {
@@ -106,9 +110,13 @@ public:
 		return charPtr - origin;
 	}
 
-	std::string readStringUTF8() {
-		std::string result(charPtr);
+	string readStringUTF8() {
+		string result(charPtr);
 		skip(strlen(charPtr) + 1);
 		return result;
+	}
+
+	string_view buffer() {
+		return string_view(charPtr, size - offset());
 	}
 };

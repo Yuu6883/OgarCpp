@@ -23,6 +23,7 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 			connection->spawningTag  = reader.readStringUTF8();
 			connection->requestSpawning = true;
 			break;
+		// spectate
 		case 2:
 			connection->requestingSpectate = true;
 			if (reader.length() == 3) 
@@ -54,11 +55,20 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 				connection->ejectMacro = reader.readUInt8() > 0;
 			}
 			break;
+		// chat
+		case 99:
+			connection->onChatMessage(reader.buffer());
+			break;
 	}
 };
 
 void ProtocolVanis::onChatMessage(ChatSource& source, string_view message) {
-
+	Writer writer;
+	writer.writeUInt8(0xd);
+	writer.writeUInt16(source.pid);
+	writer.writeBuffer(message);
+	writer.writeUInt16(0);
+	send(writer.finalize());
 };
 
 void ProtocolVanis::onPlayerSpawned(Player* player) {
@@ -111,6 +121,14 @@ void ProtocolVanis::onDead() {
 }
 
 void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) {
+	if (type == LBType::FFA) {
+		Writer writer;
+		writer.writeUInt8(0xb);
+		for (auto entry : entries)
+			writer.writeUInt16(((FFAEntry*)entry)->pid);
+		writer.writeUInt16(0);
+		send(writer.finalize());
+	}
 };
 
 void ProtocolVanis::onSpectatePosition(ViewArea* area) {

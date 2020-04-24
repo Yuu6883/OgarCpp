@@ -297,11 +297,9 @@ void World::liveUpdate() {
 	std::mutex mtx;
 	int batch_size = boostingCells.size() / handle->runtime.physicsThreads + 1;
 	int offset = 0;
-	auto bc_iter = boostingCells.cbegin();
 
 	while (offset < boostingCells.size()) {
 		auto incre = std::min(batch_size, (int) boostingCells.size() - offset);
-		std::advance(bc_iter, incre);
 		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
 
 			auto count = incre;
@@ -313,8 +311,9 @@ void World::liveUpdate() {
 
 			while (count-- && start != boostingCells.cend()) {
 				auto c = *start;
-				if (c != NULL && c->getType() == VIRUS || c->getType() == EJECTED_CELL) {
-					finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
+				std::advance(start, 1);
+				if (c->getType() == VIRUS || c->getType() == EJECTED_CELL) {
+					finder->search(c->range, [&c, &thread_rigid, &thread_eat](auto o) {
 						auto other = (Cell*)o;
 						if (c->id == other->id) return;
 						switch (c->getEatResult(other)) {
@@ -330,7 +329,6 @@ void World::liveUpdate() {
 						}
 					});
 				}
-				std::advance(start, 1);
 			}
 
 			mtx.lock();
@@ -379,11 +377,9 @@ void World::liveUpdate() {
 	
 	batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
 	offset = 0;
-	auto pc_iter = playerCells.cbegin();
 
 	while (offset < playerCells.size()) {
 		auto incre = std::min(batch_size, (int) playerCells.size() - offset);
-		std::advance(pc_iter, incre);
 		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
 
 			auto count = incre;
@@ -396,20 +392,20 @@ void World::liveUpdate() {
 			while (count-- && start != playerCells.cend()) {
 				auto c = *start;
 				std::advance(start, 1);
-				finder->search(c->range, [c, &thread_rigid, &thread_eat](auto o) {
+				finder->search(c->range, [&c, &thread_rigid, &thread_eat](auto o) {
 					auto other = (Cell*) o;
 					if (!other->exist) return;
 					if (c->id == other->id) return;
 					switch (c->getEatResult(other)) {
-					case EatResult::COLLIDE:
-						thread_rigid.push_back(std::make_pair(c, other));
-						break;
-					case EatResult::EAT:
-						thread_eat.push_back(std::make_pair(c, other));
-						break;
-					case EatResult::EATINVD:
-						thread_eat.push_back(std::make_pair(other, c));
-						break;
+						case EatResult::COLLIDE:
+							thread_rigid.push_back(std::make_pair(c, other));
+							break;
+						case EatResult::EAT:
+							thread_eat.push_back(std::make_pair(c, other));
+							break;
+						case EatResult::EATINVD:
+							thread_eat.push_back(std::make_pair(other, c));
+							break;
 					}
 				});
 			}

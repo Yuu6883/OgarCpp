@@ -242,7 +242,10 @@ bool ServerHandle::removeWorld(unsigned int id) {
 	gamemode->onWorldDestroy(worlds[id]);
 	delete worlds[id];
 	worlds.erase(id);
-	if (!worlds.size()) worlds.clear();
+	if (!worlds.size()) {
+		worlds.clear();
+		FREE_QUADTREES();
+	}
 	Logger::debug(std::string("Removed world with ID ") + std::to_string(id));
 	return true;
 }

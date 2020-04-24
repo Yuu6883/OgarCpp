@@ -24,6 +24,7 @@ struct FFAEntry : LBEntry {
 	string name;
 	bool highlighted;
 	unsigned int cellId;
+	unsigned int pid;
 	unsigned short position;
 };
 
@@ -41,6 +42,7 @@ class Protocol {
 public:
 	bool noDelDup = false;
 	bool threadedUpdate = false;
+	bool UTF16String = false;
 	Connection* connection;
 	Protocol(Connection* connection) : connection(connection) {};
 	virtual string getType() = 0;

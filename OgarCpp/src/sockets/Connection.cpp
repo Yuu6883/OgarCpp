@@ -25,6 +25,8 @@ void Connection::close() {
 	listener->onDisconnection(this, closeCode, closeReason);
 }
 
+bool Connection::isUTF16() { return protocol ? protocol->UTF16String : false; };
+
 // Called in socket thread
 void Connection::onSocketClose(int code, string_view reason) {
 	if (socketDisconnected) return;
@@ -75,6 +77,7 @@ void Connection::createPlayer() {
 }
 
 void Connection::onChatMessage(string_view message) {
+	Logger::info(string("[") + player->leaderboardName + "]: " + string(message));
 	string m = trim(string(message));
 	if (!m.size()) return;
 	auto lastChatTime = this->lastChatTime;
@@ -86,6 +89,8 @@ void Connection::onChatMessage(string_view message) {
 	} else if (duration_cast<milliseconds>(this->lastChatTime - lastChatTime).count() 
 		>= listener->handle->runtime.chatCooldown) {
 		listener->globalChat->broadcast(this, m);
+	} else {
+		listener->globalChat->directMessage(nullptr, this, "You are entering too fast");
 	}
 }
 

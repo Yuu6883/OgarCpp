@@ -14,14 +14,14 @@ void MatchMaker::broadcastQueueLength() {
 
 void MatchMaker::enqueue(Connection* connection) {
 	if (!handle->runtime.matchmakerNeedsQueuing)
-		handle->listener.globalChat->directMessage(nullptr, connection, "joined the queue");
+		handle->listener.globalChat->directMessage(nullptr, connection, "You joined the queue");
 	queued.push_front(connection);
 	broadcastQueueLength();
 }
 
 void MatchMaker::dequeue(Connection* connection) {
 	if (!handle->runtime.matchmakerNeedsQueuing)
-		handle->listener.globalChat->directMessage(nullptr, connection, "left the queue");
+		handle->listener.globalChat->directMessage(nullptr, connection, "You left the queue");
 	queued.remove(connection);
 	broadcastQueueLength();
 }
@@ -36,7 +36,7 @@ void MatchMaker::update() {
 			auto dequeued = queued.back();
 			queued.pop_back();
 			if (handle->runtime.matchmakerNeedsQueuing)
-				handle->listener.globalChat->directMessage(nullptr, dequeued, "match found!");
+				handle->listener.globalChat->directMessage(nullptr, dequeued, "Match found!");
 			world->addPlayer(dequeued->player);
 		}
 	}
@@ -45,7 +45,8 @@ void MatchMaker::update() {
 World* bestWorld = nullptr;
 World* MatchMaker::getSuitableWorld() {
 	std::for_each(handle->worlds.begin(), handle->worlds.end(), [this](auto pair) {
-		auto world = pair.second;
+		World* world = pair.second;
+		if (world->toBeRemoved) return;
 		if (!handle->gamemode->canJoinWorld(world)) return;
 		if (world->stats.external >= handle->runtime.worldMaxPlayers) return;
 		if (!bestWorld || world->stats.external < bestWorld->stats.external)

@@ -41,6 +41,7 @@ void FFA::sendLeaderboard(Connection* connection) {
 	int position = 1;
 	for (auto player : leaderboard) {
 		auto entry = new FFAEntry();
+		entry->pid = player->id;
 		entry->position = position++;
 		entry->name = player->leaderboardName;
 		entry->cellId = player->ownedCells.front()->id;
@@ -48,6 +49,8 @@ void FFA::sendLeaderboard(Connection* connection) {
 			entry->highlighted = true;
 			lbSelfData = entry;
 		}
+		lbData.push_back(entry);
 	}
 	connection->protocol->onLeaderboardUpdate(LBType::FFA, lbData, lbSelfData);
+	for (auto entry : lbData) delete entry;
 }
