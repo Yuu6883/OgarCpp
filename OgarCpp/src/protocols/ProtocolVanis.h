@@ -56,6 +56,7 @@ public:
 	void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del);
 	void onStatsRequest();
 	void onVisibleCellThreadedUpdate();
+	void onMinimapUpdate();
 	Protocol* clone() { return new ProtocolVanis(*this); };
 	void onDead();
 };

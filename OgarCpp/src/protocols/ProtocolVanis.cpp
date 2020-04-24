@@ -134,6 +134,30 @@ void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, 
 void ProtocolVanis::onSpectatePosition(ViewArea* area) {
 };
 
+void ProtocolVanis::onMinimapUpdate() {
+	auto world = connection->player->world;
+	if (!world) return;
+
+	Writer writer;
+	writer.writeUInt8(0xc);
+	for (auto player : world->players) {
+		if (player->state != PlayerState::ALIVE) continue;
+		writer.writeUInt16(player->id);
+		float x = 128 * (world->border.w + player->viewArea.getX() - world->border.getX()) / world->border.w;
+		x = x < 0 ? 0 : x;
+		x = x > 255 ? 255 : x;
+		float y = 128 * (world->border.h + player->viewArea.getY() - world->border.getY()) / world->border.h;
+		y = y < 0 ? 0 : y;
+		y = y > 255 ? 255 : y;
+		writer.writeUInt8(x);
+		writer.writeUInt8(y);
+	}
+	if (writer.offset() > 1) {
+		writer.writeUInt16(0);
+		send(writer.finalize());
+	}
+};
+
 void writeAddOrUpdate(Writer& writer, vector<Cell*>& cells) {
 	for (auto cell : cells) {
 		unsigned char type = cell->getType();

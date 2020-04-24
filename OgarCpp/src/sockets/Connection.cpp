@@ -198,6 +198,8 @@ void Connection::update() {
 			protocol->onSpectatePosition(&player->viewArea);
 		if (listener->handle->tick % 4 == 0)
 			listener->handle->gamemode->sendLeaderboard(this);
+		if (listener->handle->tick % 10 == 0)
+			protocol->onMinimapUpdate();
 		protocol->onVisibleCellUpdate(add, upd, eat, del);
 	}
 }

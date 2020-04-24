@@ -56,6 +56,7 @@ public:
 	virtual void onNewWorldBounds(Rect* border, bool includeServerInfo) = 0;
 	virtual void onWorldReset() = 0;
 	virtual void onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) = 0;
+	virtual void onMinimapUpdate() = 0;
 	virtual void onSpectatePosition(ViewArea* viewArea) = 0;
 	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) = 0;
 	virtual void onVisibleCellThreadedUpdate() = 0;

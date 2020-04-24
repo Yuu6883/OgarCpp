@@ -46,4 +46,5 @@ public:
 	Protocol* clone() { return new Protocol6(*this); };
 	void onStatsRequest();
 	void onDead() {};
+	void onMinimapUpdate() {};
 };

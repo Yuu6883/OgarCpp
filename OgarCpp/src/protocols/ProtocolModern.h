@@ -78,4 +78,5 @@ public:
 	void onVisibleCellThreadedUpdate() {};
 	Protocol* clone() { return new ProtocolModern(*this); };
 	void onDead() {};
+	void onMinimapUpdate() {};
 };

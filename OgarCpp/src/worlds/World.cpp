@@ -525,10 +525,8 @@ void World::liveUpdate() {
 	}
 
 	if (threadPlayerCount) {
-		for (auto cell : cells) {
-			if (!cell) printf("WTF\n");
+		for (auto cell : cells)
 			lockedFinder->insert(cell->getData(), true);
-		}
 		lockedFinder->split();
 	}
 
