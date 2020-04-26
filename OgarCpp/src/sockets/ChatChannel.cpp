@@ -25,10 +25,20 @@ void UTF8toUTF16(string_view& utf8, char* dist) {
 		dist[2 * i] = ptr[i];
 }
 
+bool is_big_endian(void)
+{
+    union {
+        unsigned short i;
+        char c[4];
+    } bint = {0x0102};
+
+    return bint.c[0] == 1; 
+}
+
 void UTF16toUTF8(string_view& utf16, char* dist) {
 	auto ptr = utf16.data();
 	auto s = utf16.size();
-	for (int i = std::endian::native == std::endian::little ? 0 : 1; i < s; i += 2)
+	for (int i = is_big_endian() ? 1 : 0; i < s; i += 2)
 		dist[i / 2] = ptr[i];
 }
 

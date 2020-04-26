@@ -63,7 +63,7 @@ public:
 	virtual void onDead() = 0;
 	void send(string_view data) { connection->send(data); };
 	void fail(int code, string_view reason) {
-		connection->closeSocket(code || CLOSE_UNSUPPORTED, reason.size() ? reason : "Unspecified protocol fail");
+		connection->closeSocket(code ? code : CLOSE_UNSUPPORTED, reason.size() ? reason : "Unspecified protocol fail");
 	};
 	virtual Protocol* clone() = 0;
 };

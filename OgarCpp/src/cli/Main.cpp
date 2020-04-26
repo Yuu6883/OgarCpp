@@ -29,38 +29,38 @@ void registerProtocols(ServerHandle* handle) {
 void registerCommands(ServerHandle* handle) {
 
 	Command<ServerHandle*> startCommand("start", "start the handle", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		if (!handle->start()) Logger::info("Handle already running");
 	});
 	handle->commands.registerCommand(startCommand);
 
 	Command<ServerHandle*> stopCommand("stop", "stop the handle", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		if (!handle->stop()) Logger::info("Handle not running");
 	});
 	handle->commands.registerCommand(stopCommand);
 
 	Command<ServerHandle*> exitCommand("exit", "stop the handle and close the command stream", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		handle->stop();
 		exitCLI = true;
 	});
 	handle->commands.registerCommand(exitCommand);
 
 	Command<ServerHandle*> reloadCommand("reload", "reload the settings from local game.cfg", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		handle->loadSettings();
 	});
 	handle->commands.registerCommand(reloadCommand);
 
 	Command<ServerHandle*> saveCommand("save", "save the current settings to game.cfg", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		saveConfig();
 	});
 	handle->commands.registerCommand(saveCommand);
 
 	Command<ServerHandle*> benchCommand("bench", "print out how long each part of function takes to execute", "",
-		[handle](ServerHandle* handle, auto context, vector<string>& args) {
+		[](ServerHandle* handle, auto context, vector<string>& args) {
 		handle->bench = true;
 	});
 	handle->commands.registerCommand(benchCommand);
@@ -89,7 +89,7 @@ int main() {
 	handle.ticker.every(20, [&handle] {
 		if (handle.worlds.size()) {
 			printf("Load: %2.2f%% ", (*handle.worlds.begin()).second->stats.loadTime);
-			printf("cells: %i\n", (*handle.worlds.begin()).second->cells.size());
+			printf("cells: %lu\n", (*handle.worlds.begin()).second->cells.size());
 		}
 	});
 

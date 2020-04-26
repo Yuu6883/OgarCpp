@@ -319,15 +319,17 @@ void World::liveUpdate() {
 						auto other = (Cell*)o;
 						if (c->id == other->id) return;
 						switch (c->getEatResult(other)) {
-						case EatResult::COLLIDE:
-							thread_rigid.push_back(std::make_pair(c, other));
-							break;
-						case EatResult::EAT:
-							thread_eat.push_back(std::make_pair(c, other));
-							break;
-						case EatResult::EATINVD:
-							thread_eat.push_back(std::make_pair(other, c));
-							break;
+                            case EatResult::COLLIDE:
+                                thread_rigid.push_back(std::make_pair(c, other));
+                                break;
+                            case EatResult::EAT:
+                                thread_eat.push_back(std::make_pair(c, other));
+                                break;
+                            case EatResult::EATINVD:
+                                thread_eat.push_back(std::make_pair(other, c));
+                                break;
+                            case EatResult::NONE:
+                                break;
 						}
 					});
 				}
@@ -408,6 +410,8 @@ void World::liveUpdate() {
 						case EatResult::EATINVD:
 							thread_eat.push_back(std::make_pair(other, c));
 							break;
+                        case EatResult::NONE:
+                            break;
 					}
 				});
 			}
@@ -660,7 +664,7 @@ void World::autosplitPlayerCell(PlayerCell* cell) {
 	float splitSize = std::min(sqrt(size / splitTimes), handle->runtime.playerMaxSize);
 	for (int i = 0; i < splitTimes; i++) {
 		auto angle = randomZeroToOne * 2 * PI;
-		Boost boost { sin(angle), cos(angle), handle->runtime.playerSplitBoost };
+		Boost boost { (float) sin(angle), (float) cos(angle), handle->runtime.playerSplitBoost };
 		launchPlayerCell(cell, splitSize, boost);
 	}
 	cell->setSize(splitSize);

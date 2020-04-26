@@ -184,12 +184,12 @@ void Connection::update() {
 		vector<Cell*> del;
 
 		for (auto [id, cell] : player->visibleCells) {
-			if (!player->lastVisibleCells.contains(id)) add.push_back(cell);
+			if (player->lastVisibleCells.find(id) == player->lastVisibleCells.cend()) add.push_back(cell);
 			else if (cell->shouldUpdate()) upd.push_back(cell);
 		}
 
 		for (auto [id, cell] : player->lastVisibleCells) {
-			if (player->visibleCells.contains(id)) continue;
+			if (player->visibleCells.find(id) != player->visibleCells.cend()) continue;
 			if (cell->eatenBy) eat.push_back(cell);
 			if (!protocol->noDelDup || !cell->eatenBy) del.push_back(cell);
 		}

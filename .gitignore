@@ -38,5 +38,15 @@ OgarCpp/Debug/*
 OgarCpp/x64/*
 x64/*
 
+# Build dir
+build/*
+build-Debug/*
+
+# Codelite generated files
+./codelite/*
+Makefile
+compile_flags.txt
+*.mk
+
 # Visual Studio
 .vs/*

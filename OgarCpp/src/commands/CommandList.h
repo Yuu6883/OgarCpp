@@ -57,7 +57,7 @@ public:
 	CommandList(ServerHandle* handle) : handle(handle) {};
 
 	void registerCommand(Command<T>& command) {
-		if (commands.contains(command.name)) {
+		if (commands.find(command.name) != commands.cend()) {
 			Logger::error(string("Command \"") + command.name + string("\" is already registered."));
 		} else {
 			commands.insert(std::make_pair(command.name, command));
@@ -75,7 +75,7 @@ public:
 		string cmd = tokens[0];
 		tokens.erase(tokens.begin());
 
-		if (commands.contains(cmd)) {
+		if (commands.find(cmd) != commands.cend()) {
 			if (commands.at(cmd).executor) {
 				commands.at(cmd).executor(handle, context, tokens);
 			}

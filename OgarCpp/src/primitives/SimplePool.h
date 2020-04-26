@@ -27,9 +27,8 @@ private:
     std::mutex queue_mutex;
     std::condition_variable cv_task;
     std::condition_variable cv_finished;
-    std::atomic_uint processed;
     unsigned int busy;
+    std::atomic_uint processed;
     bool stop;
-
     void thread_proc();
 };

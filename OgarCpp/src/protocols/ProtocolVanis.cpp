@@ -98,7 +98,7 @@ void ProtocolVanis::onNewWorldBounds(Rect* border, bool includeServerInfo) {
 	writer.writeUInt8(1);
 	writer.writeUInt8(2);
 	writer.writeUInt8(connection->listener->handle->gamemode->getType());
-	writer.writeUInt16(69420);
+	writer.writeUInt16(42069);
 	writer.writeUInt16(connection->player->id);
 	writer.writeUInt32(border->w * 2);
 	writer.writeUInt32(border->h * 2);
@@ -210,7 +210,7 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 	writer.writeUInt8(10);
 	// add and upd
 	for (auto [id, data] : player->visibleCellData) {
-		if (!player->lastVisibleCellData.contains(id)) {
+		if (player->lastVisibleCellData.find(id) == player->lastVisibleCellData.cend()) {
 			unsigned char type = data->type;
 			switch (type) {
 				case PLAYER:
@@ -257,11 +257,11 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 	}
 	writer.writeUInt8(0);
 	for (auto [id, cell] : player->lastVisibleCellData)
-		if (!cell->eatenById && !player->visibleCellData.contains(id))
+		if (!cell->eatenById && player->visibleCellData.find(id) == player->lastVisibleCellData.cend())
 			writer.writeUInt32(id);
 	writer.writeUInt32(0);
 	for (auto [id, cell] : player->lastVisibleCellData)
-		if (cell->eatenById && !player->visibleCellData.contains(id)) {
+		if (cell->eatenById && player->visibleCellData.find(id) == player->lastVisibleCellData.cend()) {
 			writer.writeUInt32(id);
 			writer.writeUInt32(cell->eatenById);
 		}

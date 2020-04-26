@@ -155,7 +155,7 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* sock
 
 	// check connection per IP
 	int ipLimit = handle->runtime.listenerMaxConnectionsPerIP;
-	if (ipLimit > 0 && connectionsByIP.contains(ipv4) &&
+	if (ipLimit > 0 && connectionsByIP.find(ipv4) != connectionsByIP.cend() &&
 		connectionsByIP[ipv4] >= ipLimit) {
 		socket->end(IP_LIMITED, "IP limited");
 		return false;
@@ -171,7 +171,7 @@ unsigned long Listener::getTick() {
 // Called in socket thread
 Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket) {
 	auto connection = new Connection(this, ipv4, socket);
-	if (connectionsByIP.contains(ipv4)) {
+	if (connectionsByIP.find(ipv4) != connectionsByIP.cend()) {
 		connectionsByIP[ipv4]++;
 	} else {
 		connectionsByIP.insert(std::make_pair(ipv4, 1));

@@ -13,19 +13,7 @@ using std::function;
 using std::atomic;
 
 class QuadNode;
-class QuadTree;
-
-static std::list<QuadTree*> cleanupQueue;
-
-static inline void FREE_QUADTREES() {
-	while (cleanupQueue.size()) {
-		delete cleanupQueue.front();
-		cleanupQueue.pop_front();
-	}
-}
-
 class QuadItem : public Point {
-	friend QuadTree;
 public:
 	QuadNode* root;
 	Rect range;
@@ -47,4 +35,12 @@ public:
 	void remove(QuadItem*);
 	void search(Rect&, function<void(QuadItem*)> callback);
 	bool containAny(Rect&, function<bool(QuadItem*)> selector);
+};
+
+static std::list<QuadTree*> cleanupQueue;
+static inline void FREE_QUADTREES() {
+	while (cleanupQueue.size()) {
+		delete cleanupQueue.front();
+		cleanupQueue.pop_front();
+	}
 };

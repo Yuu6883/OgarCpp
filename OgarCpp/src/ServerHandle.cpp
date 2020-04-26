@@ -208,7 +208,7 @@ bool ServerHandle::stop() {
 
 Player* ServerHandle::createPlayer(Router* router) {
 	unsigned int id = 0;
-	while (players.contains(++id));
+	while (players.find(++id) != players.cend());
 
 	auto player = new Player(this, id, router);
 	players.insert(std::make_pair(id, player));
@@ -219,7 +219,7 @@ Player* ServerHandle::createPlayer(Router* router) {
 };
 
 bool ServerHandle::removePlayer(unsigned int id) {
-	if (!players.contains(id)) return false;
+	if (players.find(id) == players.cend()) return false;
 	auto player = players[id];
 	gamemode->onPlayerDestroy(player);
 	delete player;
@@ -230,7 +230,7 @@ bool ServerHandle::removePlayer(unsigned int id) {
 
 World* ServerHandle::createWorld() {
 	unsigned int id = 0;
-	while (worlds.contains(++id));
+	while (worlds.find(++id) != worlds.cend());
 
 	auto world = new World(this, id);
 	worlds.insert(std::make_pair(id, world));
@@ -241,7 +241,7 @@ World* ServerHandle::createWorld() {
 };
 
 bool ServerHandle::removeWorld(unsigned int id) {
-	if (!worlds.contains(id)) return false;
+	if (worlds.find(id) == worlds.cend()) return false;
 	gamemode->onWorldDestroy(worlds[id]);
 	delete worlds[id];
 	worlds.erase(id);
