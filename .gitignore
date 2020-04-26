@@ -43,7 +43,7 @@ build/*
 build-Debug/*
 
 # Codelite generated files
-./codelite/*
+.codelite/*
 Makefile
 compile_flags.txt
 *.mk
