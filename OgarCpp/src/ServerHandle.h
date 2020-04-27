@@ -102,6 +102,7 @@ public:
 	CommandList<ServerHandle*> commands     = CommandList<ServerHandle*>(this);
 	CommandList<ServerHandle*> chatCommands = CommandList<ServerHandle*>(this);
 
+	bool exiting = false;
 	bool bench = false;
 	bool running = false;
 	unsigned long tick = -1;

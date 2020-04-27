@@ -3,11 +3,13 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <list>
 #include <string.h>
 #include <iostream>
 #include <sstream>
 #include <iterator>
 #include <functional>
+#include <mutex>
 
 using std::string;
 using std::vector;
@@ -52,7 +54,8 @@ class CommandList {
 private:
 	ServerHandle* handle;
 	std::map<string, Command<T>> commands;
-
+	std::mutex lock;
+	std::list<std::pair<T, string>> pendingCommand;
 public:
 	CommandList(ServerHandle* handle) : handle(handle) {};
 
@@ -64,22 +67,31 @@ public:
 		}
 	};
 
-	bool execute(T context, string input) {
-
-		std::stringstream ss(input);
-		std::istream_iterator<string> begin(ss);
-		std::istream_iterator<string> end;
-		std::vector<string> tokens(begin, end);
-
-		if (tokens.empty()) return false;
-		string cmd = tokens[0];
-		tokens.erase(tokens.begin());
-
-		if (commands.find(cmd) != commands.cend()) {
-			if (commands.at(cmd).executor) {
-				commands.at(cmd).executor(handle, context, tokens);
-			}
-			return true;
-		} else return false;
+	void execute(T context, string input) {
+		std::lock_guard l(lock);
+		pendingCommand.push_back(std::make_pair(context, input));
 	};
+
+	void process() {
+		std::lock_guard l(lock);
+		for (auto [context, input] : pendingCommand) {
+			std::stringstream ss(input);
+			std::istream_iterator<string> begin(ss);
+			std::istream_iterator<string> end;
+			std::vector<string> tokens(begin, end);
+
+			if (tokens.empty()) continue;
+			string cmd = tokens[0];
+			tokens.erase(tokens.begin());
+
+			if (commands.find(cmd) != commands.cend()) {
+				if (commands.at(cmd).executor) {
+					commands.at(cmd).executor(handle, context, tokens);
+					continue;
+				}
+			}
+			Logger::warn(string("Unknown command: ") + cmd);
+		}
+		pendingCommand.clear();
+	}
 };

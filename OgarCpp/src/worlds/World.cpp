@@ -34,10 +34,16 @@ void World::afterCreation() {
 
 World::~World() {
 	Logger::debug(string("Deallocating world (id: ") + std::to_string(id) + ")");
-	while (players.size())
-		delete players.front();
+	for (auto player : players) {
+		// Should not delete player since ServerHandle handles it
+		player->hasWorld = false;
+		player->world = nullptr;
+	}
+	players.clear();
 	for (auto c : cells) delete c;
+	cells.clear();
 	for (auto c : gcTruck) delete c;
+	gcTruck.clear();
 	delete worldChat;
 	delete finder;
 	delete physicsPool;

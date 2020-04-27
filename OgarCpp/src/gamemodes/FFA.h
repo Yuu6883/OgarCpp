@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include "../primitives/Logger.h"
 #include "Gamemode.h"
 
 using std::vector;

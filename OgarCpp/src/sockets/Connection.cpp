@@ -84,8 +84,8 @@ void Connection::onChatMessage(string_view message) {
 	this->lastChatTime = steady_clock::now();
 	if (m.length() >= 2 && m[0] == '/') {
 		m.erase(m.begin());
-		if (!listener->handle->chatCommands.execute(listener->handle, m))
-			listener->globalChat->directMessage(nullptr, this, "Unknown command, execute /help for the list of commands");
+		listener->handle->chatCommands.execute(listener->handle, m);
+		// listener->globalChat->directMessage(nullptr, this, "Unknown command, execute /help for the list of commands");
 	} else if (duration_cast<milliseconds>(this->lastChatTime - lastChatTime).count() 
 		>= listener->handle->runtime.chatCooldown) {
 		listener->globalChat->broadcast(this, m);

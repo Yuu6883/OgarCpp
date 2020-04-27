@@ -7,7 +7,7 @@
 #include "../primitives/Reader.h"
 
 class Connection;
-class ChatSource;
+struct ChatSource;
 class Reader;
 class Cell;
 
@@ -45,6 +45,7 @@ public:
 	bool UTF16String = false;
 	Connection* connection;
 	Protocol(Connection* connection) : connection(connection) {};
+	~Protocol() {};
 	virtual string getType() = 0;
 	virtual string getSubtype() = 0;
 	virtual bool distinguishes(Reader& reader) = 0;

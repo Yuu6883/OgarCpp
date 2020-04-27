@@ -30,7 +30,7 @@ public:
 		if (!out || logLevel > L_DEBUG) return;
         std::lock_guard l(lock);
 		if (color) {
-			*out << "[\033[92mdebug\033[0m] " << string << std::endl;
+			*out << "\r[\033[92mdebug\033[0m] " << string << std::endl;
 		}
 		else {
 			*out << "[debug]" << string << std::endl;
@@ -42,7 +42,7 @@ public:
 		if (!out || logLevel > L_VERBOSE) return;
         std::lock_guard l(lock);
 		if (color) {
-			*out << "[\033[95mverbose\033[0m] " << string << std::endl;
+			*out << "\r[\033[95mverbose\033[0m] " << string << std::endl;
 		}
 		else {
 			*out << "[verbose]" << string << std::endl;
@@ -54,7 +54,7 @@ public:
 		if (!out || logLevel > L_INFO) return;
         std::lock_guard l(lock);
 		if (color) {
-			*out << "[\033[96minfo\033[0m] " << string << std::endl;
+			*out << "\r[\033[96minfo\033[0m] " << string << std::endl;
 		}
 		else {
 			*out << "[info]" << string << std::endl;
@@ -66,7 +66,7 @@ public:
 		if (!out || logLevel > L_WARN) return;
         std::lock_guard l(lock);
 		if (color) {
-			*out << "[\033[93mwarn\033[0m] " << string << std::endl;
+			*out << "\r[\033[93mwarn\033[0m] " << string << std::endl;
 		}
 		else {
 			*out << "[warn]" << string << std::endl;
@@ -78,7 +78,7 @@ public:
 		if (!out || logLevel > L_ERROR) return;
         std::lock_guard l(lock);
 		if (color) {
-			*out << "[\033[91merror\033[0m] " << string << std::endl;
+			*out << "\r[\033[91merror\033[0m] " << string << std::endl;
 		}
 		else {
 			*out << "[error]" << string << std::endl;

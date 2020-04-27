@@ -103,20 +103,17 @@ bool Listener::open(int threads = 1) {
 
 bool Listener::close() {
 	if (sockets.empty() && socketThreads.empty()) return false;
-	for (auto socket : sockets) {
+	for (auto socket : sockets)
 		us_listen_socket_close(0, socket);
-	}
+
 	sockets.clear();
-	for (auto thread : socketThreads) {
-		thread->join();
-	}
+	socketThreads.clear();
 
 	if (globalChat) {
 		delete globalChat;
 		globalChat = nullptr;
 	}
 
-	socketThreads.clear();
 	Logger::debug("listener(s) closed");
 	return true;
 };

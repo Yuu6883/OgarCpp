@@ -9,9 +9,10 @@ Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 };
 
 Player::~Player() {
-	if (hasWorld || world) {
-		world->removePlayer(this);
-	}
+	Logger::debug(string("Deallocating player: ") + leaderboardName);
+	if (hasWorld || world)
+		Logger::warn("Player should NOT have reference to world while being deallocated");
+
 	if (router->disconnected) {
 		router->hasPlayer = false;
 		router->player = nullptr;

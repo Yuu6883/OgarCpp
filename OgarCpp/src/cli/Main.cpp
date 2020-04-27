@@ -10,8 +10,6 @@
 #include "../protocols/ProtocolVanis.h"
 #include "../gamemodes/FFA.h"
 
-bool exitCLI = false;
-
 void registerGamemodes(ServerHandle* handle) {
 	auto ffa = new FFA(handle);
 	handle->gamemodes->registerGamemode(ffa);
@@ -43,7 +41,8 @@ void registerCommands(ServerHandle* handle) {
 	Command<ServerHandle*> exitCommand("exit", "stop the handle and close the command stream", "",
 		[](ServerHandle* handle, auto context, vector<string>& args) {
 		handle->stop();
-		exitCLI = true;
+		handle->exiting = true;
+		Logger::info("Exiting OgarCpp");
 	});
 	handle->commands.registerCommand(exitCommand);
 
@@ -64,18 +63,37 @@ void registerCommands(ServerHandle* handle) {
 		handle->bench = true;
 	});
 	handle->commands.registerCommand(benchCommand);
+
+	Command<ServerHandle*> monitorStartCommand("mstart", "monitor load and cell count", "",
+		[](ServerHandle* handle, auto context, vector<string>& args) {
+		handle->ticker.every(20, [handle] {
+			if (handle->worlds.size()) {
+				printf("Load: %2.2f%% ", handle->worlds.begin()->second->stats.loadTime);
+				printf("cells: %lu\n",   handle->worlds.begin()->second->cells.size());
+			}
+		});
+	});
+	handle->commands.registerCommand(monitorStartCommand);
+
+	Command<ServerHandle*> monitorStopCommand("mstop", "stop the monitor", "",
+		[](ServerHandle* handle, auto context, vector<string>& args) {
+		handle->ticker.clearInterval();
+	});
+	handle->commands.registerCommand(monitorStopCommand);
 }
 
-void promptInput(ServerHandle* handle) {
+void promptInput(ServerHandle& handle) {
+	Logger::verbose("CLI reader open");
 	string input;
-	while (!exitCLI) {
+	while (!handle.exiting) {
 		std::cout << "> ";
 		std::getline(std::cin, input);
 		input = trim(input);
 		if (!input.length()) continue;
-		if (!handle->commands.execute(nullptr, input))
-			Logger::info("Unknown command");
+		handle.commands.execute(nullptr, input);
+		std::this_thread::sleep_for(milliseconds{ 150 });
 	}
+	Logger::verbose("CLI reader closed");
 }
 
 int main() {
@@ -86,17 +104,10 @@ int main() {
 	registerProtocols(&handle);
 	registerCommands(&handle);
 
-	handle.ticker.every(20, [&handle] {
-		if (handle.worlds.size()) {
-			printf("Load: %2.2f%% ", (*handle.worlds.begin()).second->stats.loadTime);
-			printf("cells: %lu\n", (*handle.worlds.begin()).second->cells.size());
-		}
-	});
-
 	handle.start();
 
 	std::this_thread::sleep_for(seconds{ 1 });
 
-	promptInput(&handle);
+	promptInput(handle);
 	return EXIT_SUCCESS;
 }

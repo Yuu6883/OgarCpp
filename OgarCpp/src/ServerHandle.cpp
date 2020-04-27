@@ -3,6 +3,8 @@
 #include "worlds/Player.h"
 #include "worlds/World.h"
 
+using std::to_string;
+
 #define LOAD_INT(prop) runtime.prop = getSettingInt(#prop)
 #define LOAD_FLOAT(prop) runtime.prop = getSettingFloat(#prop)
 #define LOAD_BOOL(prop) runtime.prop = getSettingBool(#prop)
@@ -17,6 +19,7 @@ ServerHandle::ServerHandle() {
 };
 
 ServerHandle::~ServerHandle() {
+	if (running) stop();
 	delete gamemodes;
 	delete protocols;
 	while (worlds.size())
@@ -163,6 +166,9 @@ void ServerHandle::onTick() {
 	for (auto [_, world] : worlds)
 		world->clearTruck();
 
+	chatCommands.process();
+	commands.process();
+
 	averageTickTime = stopwatch.elapsed();
 	stopwatch.stop();
 };
@@ -191,15 +197,17 @@ bool ServerHandle::stop() {
 
 	if (ticker.running)
 		ticker.stop();
-	for (auto pair : worlds)
-		removeWorld(pair.first);
-	for (auto pair : players)
-		removePlayer(pair.first);
+	Logger::debug(string("Removing ") + to_string(worlds.size()) + " worlds");
+	while (worlds.size())
+		removeWorld(worlds.begin()->first);
 	for (auto router : listener.routers)
 		router->close();
+	Logger::debug(string("Removing ") + to_string(players.size()) + " players");
+	while (players.size())
+		removePlayer(players.begin()->first);
 	gamemode->onHandleStop();
+	Logger::debug("Closing listeners");
 	listener.close();
-
 	running = false;
 
 	Logger::info("Ticker stopped");
