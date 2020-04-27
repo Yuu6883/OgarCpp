@@ -86,8 +86,8 @@ void ProtocolVanis::onPlayerSpawned(Player* player) {
 	Writer writer;
 	writer.writeUInt8(15);
 	writer.writeUInt16(player->id);
-	writer.writeStringUTF8(player->cellName.data());
-	writer.writeStringUTF8(player->cellSkin.data());
+	writer.writeStringUTF8(player->cellName.c_str());
+	writer.writeStringUTF8(player->cellSkin.c_str());
 	send(writer.finalize());
 };
 
@@ -104,6 +104,7 @@ void ProtocolVanis::onNewWorldBounds(Rect* border, bool includeServerInfo) {
 	writer.writeUInt32(border->h * 2);
 	send(writer.finalize());
 	if (!connection->hasPlayer || !connection->player->hasWorld) return;
+
 	for (auto player : connection->player->world->players)
 		onPlayerSpawned(player);
 };
@@ -125,8 +126,12 @@ void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, 
 	if (type == LBType::FFA) {
 		Writer writer;
 		writer.writeUInt8(0xb);
-		for (auto entry : entries)
+		unsigned char count = 0;
+		for (auto entry : entries) {
+			count++;
+			if (count > 10) break;
 			writer.writeUInt16(((FFAEntry*)entry)->pid);
+		}
 		writer.writeUInt16(0);
 		send(writer.finalize());
 	}

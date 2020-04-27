@@ -1,11 +1,9 @@
 #include "Router.h"
 #include "../ServerHandle.h"
 
-Router::Router(Listener* listener) : listener(listener), ejectTick(listener->handle->tick) {
-};
+Router::Router(Listener* listener) : listener(listener), ejectTick(listener->handle->tick) {};
 
-Router::~Router() {
-}
+Router::~Router() {};
 
 void Router::createPlayer() {
 	if (hasPlayer) return;
@@ -77,12 +75,9 @@ void Router::onQPress() {
 void Router::attemptSplit() {
 	if (!hasPlayer) return;
 	listener->handle->gamemode->onPlayerSplit(player);
-}
+};
 
 void Router::attemptEject() {
 	if (!hasPlayer) return;
 	listener->handle->gamemode->onPlayerEject(player);
-}
-
-void Router::close() {
-}
+};

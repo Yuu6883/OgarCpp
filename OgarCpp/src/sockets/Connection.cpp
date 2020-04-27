@@ -22,7 +22,6 @@ void Connection::close() {
 	}
 	disconnected = true;
 	disconnectedTick = listener->getTick();
-	listener->onDisconnection(this, closeCode, closeReason);
 }
 
 bool Connection::isUTF16() { return protocol ? protocol->UTF16String : false; };

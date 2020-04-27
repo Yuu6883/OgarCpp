@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "../worlds/World.h"
 #include "../ServerHandle.h"
+#include "../bots/PlayerBot.h"
 
 Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 	handle(handle), id(id), router(router) {
@@ -16,7 +17,10 @@ Player::~Player() {
 	if (router->disconnected) {
 		router->hasPlayer = false;
 		router->player = nullptr;
-		delete (Connection*) router;
+		if (router->type == RouterType::PLAYER)
+			delete (Connection*) router;
+		else if (router->type == RouterType::PLAYER_BOT)
+			delete (PlayerBot *) router;
 		router = nullptr;
 	}
 };
@@ -149,6 +153,7 @@ void Player::updateVisibleCells(bool threaded) {
 bool Player::exist() {
 	if (!router->disconnected) return true;
 	if (state != PlayerState::ALIVE) {
+		world->removePlayer(this);
 		handle->removePlayer(this->id);
 		return false;
 	}

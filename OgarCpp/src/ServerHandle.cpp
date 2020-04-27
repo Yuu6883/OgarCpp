@@ -101,6 +101,38 @@ void ServerHandle::loadSettings() {
 	LOAD_FLOAT(playerMergeTime);
 	LOAD_FLOAT(playerMergeTimeIncrease);
 	LOAD_FLOAT(playerDecayMult);
+
+	runtime.botNames.clear();
+	auto botNames = GAME_CONFIG["worldPlayerBotNames"];
+	if (botNames.is_array()) {
+		for (auto name : botNames)
+			if (name.is_string())
+				runtime.botNames.push_back(name);
+	
+	} else Logger::warn("Failed to read \"worldPlayerBotNames\" from config");
+
+	if (!runtime.botNames.size()) 
+		runtime.botNames.push_back("Bot");
+
+	runtime.botSkins.clear();
+	auto botSkins = GAME_CONFIG["worldPlayerBotSkins"];
+	if (botSkins.is_array()) {
+		for (auto skin : botSkins)
+			if (skin.is_string())
+				runtime.botSkins.push_back(skin);
+
+	} else Logger::warn("Failed to read \"worldPlayerBotSkins\" from config");
+
+	if (!runtime.botSkins.size())
+		runtime.botSkins.push_back("https://skins.vanis.io/s/vanis1");
+}
+
+string ServerHandle::randomBotName() {
+	return runtime.botNames[randomZeroToOne * runtime.botNames.size()];
+}
+
+string ServerHandle::randomBotSkin() {
+	return runtime.botSkins[randomZeroToOne * runtime.botSkins.size()];
 }
 
 int ServerHandle::getSettingInt(const char* key) {
@@ -243,8 +275,8 @@ World* ServerHandle::createWorld() {
 	auto world = new World(this, id);
 	worlds.insert(std::make_pair(id, world));
 	gamemode->onNewWorld(world);
-	world->afterCreation();
 	Logger::debug(std::string("Added world with ID ") + std::to_string(id));
+	world->afterCreation();
 	return world;
 };
 

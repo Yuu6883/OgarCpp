@@ -14,7 +14,7 @@ class PlayerCell;
 static std::regex nameSkinRegex{ "<(.*)>(.*)" };
 
 enum class RouterType {
-	NONE, PLAYER, MINION
+	NONE, PLAYER, PLAYER_BOT, MINION
 };
 
 class Router;
@@ -37,7 +37,7 @@ public:
 	atomic<float> mouseY = 0;
 	atomic<bool> requestingSpectate = false;
 	atomic<unsigned int> spectatePID = 0;
-	Router* spectateTarget;
+	Router* spectateTarget = nullptr;
 	list<Router*> spectators;
 	atomic<bool> isPressingQ = false;
 	atomic<bool> hasPressedQ = false;
@@ -63,7 +63,7 @@ public:
 	void onSpectateRequest();
 	void attemptSplit();
 	void attemptEject();
-	void close();
+	virtual void close() = 0;
 	virtual bool shouldClose() = 0;
 	virtual void update() = 0;
 	virtual bool isThreaded() = 0;

@@ -22,6 +22,8 @@ class GamemodeList;
 using namespace std::chrono;
 
 struct RuntimeSettings {
+	vector<string> botNames;
+	vector<string> botSkins;
 	string serverName;
 	bool chatEnabled;
 	int worldMaxPlayers;
@@ -138,4 +140,7 @@ public:
 	bool removePlayer(unsigned int id);
 	World* createWorld();
 	bool removeWorld(unsigned int id);
+
+	string randomBotName();
+	string randomBotSkin();
 };

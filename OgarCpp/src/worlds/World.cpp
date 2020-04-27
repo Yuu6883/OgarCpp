@@ -2,6 +2,7 @@
 #include "../sockets/Router.h"
 #include "../ServerHandle.h"
 #include "../cells/Cell.h"
+#include "../bots/PlayerBot.h"
 #include <random>
 #include <thread>
 #include <mutex>
@@ -27,8 +28,12 @@ World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 
 void World::afterCreation() {
 	int bots = handle->getSettingInt("worldPlayerBotsPerWorld");
+	if (!bots) return;
+	Logger::verbose(string("Adding ") + to_string(bots) + " bots to (id: world " + to_string(id) + ")");
 	while (bots-- > 0) {
-		// TODO: add playerbot
+		auto bot = new PlayerBot(this);
+		bot->createPlayer();
+		addPlayer(bot->player);
 	}
 }
 
@@ -127,17 +132,18 @@ void World::clearTruck() {
 }
 
 void World::addPlayer(Player* player) {
+
 	players.push_back(player);
 	player->world = this;
 	player->hasWorld = true;
 
 	if (player->router->type == RouterType::PLAYER)
-		worldChat->add((Connection*) (player->router));
+		worldChat->add((Connection*)(player->router));
 
 	handle->gamemode->onPlayerJoinWorld(player, this);
 	player->router->onWorldSet();
 
-	Logger::debug(string("player ") + to_string(player->id) + " has been added to world " + to_string(id));
+	Logger::debug(string("Player ") + to_string(player->id) + string(" has been added to world ") + to_string(id));
 	if (!player->router->isExternal()) return;
 	int minionsPerPlayer = handle->getSettingInt("worldMinionsPerPlayer");
 	while (minionsPerPlayer-- > 0) {
@@ -225,13 +231,11 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 
 void World::spawnPlayer(Player* player, Point& pos, float size) {
 
-	if (player->router->type == RouterType::PLAYER)
-		((Connection*)player->router)->protocol->onPlayerSpawned(player);
-
-	for (auto other : players) {
-		if (other->router->type == RouterType::PLAYER) {
+	if (player->router->type == RouterType::PLAYER) {
+		for (auto other : players) {
 			((Connection*)player->router)->protocol->onPlayerSpawned(other);
-			((Connection*)other->router)->protocol->onPlayerSpawned(player);
+			if (other->router->type == RouterType::PLAYER)
+				((Connection*)other->router)->protocol->onPlayerSpawned(player);
 		}
 	}
 
@@ -523,10 +527,7 @@ void World::liveUpdate() {
 
 		if (router->isThreaded()) {
 
-			if (router->busy) {
-				continue;
-			};
-
+			if (router->busy) continue;
 			for (auto d : player->ownedCellData) delete d;
 			player->ownedCellData.clear();
 			for (auto cell : player->ownedCells)

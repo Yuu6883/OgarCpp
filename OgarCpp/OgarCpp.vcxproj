@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="src\bots\PlayerBot.cpp" />
     <ClCompile Include="src\cells\Cell.cpp" />
     <ClCompile Include="src\cli\Main.cpp" />
     <ClCompile Include="src\gamemodes\FFA.cpp" />
@@ -48,6 +49,7 @@
     <ClCompile Include="src\worlds\World.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\bots\PlayerBot.h" />
     <ClInclude Include="src\cells\Cell.h" />
     <ClInclude Include="src\commands\CommandList.h" />
     <ClInclude Include="src\gamemodes\FFA.h" />

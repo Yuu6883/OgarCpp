@@ -72,6 +72,9 @@
     <ClCompile Include="src\primitives\QuadTree.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\bots\PlayerBot.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Settings.h">
@@ -153,6 +156,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\primitives\SimplePool.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\bots\PlayerBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
