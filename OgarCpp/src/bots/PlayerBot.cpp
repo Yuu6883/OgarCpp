@@ -171,7 +171,7 @@ void PlayerBot::update() {
 		}
 
 		if (popsplitTarget && !popsplitTarget->isBoosting && popsplitTarget->getSize() >= 0.5f * biggestCell->getSize() && splitCooldownTicks <= 0) {
-			Logger::debug(player->leaderboardName + " popsplit -> " + popsplitTarget->owner->leaderboardName);
+			// Logger::debug(player->leaderboardName + " popsplit -> " + popsplitTarget->owner->leaderboardName);
 			mouseX = popsplitTarget->getX();
 			mouseY = popsplitTarget->getY();
 			splitAttempts = (randomZeroToOne * 4 + 4);

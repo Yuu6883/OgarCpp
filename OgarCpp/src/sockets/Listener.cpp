@@ -38,14 +38,12 @@ bool Listener::open(int threads = 1) {
 		globalChat = new ChatChannel(this);
 
 	Logger::debug(std::to_string(threads) + " listener(s) opening at port " + std::to_string(port));
-
-	bool ssl = false;
 	
 	if (GAME_CONFIG["enableSSL"].is_boolean())
 		ssl = GAME_CONFIG["enableSSL"];
 
 	for (int th = 0; th < threads; th++) {
-		socketThreads.push_back(new std::thread([this, port, th, ssl] {
+		socketThreads.push_back(new std::thread([this, port, th] {
 			if (ssl) {
 				us_socket_context_options_t options;
 				LOAD_SSL_OPTION(key_file_name);
@@ -203,12 +201,18 @@ bool Listener::close() {
 	return true;
 };
 
-template<bool SSL>
-bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket, std::string origin) {
-
+bool Listener::verifyClient(unsigned int ipv4, void* socket, std::string origin) {
+    
+    uWS::WebSocket<true, true>* s1 = nullptr;
+    uWS::WebSocket<false, true>* s2 = nullptr;
+    if (ssl)
+        s1 = (uWS::WebSocket<true, true>*) socket;
+    else
+        s2 = (uWS::WebSocket<false, true>*) socket;
+    
 	if (!ipv4) {
 		Logger::warn("INVALID IP");
-		socket->end(INVALID_IP, "Invalid IP");
+		ssl ? s1->end(INVALID_IP, "Invalid IP") : s2->end(INVALID_IP, "Invalid IP");
 		return false;
 	}
 
@@ -223,14 +227,14 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket
 	// check connection list length
 	if (externalRouters.load() >= handle->runtime.listenerMaxConnections) {
 		Logger::warn(string("CONNECTION MAXED: ") + to_string(handle->runtime.listenerMaxConnections));
-		socket->end(CONNECTION_MAXED, "Server max connection reached");
+		ssl ? s1->end(CONNECTION_MAXED, "Server max connection reached") : s2->end(CONNECTION_MAXED, "Server max connection reached");
 		return false;
 	}
 
 	// check request origin
 	Logger::debug(std::string("Origin: ") + origin);
 	if (!std::regex_match(std::string(origin), originRegex)) {
-		socket->end(UNKNOWN_ORIGIN, "Unknown origin");
+		ssl ? s1->end(UNKNOWN_ORIGIN, "Unknown origin") : s2->end(UNKNOWN_ORIGIN, "Unknown origin");
 		return false;
 	}
 
@@ -240,7 +244,7 @@ bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket
 	int ipLimit = handle->runtime.listenerMaxConnectionsPerIP;
 	if (ipLimit > 0 && connectionsByIP.find(ipv4) != connectionsByIP.cend() &&
 		connectionsByIP[ipv4] >= ipLimit) {
-		socket->end(IP_LIMITED, "IP limited");
+		ssl ? s1->end(IP_LIMITED, "IP limited") : s2->end(IP_LIMITED, "IP limited");
 		return false;
 	}
 
@@ -251,10 +255,17 @@ unsigned long Listener::getTick() {
 	return handle->tick;
 }
 
-// Called in socket thread
-template<bool SSL>
-Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket) {
-	auto connection = new Connection(this, ipv4, socket);
+// Called in socket thread=
+Connection* Listener::onConnection(unsigned int ipv4, void* socket) {
+    
+    uWS::WebSocket<true, true>* s1 = nullptr;
+    uWS::WebSocket<false, true>* s2 = nullptr;
+    if (ssl)
+        s1 = (uWS::WebSocket<true, true>*) socket;
+    else
+        s2 = (uWS::WebSocket<false, true>*) socket;
+    
+	auto connection = ssl ? new Connection(this, ipv4, s1) : new Connection(this, ipv4, s2);
 	if (connectionsByIP.find(ipv4) != connectionsByIP.cend()) {
 		connectionsByIP[ipv4]++;
 	} else {

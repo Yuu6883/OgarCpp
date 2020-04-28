@@ -8,6 +8,8 @@
   <Description/>
   <Dependencies/>
   <VirtualDirectory Name="src">
+    <File Name="OgarCpp/src/bots/PlayerBot.h"/>
+    <File Name="OgarCpp/src/bots/PlayerBot.cpp"/>
     <File Name="OgarCpp/src/cells/Cell.h"/>
     <File Name="OgarCpp/src/cells/Cell.cpp"/>
     <File Name="OgarCpp/src/cli/Main.cpp"/>

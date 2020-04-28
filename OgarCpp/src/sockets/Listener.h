@@ -21,6 +21,7 @@ struct SocketData {
 
 class Listener {
 public:
+    bool ssl = false;
 	std::regex originRegex = std::regex("");
 	ServerHandle* handle;
 	std::vector<us_listen_socket_t*> sockets;
@@ -37,12 +38,10 @@ public:
 
 	bool open(int);
 	bool close();
-	template<bool SSL>
-	bool verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket, std::string origin);
+	bool verifyClient(unsigned int ipv4, void* socket, std::string origin);
 
 	unsigned long getTick();
-	template<bool SSL>
-	Connection* onConnection(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket);
+	Connection* onConnection(unsigned int ipv4, void* socket);
 	void onDisconnection(Connection* connection, int code, std::string_view message);
 	void update();
 };
