@@ -30,7 +30,8 @@ enum CloseCodes : short {
 class Connection : public Router {
 public:
 	unsigned int ipv4;
-	uWS::WebSocket<false, true>* socket;
+	uWS::WebSocket<false, true>* socket = nullptr;
+	uWS::WebSocket<true,  true>* SSLsocket = nullptr;
 	time_point<steady_clock> lastChatTime = steady_clock::now();
 	Protocol* protocol = nullptr;
 	atomic<bool> socketDisconnected = false;
@@ -44,6 +45,12 @@ public:
 		Router(listener), ipv4(ipv4), socket(socket) {
 		type = RouterType::PLAYER;
 	};
+
+	Connection(Listener* listener, unsigned int ipv4, uWS::WebSocket<true, true>* SSLsocket) :
+		Router(listener), ipv4(ipv4), SSLsocket(SSLsocket) {
+		type = RouterType::PLAYER;
+	};
+
 	~Connection();
 	bool isExternal() { return true; };
 	bool isUTF16();

@@ -12,6 +12,12 @@ using std::ofstream;
 
 inline Json GAME_CONFIG = R"(
 {
+    "enableSSL": false,
+    "key_file_name": "",
+	"cert_file_name": "",
+	"passphrase": "",
+	"dh_params_file_name": "",
+	"ca_file_name": "",
     "listenerAcceptedOriginRegex" : ".*",
     "listenerMaxConnections" : 100,
     "listenerMaxClientDormancy" : 60000,

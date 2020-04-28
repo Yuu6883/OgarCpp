@@ -37,10 +37,12 @@ public:
 
 	bool open(int);
 	bool close();
-	bool verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* socket, std::string origin);
+	template<bool SSL>
+	bool verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket, std::string origin);
 
 	unsigned long getTick();
-	Connection* onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket);
+	template<bool SSL>
+	Connection* onConnection(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket);
 	void onDisconnection(Connection* connection, int code, std::string_view message);
 	void update();
 };

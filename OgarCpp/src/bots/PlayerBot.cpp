@@ -6,11 +6,32 @@
 PlayerBot::PlayerBot(World* world) : Router(&world->handle->listener) {
 	type = RouterType::PLAYER_BOT;
 	listener->routers.push_back(this);
+	if (randomZeroToOne > 0.2f) selfeed = true;
+	if (randomZeroToOne > 0.2f) trypopsplit = true;
+	if (randomZeroToOne > 0.6f) revpopsplit = true;
 };
+
+unsigned int virusInRange(list<Cell*>& viruses, Cell* cell, float feedMass) {
+	float radiusSquared = (cell->getMass() + feedMass) * 100;
+	unsigned int count = 0;
+	for (auto virus : viruses) {
+		float dx = virus->getX() - cell->getX();
+		float dy = virus->getY() - cell->getY();
+		float dSquared = dx * dx + dy * dy;
+		if (dSquared < radiusSquared) count++;
+	}
+	return count;
+}
 
 void PlayerBot::update() {
 	if (splitCooldownTicks > 0) splitCooldownTicks--;
 	else target = nullptr;
+
+	if (lockTicks > 0) {
+		lockTicks--;
+		return;
+	}
+	ejectMacro = false;
 
 	player->updateVisibleCells();
 	if (player->state != PlayerState::ALIVE) {
@@ -35,13 +56,39 @@ void PlayerBot::update() {
 		}
 
 		bool atMaxCells = player->ownedCells.size() >= listener->handle->runtime.playerMaxCells;
-		bool willingToSplit = player->ownedCells.size() <= listener->handle->runtime.playerMaxCells / 10;
-		unsigned int cellCount = player->visibleCells.size();
+		bool willingToSplit = player->ownedCells.size() <= pow(listener->handle->runtime.playerMaxCells, 0.4f);
+		int cellCount = player->visibleCells.size();
+		bool canMerge = false;
+		float mergeMass = 0.0f;
+		float totalMass = 0.0f;
 
+		for (auto cell : player->ownedCells) {
+			if (cell->canMerge()) {
+				mergeMass += cell->getMass();
+				canMerge = true;
+			}
+			totalMass += cell->getMass();
+		}
+
+		if (player->ownedCells.size() > 1 && canMerge && mergeMass > totalMass / 2) {
+			mouseX = player->viewArea.getX();
+			mouseY = player->viewArea.getY();
+			return;
+		}
+
+		// Influence calculation
 		float mx = 0.0f, my = 0.0f;
 		Cell* bestPrey = nullptr;
 		bool splitkillObstacleNearby = false;
 		float truncatedInfluence = log10f(biggestCell->getSquareSize());
+		Cell* virusToSplitOn = nullptr;
+		Cell* popsplitTarget = nullptr;
+		list<Cell*> viruses;
+
+		if (trypopsplit)
+			for (auto [_, check] : player->visibleCells)
+				if (check->getType() == CellType::VIRUS || check->getType() == CellType::MOTHER_CELL)
+					viruses.push_back(check);
 
 		for (auto [_, check] : player->visibleCells) {
 			float dx = check->getX() - biggestCell->getX();
@@ -53,6 +100,12 @@ void PlayerBot::update() {
 				case CellType::PLAYER:
 					if (!check->owner || check->owner == player) break;
 					if (player->team > 0 && player->team == check->owner->team) break;
+					if (trypopsplit) {
+						auto count = virusInRange(viruses, check, biggestCell->getMass());
+						if (count == 1)
+							if (splitDist < biggestCell->getSize() * 2 && (!popsplitTarget || check->getSize() > popsplitTarget->getSize()))
+								popsplitTarget = check;
+					}
 					if (canEat(biggestCell->getSize(), check->getSize())) {
 						influence = truncatedInfluence;
 						if (!canSplitKill(biggestCell->getSize(), check->getSize(), splitDist)) break;
@@ -71,6 +124,10 @@ void PlayerBot::update() {
 				case CellType::VIRUS:
 					if (atMaxCells) influence = truncatedInfluence;
 					else if (canEat(biggestCell->getSize(), check->getSize())) {
+						if (d < 60) {
+							virusToSplitOn = check;
+							break;
+						}
 						influence = -1 * cellCount;
 						if (canSplitKill(biggestCell->getSize(), check->getSize(), splitDist))
 							splitkillObstacleNearby = true;
@@ -88,6 +145,7 @@ void PlayerBot::update() {
 					break;
 			}
 
+			if (virusToSplitOn) break;
 			if (!influence) continue;
 			if (!d) d = 1.0f;
 			dx /= d; dy /= d;
@@ -95,8 +153,35 @@ void PlayerBot::update() {
 			my += dy * influence / d;
 		}
 
+		if (revpopsplit && virusToSplitOn && splitCooldownTicks <= 0) {
+			mouseX = virusToSplitOn->getX();
+			mouseY = virusToSplitOn->getY();
+			splitAttempts++;
+			splitCooldownTicks = 8;
+			return;
+		}
+
+		if (virusToSplitOn) {
+			mouseX = virusToSplitOn->getX();
+			mouseY = virusToSplitOn->getY();
+			ejectAttempts++;
+			ejectMacro = true;
+			lockTicks = 15;
+			return;
+		}
+
+		if (popsplitTarget && !popsplitTarget->isBoosting && popsplitTarget->getSize() >= 0.5f * biggestCell->getSize() && splitCooldownTicks <= 0) {
+			Logger::debug(player->leaderboardName + " popsplit -> " + popsplitTarget->owner->leaderboardName);
+			mouseX = popsplitTarget->getX();
+			mouseY = popsplitTarget->getY();
+			splitAttempts = (randomZeroToOne * 4 + 4);
+			splitCooldownTicks = 25;
+			lockTicks = 15;
+			return;
+		}
+
 		if (willingToSplit && !splitkillObstacleNearby && splitCooldownTicks <= 0 &&
-			bestPrey && bestPrey->getSize() * 2 > biggestCell->getSize()) {
+			bestPrey && bestPrey->getSize() * 1.75f > biggestCell->getSize()) {
 			target = bestPrey;
 			mouseX = bestPrey->getX();
 			mouseY = bestPrey->getY();

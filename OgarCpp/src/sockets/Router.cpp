@@ -38,7 +38,12 @@ void Router::onSpawnRequest() {
 	if (spectateTarget) spectateTarget->spectators.remove(this);
 	spectateTarget = nullptr;
 
-	Logger::debug(string("Spawning Player { Name: ") + name + ", Skin: " + skin + " }");
+	if (type == RouterType::PLAYER)
+		Logger::debug(string("Spawning Player { Name: ") + name + ", Skin: " + skin + " }");
+
+	if (type == RouterType::PLAYER_BOT)
+		Logger::debug(string("Spawning Bot"));
+
 	listener->handle->gamemode->onPlayerSpawnRequest(player, name, skin);
 };
 

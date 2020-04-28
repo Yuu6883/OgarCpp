@@ -7,7 +7,11 @@
 class PlayerBot : public Router {
 public:
 	unsigned int splitCooldownTicks = 0;
+	unsigned int lockTicks = 0;
 	Cell* target = nullptr;
+	bool selfeed = false;
+	bool trypopsplit = false;
+	bool revpopsplit = false;
 	PlayerBot(World* world);
 	bool shouldClose() {
 		return !hasPlayer || !player->exist() || !player->hasWorld;

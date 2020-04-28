@@ -14,6 +14,8 @@ enum CustomErrorCode : short {
 using std::string;
 using std::to_string;
 
+#define LOAD_SSL_OPTION(op) if (GAME_CONFIG[#op].is_string()) options.op = string(GAME_CONFIG[#op]).c_str();
+
 bool Listener::open(int threads = 1) {
 	if (threads < 1) {
 		threads = 1;
@@ -37,65 +39,148 @@ bool Listener::open(int threads = 1) {
 
 	Logger::debug(std::to_string(threads) + " listener(s) opening at port " + std::to_string(port));
 
+	bool ssl = false;
+	
+	if (GAME_CONFIG["enableSSL"].is_boolean())
+		ssl = GAME_CONFIG["enableSSL"];
+
 	for (int th = 0; th < threads; th++) {
-		socketThreads.push_back(new std::thread([this, port, th] {
-			uWS::App().ws<SocketData>("/", {
-				/* Settings */
-				.compression = uWS::SHARED_COMPRESSOR,
-				.maxPayloadLength = 16 * 1024,
-				.maxBackpressure = 1 * 1024 * 1204,
-				/* Handlers */
-				.open = [this](auto* ws, auto* req) {
-				    // req object gets yeet'd after return, capture origin to pass into loop::defer
-					std::string origin = std::string(req->getHeader("origin"));
-					auto data = (SocketData*) ws->getUserData();
-
-					data->loop = uWS::Loop::get();
-					data->loop->defer([this, data, ws, origin] {
-						std::string_view ip_buff = ws->getRemoteAddress();
-						unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*) ip_buff.data()) : 0;
-
-						if (verifyClient(ipv4, ws, origin)) {
-							data->connection = onConnection(ipv4, ws);
-							Logger::info("Connected");
-						} else {
-							Logger::warn("Client verification failed");
-						}
-					});
-				},
-				.message = [](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
-					auto data = (SocketData*)ws->getUserData();
-					if (data->connection)
-						data->connection->onSocketMessage(buffer);
-				},
-				.drain = [](auto* ws) {
-					auto amount = ws->getBufferedAmount();
-					if (!amount) {
+		socketThreads.push_back(new std::thread([this, port, th, ssl] {
+			if (ssl) {
+				us_socket_context_options_t options;
+				LOAD_SSL_OPTION(key_file_name);
+				LOAD_SSL_OPTION(cert_file_name);
+				LOAD_SSL_OPTION(passphrase);
+				LOAD_SSL_OPTION(dh_params_file_name);
+				LOAD_SSL_OPTION(ca_file_name);
+				uWS::SSLApp(options).ws<SocketData>("/", {
+					/* Settings */
+					.compression = uWS::SHARED_COMPRESSOR,
+					.maxPayloadLength = 16 * 1024,
+					.maxBackpressure = 1 * 1024 * 1204,
+					/* Handlers */
+					.open = [this](auto* ws, auto* req) {
+						if (handle->exiting) return;
+						// req object gets yeet'd after return, capture origin to pass into loop::defer
+						std::string origin = string(req->getHeader("origin"));
 						auto data = (SocketData*)ws->getUserData();
-						if (data->connection) {
-							data->connection->busy = false;
-							if (data->connection->player)
-								Logger::debug("Backpressure drained: " + data->connection->player->leaderboardName);
+
+						data->loop = uWS::Loop::get();
+						data->loop->defer([this, data, ws, origin] {
+							std::string_view ip_buff = ws->getRemoteAddress();
+							unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
+
+							if (verifyClient(ipv4, ws, origin)) {
+								data->connection = onConnection(ipv4, ws);
+								Logger::info("Connected");
+							} else {
+							  Logger::warn("Client verification failed");
+							}
+						});
+					},
+					.message = [this](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
+						if (handle->exiting) return;
+						auto data = (SocketData*)ws->getUserData();
+						if (data->connection)
+							data->connection->onSocketMessage(buffer);
+					},
+					.drain = [this](auto* ws) {
+						if (handle->exiting) return;
+						auto amount = ws->getBufferedAmount();
+						if (!amount) {
+							auto data = (SocketData*)ws->getUserData();
+							if (data->connection) {
+								data->connection->busy = false;
+								if (data->connection->player)
+									Logger::debug("Backpressure drained: " + data->connection->player->leaderboardName);
+								}
+							}
+						else {
+							Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
 						}
-					} else {
-						Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
+					},
+					.ping = [](auto* ws) {},
+					.pong = [](auto* ws) {},
+					.close = [this](auto* ws, int code, std::string_view message) {
+						if (handle->exiting) return;
+						auto data = (SocketData*)ws->getUserData();
+						if (data->connection)
+							data->connection->onSocketClose(code, message);
 					}
-				},
-				.ping = [](auto* ws) {},
-				.pong = [](auto* ws) {},
-				.close = [this](auto* ws, int code, std::string_view message) {
-					auto data = (SocketData*)ws->getUserData();
-					if (data->connection)
-						data->connection->onSocketClose(code, message);
-				}
-			}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
-				if (listenerSocket) {
-					sockets.push_back(listenerSocket);
-					Logger::info(string("listener#") + to_string(th) + string(" opened at port ") + to_string(port));
-				} else {
-					Logger::error(string("listener#") + to_string(th) + string(" failed to open at port ") + to_string(port));
-				}
-			}).run();
+				}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
+					if (listenerSocket) {
+						sockets.push_back(listenerSocket);
+							Logger::info(string("listener#") + to_string(th) + string(" opened at port ") + to_string(port));
+					} else {
+						Logger::error(string("listener#") + to_string(th) + string(" failed to open at port ") + to_string(port));
+					}
+				}).run();
+
+			} else {
+
+				uWS::App().ws<SocketData>("/", {
+					/* Settings */
+					.compression = uWS::SHARED_COMPRESSOR,
+					.maxPayloadLength = 16 * 1024,
+					.maxBackpressure = 1 * 1024 * 1204,
+					/* Handlers */
+					.open = [this](auto* ws, auto* req) {
+						if (handle->exiting) return;
+						// req object gets yeet'd after return, capture origin to pass into loop::defer
+						std::string origin = std::string(req->getHeader("origin"));
+						auto data = (SocketData*)ws->getUserData();
+
+						data->loop = uWS::Loop::get();
+						data->loop->defer([this, data, ws, origin] {
+							std::string_view ip_buff = ws->getRemoteAddress();
+							unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
+
+							if (verifyClient(ipv4, ws, origin)) {
+								data->connection = onConnection(ipv4, ws);
+								Logger::info("Connected");
+							} else {
+							  Logger::warn("Client verification failed");
+							}
+						});
+					},
+					.message = [this](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
+						if (handle->exiting) return;
+						auto data = (SocketData*)ws->getUserData();
+						if (data->connection)
+							data->connection->onSocketMessage(buffer);
+					},
+					.drain = [this](auto* ws) {
+						if (handle->exiting) return;
+						auto amount = ws->getBufferedAmount();
+						if (!amount) {
+							auto data = (SocketData*)ws->getUserData();
+							if (data->connection) {
+								data->connection->busy = false;
+								if (data->connection->player)
+									Logger::debug("Backpressure drained: " + data->connection->player->leaderboardName);
+								}
+							}
+						else {
+							Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
+						}
+					},
+					.ping = [](auto* ws) {},
+					.pong = [](auto* ws) {},
+					.close = [this](auto* ws, int code, std::string_view message) {
+						if (handle->exiting) return;
+						auto data = (SocketData*)ws->getUserData();
+						if (data->connection)
+							data->connection->onSocketClose(code, message);
+					}
+				}).listen("0.0.0.0", port, [this, port, th](us_listen_socket_t* listenerSocket) {
+					if (listenerSocket) {
+						sockets.push_back(listenerSocket);
+							Logger::info(string("listener#") + to_string(th) + string(" opened at port ") + to_string(port));
+					} else {
+						Logger::error(string("listener#") + to_string(th) + string(" failed to open at port ") + to_string(port));
+					}
+				}).run();
+			}
 		}));
 	}
 	return true;
@@ -118,7 +203,8 @@ bool Listener::close() {
 	return true;
 };
 
-bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<false, true>* socket, std::string origin) {
+template<bool SSL>
+bool Listener::verifyClient(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket, std::string origin) {
 
 	if (!ipv4) {
 		Logger::warn("INVALID IP");
@@ -166,7 +252,8 @@ unsigned long Listener::getTick() {
 }
 
 // Called in socket thread
-Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<false, true>* socket) {
+template<bool SSL>
+Connection* Listener::onConnection(unsigned int ipv4, uWS::WebSocket<SSL, true>* socket) {
 	auto connection = new Connection(this, ipv4, socket);
 	if (connectionsByIP.find(ipv4) != connectionsByIP.cend()) {
 		connectionsByIP[ipv4]++;

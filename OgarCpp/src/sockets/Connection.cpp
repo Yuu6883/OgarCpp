@@ -42,7 +42,8 @@ void Connection::closeSocket(int code, string_view str) {
 	closeCode = code;
 	closeReason = string(str);
 	uWS::Loop::get()->defer([this, code, str] {
-		socket->end(code ? code : CLOSE_ABNORMAL, str);
+		if (socket) socket->end(code ? code : CLOSE_ABNORMAL, str);
+		else SSLsocket->end(code ? code : CLOSE_ABNORMAL, str);
 	});
 }
 
@@ -117,7 +118,7 @@ void Connection::send(string_view message) {
 		Logger::warn("Sending buffer but socket is disconnected");
 		return;
 	}
-	bool backpressure = socket->send(message);
+	bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
 	if (!backpressure) {
 		busy = true;
 		if (player)
