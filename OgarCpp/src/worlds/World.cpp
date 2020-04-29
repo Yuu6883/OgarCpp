@@ -78,6 +78,37 @@ void World::addCell(Cell* cell) {
 	handle->gamemode->onNewCell(cell);
 }
 
+void World::restart() {
+	if (!shouldRestart) return;
+
+	Logger::info(string("World (id: ") + to_string(id) + ") restarting!");
+	playerCells.clear();
+	boostingCells.clear();
+	ejectedCells.clear();
+	for (auto c : cells) delete c;
+	cells.clear();
+	for (auto c : gcTruck) delete c;
+	gcTruck.clear();
+	for (auto p : players) {
+		p->lastVisibleCellData.clear();
+		p->lastVisibleCells.clear();
+		p->visibleCellData.clear();
+		p->visibleCells.clear();
+		p->ownedCellData.clear();
+		p->ownedCells.clear();
+		p->updateState(PlayerState::DEAD);
+	}
+
+	virusCount = 0;
+	pelletCount = 0;
+	motherCellCount = 0;
+
+	setBorder(border);
+	_nextCellId = 1;
+	worldChat->broadcast(nullptr, "Server restarted");
+	shouldRestart = false;
+}
+
 bool World::setCellAsBoosting(Cell* cell) {
 	if (cell->isBoosting) return false;
 	cell->isBoosting = true;

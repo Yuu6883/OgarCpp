@@ -71,7 +71,13 @@ public:
 			for_each(intervals.begin(), intervals.end(), [this](pair<Callback, int> p) {
 				if (!(ticked % p.second)) p.first();
 			});
-			std::this_thread::sleep_until(_start + ticked++ * milliseconds{ step });
+			auto timepoint = _start + ticked++ * milliseconds{ step };
+			auto delta = timepoint - steady_clock::now();
+			if (delta.count() < 0) {
+				_start -= delta;
+				continue;
+			}
+			std::this_thread::sleep_until(timepoint);
 		}
 	}
 

@@ -34,9 +34,11 @@ void PlayerBot::update() {
 	ejectMacro = false;
 
 	player->updateVisibleCells();
-	if (player->state != PlayerState::ALIVE) {
-		spawningName = listener->handle->randomBotName();
-		spawningSkin = listener->handle->randomBotSkin();
+	if (player->state != PlayerState::ALIVE && !requestSpawning) {
+		if (player->cellName.length()) spawningName = player->cellName;
+		else spawningName = listener->handle->randomBotName();
+		if (player->cellSkin.length()) spawningSkin = player->cellSkin;
+		else spawningSkin = listener->handle->randomBotSkin();
 		requestSpawning = true;
 	} else {
 		PlayerCell* biggestCell = nullptr;
@@ -101,9 +103,9 @@ void PlayerBot::update() {
 					if (!check->owner || check->owner == player) break;
 					if (player->team > 0 && player->team == check->owner->team) break;
 					if (trypopsplit) {
-						auto count = virusInRange(viruses, check, biggestCell->getMass());
+						auto count = virusInRange(viruses, check, biggestCell->getMass() * 0.75f);
 						if (count == 1)
-							if (splitDist < biggestCell->getSize() * 2 && (!popsplitTarget || check->getSize() > popsplitTarget->getSize()))
+							if (splitDist < biggestCell->getSize() * 1.25f && (!popsplitTarget || check->getSize() > popsplitTarget->getSize()))
 								popsplitTarget = check;
 					}
 					if (canEat(biggestCell->getSize(), check->getSize())) {
@@ -124,7 +126,11 @@ void PlayerBot::update() {
 				case CellType::VIRUS:
 					if (atMaxCells) influence = truncatedInfluence;
 					else if (canEat(biggestCell->getSize(), check->getSize())) {
-						if (d < 60) {
+						if (d < 60 && revpopsplit) {
+							virusToSplitOn = check;
+							break;
+						}
+						else if (d < 60 * log10f(biggestCell->getSize() / 2.0f)) {
 							virusToSplitOn = check;
 							break;
 						}
@@ -166,7 +172,7 @@ void PlayerBot::update() {
 			mouseY = virusToSplitOn->getY();
 			ejectAttempts++;
 			ejectMacro = true;
-			lockTicks = 15;
+			lockTicks = 20;
 			return;
 		}
 
@@ -174,14 +180,14 @@ void PlayerBot::update() {
 			// Logger::debug(player->leaderboardName + " popsplit -> " + popsplitTarget->owner->leaderboardName);
 			mouseX = popsplitTarget->getX();
 			mouseY = popsplitTarget->getY();
-			splitAttempts = (randomZeroToOne * 4 + 4);
-			splitCooldownTicks = 25;
-			lockTicks = 15;
+			splitAttempts = (randomZeroToOne * 4 + 1);
+			splitCooldownTicks = splitAttempts * 2;
+			lockTicks = splitAttempts * 2;
 			return;
 		}
 
 		if (willingToSplit && !splitkillObstacleNearby && splitCooldownTicks <= 0 &&
-			bestPrey && bestPrey->getSize() * 1.75f > biggestCell->getSize()) {
+			bestPrey && bestPrey->getSize() * 3.0f > biggestCell->getSize()) {
 			target = bestPrey;
 			mouseX = bestPrey->getX();
 			mouseY = bestPrey->getY();

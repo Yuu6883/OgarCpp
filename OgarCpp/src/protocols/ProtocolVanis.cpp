@@ -86,7 +86,7 @@ void ProtocolVanis::onPlayerSpawned(Player* player) {
 	Writer writer;
 	writer.writeUInt8(15);
 	writer.writeUInt16(player->id);
-	writer.writeStringUTF8(player->cellName.c_str());
+	writer.writeStringUTF8(player->chatName.c_str());
 	writer.writeStringUTF8(player->cellSkin.c_str());
 	send(writer.finalize());
 };
@@ -113,13 +113,20 @@ void ProtocolVanis::onWorldReset() {
 };
 
 void ProtocolVanis::onDead() {
-	Writer writer2;
-	writer2.writeUInt8(0x14);
-	writer2.writeUInt16((connection->listener->handle->tick - 
-		connection->player->joinTick) * connection->listener->handle->tickDelay / 1000);
-	writer2.writeUInt16(connection->player->killCount);
-	writer2.writeUInt32(connection->player->maxScore);
-	send(writer2.finalize());
+	{
+		Writer writer;
+		writer.writeUInt8(0x12);
+		send(writer.finalize());
+	}
+	{
+		Writer writer;
+		writer.writeUInt8(0x14);
+		writer.writeUInt16((connection->listener->handle->tick -
+			connection->player->joinTick) * connection->listener->handle->tickDelay / 1000);
+		writer.writeUInt16(connection->player->killCount);
+		writer.writeUInt32(connection->player->maxScore);
+		send(writer.finalize());
+	}
 }
 
 void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) {
@@ -138,6 +145,11 @@ void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, 
 };
 
 void ProtocolVanis::onSpectatePosition(ViewArea* area) {
+	Writer writer;
+	writer.writeUInt8(0x11);
+	writer.writeInt32(area->getX());
+	writer.writeInt32(area->getY());
+	send(writer.finalize());
 };
 
 void ProtocolVanis::onMinimapUpdate() {

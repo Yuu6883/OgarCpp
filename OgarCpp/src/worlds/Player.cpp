@@ -3,6 +3,8 @@
 #include "../ServerHandle.h"
 #include "../bots/PlayerBot.h"
 
+using std::to_string;
+
 Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 	handle(handle), id(id), router(router) {
 	viewArea.w /= handle->runtime.playerViewScaleMult;
@@ -64,6 +66,10 @@ void Player::updateViewArea() {
 			}
 			this->score = score;
 			maxScore = std::max(score, maxScore);
+			if ((score > world->border.w * world->border.h / 200.0f) && handle->tick > 1000) {
+				world->shouldRestart = true;
+				world->worldChat->broadcast(nullptr, string(leaderboardName) + " won with " + to_string((int) (score / 1000.0f)) + "k mass");
+			}
 
 			factor = pow(ownedCells.size() + 50, 0.1);
 			viewArea.setX(x / size);
@@ -80,7 +86,8 @@ void Player::updateViewArea() {
 			break;
 		case PlayerState::SPEC:
 			this->score = -1;
-			viewArea = world->largestPlayer->viewArea;
+			if (!router->spectateTarget || !router->spectateTarget->player) break;
+			viewArea = router->spectateTarget->player->viewArea;
 			break;
 		case PlayerState::ROAM:
 			score = -1;

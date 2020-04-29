@@ -47,6 +47,7 @@ public:
 
 	ChatChannel* worldChat;
 
+	bool shouldRestart = false;
 	int motherCellCount = 0;
 	int virusCount = 0;
 	Rect border;
@@ -92,4 +93,5 @@ public:
 	void distributeCellMass(PlayerCell* cell, std::vector<float>& ref);
 	void compileStatistics();
 	void clearTruck();
+	void restart();
 };

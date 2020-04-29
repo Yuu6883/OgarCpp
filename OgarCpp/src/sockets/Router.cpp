@@ -56,16 +56,21 @@ void Router::onSpectateRequest() {
 		return;
 	}
 	if (spectatePID && player->hasWorld) {
-		auto iter = std::find_if(player->world->players.begin(), player->world->players.end(), [this](Player* p) { return p->id == spectatePID; });
+		auto iter = std::find_if(player->world->players.begin(), player->world->players.end(), [this](Player* p) { return p->id == spectatePID.load(); });
 		if (iter != player->world->players.end()) {
 			auto toSpec = *iter;
 			toSpec->router->spectators.remove(this);
 			toSpec->router->spectators.push_back(this);
+
+			toSpec->lastVisibleCells.clear();
+			toSpec->lastVisibleCellData.clear();
+
 			spectateTarget = toSpec->router;
+			Logger::debug(player->leaderboardName + " spectating -> " + toSpec->leaderboardName);
 		}
 		spectatePID = 0;
 	}
-	if (player->hasWorld && player->world->largestPlayer) {
+	if (!spectateTarget && player->hasWorld && player->world->largestPlayer) {
 		player->world->largestPlayer->router->spectators.remove(this);
 		player->world->largestPlayer->router->spectators.push_back(this);
 		spectateTarget = player->world->largestPlayer->router;

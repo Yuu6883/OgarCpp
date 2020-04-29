@@ -184,6 +184,8 @@ void ServerHandle::onTick() {
 	vector<unsigned int> removingIds;
 	for (auto [id, world] : worlds) {
 		world->update();
+		if (world->shouldRestart)
+			world->restart();
 		if (world->toBeRemoved)
 			removingIds.push_back(id);
 	}

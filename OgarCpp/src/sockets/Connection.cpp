@@ -200,6 +200,10 @@ void Connection::update() {
 			listener->handle->gamemode->sendLeaderboard(this);
 		if (listener->handle->tick % 10 == 0)
 			protocol->onMinimapUpdate();
+		if (player->state == PlayerState::SPEC && player->router->spectateTarget) {
+			if (player->router->spectateTarget->type == RouterType::PLAYER &&
+				player->router->spectateTarget->player->state == PlayerState::ALIVE) return;
+		}
 		protocol->onVisibleCellUpdate(add, upd, eat, del);
 	}
 }
