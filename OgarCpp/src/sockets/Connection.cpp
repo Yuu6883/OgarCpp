@@ -8,6 +8,7 @@
 #include "../worlds/MatchMaker.h"
 
 #define MAX_FRAME_SIZE 512
+using std::to_string;
 
 string ipv4ToString(unsigned int ipv4) {
 	return "";
@@ -121,8 +122,9 @@ void Connection::send(string_view message) {
 	bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
 	if (!backpressure) {
 		busy = true;
+		int bufferedAmount = socket ? socket->getBufferedAmount() : SSLsocket->getBufferedAmount();
 		if (player)
-			Logger::info(string("Flagged ") + player->leaderboardName + " as busy (backpressure)");
+			Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
 	}
 }
 

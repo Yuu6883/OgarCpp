@@ -77,7 +77,7 @@ void PlayerCell::onSpawned() {
 		owner->router->onNewOwnedCell(this);
 		owner->ownedCells.push_back(this);
 	}
-	world->playerCells.push_back(this);
+	world->playerCells.push_front(this);
 }
 
 void PlayerCell::onRemoved() {

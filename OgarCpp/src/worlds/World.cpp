@@ -103,6 +103,7 @@ void World::restart() {
 	pelletCount = 0;
 	motherCellCount = 0;
 
+	handle->gamemode->compileLeaderboard(this);
 	setBorder(border);
 	_nextCellId = 1;
 	worldChat->broadcast(nullptr, "Server restarted");
@@ -119,14 +120,7 @@ bool World::setCellAsBoosting(Cell* cell) {
 bool World::setCellAsNotBoosting(Cell* cell) {
 	if (!cell->isBoosting) return false;
 	cell->isBoosting = false;
-	auto iter = boostingCells.begin();
-	while (iter != boostingCells.cend()) {
-		if (*iter == cell) {
-			boostingCells.erase(iter);
-			return true;
-		}
-		iter++;
-	}
+	boostingCells.remove(cell);
 	return true;
 }
 
@@ -588,6 +582,7 @@ void World::liveUpdate() {
 }
 
 void World::resolveRigidCheck(Cell* a, Cell* b) {
+	if (a->getAge() <= 1 || b->getAge() <= 1) return;
 	float dx = b->getX() - a->getX();
 	float dy = b->getY() - a->getY();
 	float d = sqrt(dx * dx + dy * dy);
