@@ -1,11 +1,10 @@
 # OgarCpp
 Luka's OgarII implemented in C++ with high performance.
 
-## Progress
-* January  - Started on the project
-* February - Wrote some utility  classes
-* March - Slacked off for a whole month
-* April - Implemented most of the project (95%) and started testing
+## Features
+* Pretty much everything in OgarII besides team mode.
+* Improved performance
+* Improved bot AI
 
 ## Install
 * ### Windows
@@ -27,7 +26,6 @@ You can build and run this locally for yourself, but you are too lazy (like me),
 It is currently hosted on a $6 high-frequency Vultr VPS (in EU), with the settings in `bench.json`. Very limited resource, yet high performance.
 
 ## TODO
-* Bots
 * More gamemodes (probably not going to be bothered since there's more work to frontend than the backend)
 * Endianness support to protocols since we are assuming the server runs on a little-endian machine
 * Improve physics calculation (fix solotricks)
