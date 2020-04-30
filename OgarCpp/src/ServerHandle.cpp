@@ -1,3 +1,5 @@
+#include <time.h>
+
 #include "ServerHandle.h"
 #include "Settings.h"
 #include "worlds/Player.h"
@@ -11,6 +13,7 @@ using std::to_string;
 #define LOAD_STR(prop) runtime.prop = getSettingString(#prop)
 
 ServerHandle::ServerHandle() {
+	srand(time(NULL));
 	loadSettings();
 	ticker.add([this] { onTick(); });
 	protocols = new ProtocolStore();
@@ -35,6 +38,9 @@ void ServerHandle::loadSettings() {
 	ticker.setStep(tickDelay);
 	stepMult = tickDelay / 40;
 
+	LOAD_INT(spawnProtection);
+	LOAD_FLOAT(restartMulti);
+	LOAD_BOOL(killOversize);
 	LOAD_BOOL(chatEnabled);
 	LOAD_STR(serverName);
 	LOAD_INT(worldMaxPlayers);
@@ -189,6 +195,7 @@ void ServerHandle::onTick() {
 		if (world->toBeRemoved)
 			removingIds.push_back(id);
 	}
+	float time1 = stopwatch.lap();
 
 	for (auto id : removingIds)
 		removeWorld(id);
@@ -196,14 +203,18 @@ void ServerHandle::onTick() {
 	listener.update();
 	matchmaker.update();
 	gamemode->onHandleTick();
+	float time2 = stopwatch.lap();
 
 	for (auto [_, world] : worlds)
 		world->clearTruck();
 
 	chatCommands.process();
 	commands.process();
+	bench = false;
 
 	averageTickTime = stopwatch.elapsed();
+	if (bench)
+		printf("Tick: %fms, World: %fms, Listener: %fms\n", averageTickTime, time1, time2);
 	stopwatch.stop();
 };
 
@@ -255,8 +266,6 @@ Player* ServerHandle::createPlayer(Router* router) {
 	auto player = new Player(this, id, router);
 	players.insert(std::make_pair(id, player));
 	gamemode->onNewPlayer(player);
-
-	Logger::debug(std::string("Added player with ID ") + std::to_string(id));
 	return player;
 };
 
@@ -266,7 +275,6 @@ bool ServerHandle::removePlayer(unsigned int id) {
 	gamemode->onPlayerDestroy(player);
 	delete player;
 	players.erase(id);
-	Logger::debug(std::string("Removed player with ID ") + std::to_string(id));
 	return true;
 };
 

@@ -9,6 +9,8 @@ PlayerBot::PlayerBot(World* world) : Router(&world->handle->listener) {
 	if (randomZeroToOne > 0.2f) selfeed = true;
 	if (randomZeroToOne > 0.2f) trypopsplit = true;
 	if (randomZeroToOne > 0.6f) revpopsplit = true;
+	lockTicks = randomZeroToOne * 10;
+	onDead();
 };
 
 unsigned int virusInRange(list<Cell*>& viruses, Cell* cell, float feedMass) {
@@ -24,6 +26,9 @@ unsigned int virusInRange(list<Cell*>& viruses, Cell* cell, float feedMass) {
 }
 
 void PlayerBot::update() {
+	if (player->world->stats.loadTime > 50.0f) {
+		lockTicks = 5;
+	}
 	if (splitCooldownTicks > 0) splitCooldownTicks--;
 	else target = nullptr;
 
@@ -35,11 +40,6 @@ void PlayerBot::update() {
 
 	player->updateVisibleCells();
 	if (player->state != PlayerState::ALIVE && !requestSpawning) {
-		if (player->cellName.length()) spawningName = player->cellName;
-		else spawningName = listener->handle->randomBotName();
-		if (player->cellSkin.length()) spawningSkin = player->cellSkin;
-		else spawningSkin = listener->handle->randomBotSkin();
-		requestSpawning = true;
 	} else {
 		PlayerCell* biggestCell = nullptr;
 		for (auto cell : player->ownedCells)
@@ -217,4 +217,14 @@ void PlayerBot::close() {
 		player->world->removePlayer(player);
 	disconnected = true;
 	disconnectedTick = listener->handle->tick;
+}
+
+void PlayerBot::onDead() {
+	listener->handle->ticker.timeout(60, [this] {
+		if (player->cellName.length()) spawningName = player->cellName;
+		else spawningName = listener->handle->randomBotName();
+		if (player->cellSkin.length()) spawningSkin = player->cellSkin;
+		else spawningSkin = listener->handle->randomBotSkin();
+		requestSpawning = true;
+	});
 }

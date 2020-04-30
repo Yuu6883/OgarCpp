@@ -1,12 +1,12 @@
 #pragma once
 #include <string>
-#include <map>
+#include <unordered_map>
 #include <list>
 #include "../primitives/Rect.h"
 #include "../cells/Cell.h"
 
 using std::string;
-using std::map;
+using std::unordered_map;
 using std::list;
 
 class ServerHandle;
@@ -31,6 +31,7 @@ public:
 	unsigned int chatColor = 0x7F7F7F;
 	PlayerState state = PlayerState::DEAD;
 	bool hasWorld = false;
+	bool justPopped = false;
 	World* world = nullptr;
 	short team = -1;
 	float score = 0;
@@ -40,13 +41,13 @@ public:
 	
 	// For sequential buffering
 	list<PlayerCell*> ownedCells;
-	map<unsigned int, Cell*> visibleCells;
-	map<unsigned int, Cell*> lastVisibleCells;
+	unordered_map<unsigned int, Cell*> visibleCells;
+	unordered_map<unsigned int, Cell*> lastVisibleCells;
 
 	// For threaded buffering
 	list<CellData*> ownedCellData;
-	map<unsigned int, CellData*> visibleCellData;
-	map<unsigned int, CellData*> lastVisibleCellData;
+	unordered_map<unsigned int, CellData*> visibleCellData;
+	unordered_map<unsigned int, CellData*> lastVisibleCellData;
 	QuadTree* lockedFinder = nullptr;
 	
 	ViewArea viewArea = ViewArea(0, 0, 1920 / 2, 1080 / 2, 1);

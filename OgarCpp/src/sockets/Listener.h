@@ -6,6 +6,7 @@
 #include <vector>
 #include <list>
 #include <map>
+#include "../primitives/SimplePool.h"
 
 using std::atomic;
 
@@ -26,6 +27,7 @@ public:
 	ServerHandle* handle;
 	std::vector<us_listen_socket_t*> sockets;
 	std::vector<std::thread*> socketThreads;
+	ThreadPool* socketsPool;
 	
 	ChatChannel* globalChat = nullptr;
 
@@ -33,8 +35,11 @@ public:
 	std::list<Router*> routers;
 	std::map<unsigned int, unsigned int> connectionsByIP;
 
-	Listener(ServerHandle* handle) : handle(handle) {};
-	~Listener() { close(); }
+	Listener(ServerHandle* handle);
+	~Listener() {
+		delete socketsPool;
+		close();
+	}
 
 	bool open(int);
 	bool close();

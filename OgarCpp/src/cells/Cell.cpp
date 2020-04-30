@@ -48,6 +48,7 @@ EatResult PlayerCell::getEatResult(Cell* other) {
 }
 
 EatResult PlayerCell::getDefaultEatResult(Cell* other) {
+	if (world->handle->tick - owner->joinTick < world->handle->runtime.spawnProtection && other->owner != owner) return EatResult::NONE;
 	return other->getSize() * world->handle->runtime.worldEatMult > size ? EatResult::NONE : EatResult::EAT;
 }
 

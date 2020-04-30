@@ -12,6 +12,9 @@ using std::ofstream;
 
 inline Json GAME_CONFIG = R"(
 {
+    "spawnProtection": 40,
+    "restartMulti": 0.75,
+    "killOversize": false,
     "enableSSL": false,
     "key_file_name": "",
 	"cert_file_name": "",

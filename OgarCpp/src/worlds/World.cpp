@@ -13,7 +13,6 @@ using std::thread;
 World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 	worldChat = new ChatChannel(&handle->listener);
 	physicsPool = new ThreadPool(handle->getSettingInt("physicsThreads"));
-	socketsPool = new ThreadPool(handle->getSettingInt("socketsThreads"));
 
 	Logger::info(string("Using ") + std::to_string(handle->getSettingInt("physicsThreads")) + " threads to accelerate physics");
 	Logger::info(string("Using ") + std::to_string(handle->getSettingInt("socketsThreads")) + " threads to accelerate sockets");
@@ -24,16 +23,18 @@ World::World(ServerHandle* handle, unsigned int id) : handle(handle), id(id) {
 	float h = handle->getSettingInt("worldMapH");
 	Rect rect(x, y, w, h);
 	setBorder(rect);
+	handle->bench = true;
 }
 
 void World::afterCreation() {
 	int bots = handle->getSettingInt("worldPlayerBotsPerWorld");
 	if (!bots) return;
-	Logger::verbose(string("Adding ") + to_string(bots) + " bots to (id: world " + to_string(id) + ")");
 	while (bots-- > 0) {
-		auto bot = new PlayerBot(this);
-		bot->createPlayer();
-		addPlayer(bot->player);
+		handle->ticker.timeout(bots * 10, [this, bots] {
+			auto bot = new PlayerBot(this);
+			bot->createPlayer();
+			addPlayer(bot->player);
+		});
 	}
 }
 
@@ -52,7 +53,6 @@ World::~World() {
 	delete worldChat;
 	delete finder;
 	delete physicsPool;
-	delete socketsPool;
 }
 
 void World::setBorder(Rect& rect) {
@@ -149,7 +149,7 @@ void World::clearTruck() {
 	auto iter = gcTruck.begin();
 	while (iter != gcTruck.end()) {
 		auto cell = *iter;
-		if (handle->tick - cell->deadTick > 10) {
+		if (handle->tick - cell->deadTick > 100) {
 			delete cell;
 			iter = gcTruck.erase(iter);
 		} else break;
@@ -168,7 +168,8 @@ void World::addPlayer(Player* player) {
 	handle->gamemode->onPlayerJoinWorld(player, this);
 	player->router->onWorldSet();
 
-	Logger::debug(string("Player ") + to_string(player->id) + string(" has been added to world ") + to_string(id));
+	if (player->router->type == RouterType::PLAYER)
+		Logger::debug(string("Player ") + to_string(player->id) + string(" has been added to world ") + to_string(id));
 	if (!player->router->isExternal()) return;
 	int minionsPerPlayer = handle->getSettingInt("worldMinionsPerPlayer");
 	while (minionsPerPlayer-- > 0) {
@@ -190,17 +191,20 @@ void World::removePlayer(Player* player) {
 	Logger::debug(string("player ") + to_string(player->id) + " has been removed from world " + to_string(id));
 };
 
-void World::killPlayer(Player* player) {
+void World::killPlayer(Player* player, bool instantKill) {
 
 	for (auto c : player->ownedCells) {
-		c->owner = nullptr;
-		c->posChanged = true;
-		c->id = getNextCellId();
-		if (c->data) c->data->dead = true;
+		if (instantKill) {
+			removeCell(c);
+		} else {
+			c->owner = nullptr;
+			c->posChanged = true;
+			c->id = getNextCellId();
+			if (c->data) c->data->dead = true;
+		}
 	}
 
 	player->ownedCells.clear();
-
 	player->lastVisibleCells.clear();
 	player->visibleCells.clear();
 	player->lastVisibleCellData.clear();
@@ -209,6 +213,7 @@ void World::killPlayer(Player* player) {
 	for (auto c : player->ownedCellData)
 		delete c;
 	player->ownedCellData.clear();
+	player->router->onDead();
 }
 
 Point World::getRandomPos(float cellSize) {
@@ -256,12 +261,15 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 
 void World::spawnPlayer(Player* player, Point& pos, float size) {
 
-	if (player->router->type == RouterType::PLAYER) {
-		for (auto other : players) {
+	if (player->router->type == RouterType::PLAYER)
+		((Connection*)player->router)->protocol->onPlayerSpawned(player);
+		
+	for (auto other : players) {
+		if (other == player) continue;
+		if (player->router->type == RouterType::PLAYER)
 			((Connection*)player->router)->protocol->onPlayerSpawned(other);
-			if (other->router->type == RouterType::PLAYER)
-				((Connection*)other->router)->protocol->onPlayerSpawned(player);
-		}
+		if (other->router->type == RouterType::PLAYER)
+			((Connection*)other->router)->protocol->onPlayerSpawned(player);
 	}
 
 	auto playerCell = new PlayerCell(this, player, pos.getX(), pos.getY(), size);
@@ -287,6 +295,11 @@ void World::frozenUpdate() {
 
 void World::liveUpdate() {
 
+	if (stats.loadTime > 80.0f) {
+		Logger::warn(string("Server can't keep up! Load: ") + std::to_string(stats.loadTime) + "%");
+		handle->bench = true;
+	}
+
 	handle->gamemode->onWorldTick(this);
 
 	Stopwatch bench;
@@ -295,8 +308,7 @@ void World::liveUpdate() {
 	for (auto c : cells)
 		c->onTick();
 
-	bool pog = handle->bench;
-	if (pog)
+	if (handle->bench)
 		printf("\nonTickTime: %2.5fms\n", bench.lap());
 
 	while (pelletCount < handle->runtime.pelletCount) {
@@ -314,7 +326,7 @@ void World::liveUpdate() {
 		addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
 
-	if (pog)
+	if (handle->bench)
 		printf("newCellTime: %2.5fms\n", bench.lap());
 	
 	auto c_iter = boostingCells.begin();
@@ -325,7 +337,7 @@ void World::liveUpdate() {
 		} else c_iter++;
 	}
 
-	if (pog)
+	if (handle->bench)
 		printf("boostTime: %2.5fms\n", bench.lap());
 
 	list<pair<Cell*, Cell*>> rigid;
@@ -400,7 +412,7 @@ void World::liveUpdate() {
 		});
 	} */
 
-	if (pog)
+	if (handle->bench)
 		printf("boostCheckTime: %2.5fms\n", bench.lap());
 
 	for (auto c : playerCells) {
@@ -411,7 +423,7 @@ void World::liveUpdate() {
 		updateCell(c);
 	}
 
-	if (pog)
+	if (handle->bench)
 		printf("playerCellUpdateTime: %2.5fms\n", bench.lap());
 	
 	batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
@@ -482,19 +494,19 @@ void World::liveUpdate() {
 	}
 	*/
 
-	if (pog)
+	if (handle->bench)
 		printf("playerCellRigidEatUpdateTime: %2.5fms\n", bench.lap());
 
 	for (auto rigidPair : rigid)
 		resolveRigidCheck(rigidPair.first, rigidPair.second);
 
-	if (pog)
+	if (handle->bench)
 		printf("resolveRigidTime: %2.5fms\n", bench.lap());
 
 	for (auto eatPair : eat)
 		resolveEatCheck(eatPair.first, eatPair.second);
 
-	if (pog)
+	if (handle->bench)
 		printf("resolveEatTime: %2.5fms\n", bench.lap());
 
 	auto r_iter = cells.begin();
@@ -568,7 +580,7 @@ void World::liveUpdate() {
 		lockedFinder->split();
 	}
 
-	if (pog)
+	if (handle->bench)
 		printf("playerUpdateTime: %2.5fms\n", bench.lap());
 
 	compileStatistics();
@@ -578,7 +590,6 @@ void World::liveUpdate() {
 		if (handle->worlds.size() > handle->runtime.worldMinCount)
 			toBeRemoved = true;
 
-	if (pog) handle->bench = false;
 }
 
 void World::resolveRigidCheck(Cell* a, Cell* b) {
@@ -660,6 +671,7 @@ void World::movePlayerCell(PlayerCell* cell) {
 	if (!cell->owner) return;
 	auto router = cell->owner->router;
 	if (router->disconnected) return;
+	if (cell->getAge() <= 3) return;
 	float dx = router->mouseX - cell->getX();
 	float dy = router->mouseY - cell->getY();
 	float d = sqrt(dx * dx + dy * dy);
@@ -722,10 +734,15 @@ void World::splitPlayer(Player* player) {
 }
 
 void World::ejectFromPlayer(Player* player) {
+	if (player->justPopped) {
+		handle->ticker.timeout(2, [player] { player->justPopped = false; });
+		return;
+	};
 	float dispersion = handle->runtime.ejectDispersion;
 	float loss = handle->runtime.ejectingLoss * handle->runtime.ejectingLoss;
 	auto router = player->router;
 	for (auto cell : player->ownedCells) {
+		if (cell->getAge() <= 1) continue;
 		if (cell->getSize() < handle->runtime.playerMinEjectSize) continue;
 		float dx = router->mouseX - cell->getX();
 		float dy = router->mouseY - cell->getY();
@@ -754,6 +771,7 @@ void World::popPlayerCell(PlayerCell* cell) {
 		Boost boost { sin(angle), cos(angle), handle->runtime.playerSplitBoost };
 		launchPlayerCell(cell, sqrt(mass * 100), boost);
 	}
+	if (cell->owner) cell->owner->justPopped = true;
 }
 
 void World::distributeCellMass(PlayerCell* cell, std::vector<float>& dist) {
@@ -814,10 +832,5 @@ void World::compileStatistics() {
 	stats.gamemode = handle->gamemode->getName();
 	stats.loadTime = handle->averageTickTime / handle->stepMult;
 	stats.uptime = duration_cast<seconds>(system_clock::now() - handle->startTime).count();
-
-	if (stats.loadTime > 80.0f) {
-		Logger::warn(string("Server can't keep up! Load: ") + std::to_string(stats.loadTime) + "%");
-		handle->bench = true;
-	}
 }
 

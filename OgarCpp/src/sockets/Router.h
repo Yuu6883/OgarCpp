@@ -32,6 +32,7 @@ public:
 	string spawningSkin = "";
 	string spawningTag  = "";
 
+	atomic<bool> admin = false;
 	atomic<bool> busy = false;
 	atomic<float> mouseX = 0;
 	atomic<float> mouseY = 0;

@@ -31,7 +31,6 @@ class World : public Spawner {
 public:
 	ServerHandle* handle;
 	ThreadPool* physicsPool;
-	ThreadPool* socketsPool;
 	unsigned int id;
 	bool frozen = false;
 	bool toBeRemoved = false;
@@ -68,7 +67,7 @@ public:
 	void updateCell(Cell* cell);
 	void removeCell(Cell* cell);
 	void addPlayer(Player* player);
-	void killPlayer(Player* player);
+	void killPlayer(Player* player, bool instantKill = false);
 	void removePlayer(Player* player);
 	Point getRandomPos(float cellSize);
 	bool isSafeSpawnPos(Rect& range);

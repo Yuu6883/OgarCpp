@@ -25,5 +25,5 @@ public:
 	bool canEat(float aSize, float bSize);
 	bool canSplitKill(float aSize, float bSize, float d);
 	bool isThreaded() { return false; };
-	void onDead() {};
+	void onDead();
 };

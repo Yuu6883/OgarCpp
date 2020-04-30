@@ -22,6 +22,9 @@ class GamemodeList;
 using namespace std::chrono;
 
 struct RuntimeSettings {
+	int spawnProtection;
+	float restartMulti;
+	bool killOversize;
 	vector<string> botNames;
 	vector<string> botSkins;
 	string serverName;

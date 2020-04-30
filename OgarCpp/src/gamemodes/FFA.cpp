@@ -27,7 +27,7 @@ void FFA::compileLeaderboard(World* world) {
 		if (player->score > 0)
 			leaderboard.push_back(player);
 	std::sort(leaderboard.begin(), leaderboard.end(), [](Player* a, Player* b) {
-		return b->score > a->score;
+		return b->score < a->score;
 	});
 }
 
@@ -44,7 +44,7 @@ void FFA::sendLeaderboard(Connection* connection) {
 		entry->pid = player->id;
 		entry->position = position++;
 		entry->name = player->leaderboardName;
-		entry->cellId = player->ownedCells.front()->id;
+		entry->cellId = player->ownedCells.size() ? player->ownedCells.front()->id : 0;
 		if (connection->player == player) {
 			entry->highlighted = true;
 			lbSelfData = entry;

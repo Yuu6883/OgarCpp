@@ -12,9 +12,9 @@ Player::Player(ServerHandle* handle, unsigned int id, Router* router) :
 };
 
 Player::~Player() {
-	Logger::debug(string("Deallocating player: ") + leaderboardName);
+	// Logger::debug(string("Deallocating player: ") + leaderboardName);
 	if (hasWorld || world)
-		Logger::warn("Player should NOT have reference to world while being deallocated");
+		Logger::warn(string("Player: ") + leaderboardName + " should NOT have reference to world while being deallocated");
 
 	if (router->disconnected) {
 		router->hasPlayer = false;
@@ -29,8 +29,11 @@ Player::~Player() {
 
 void Player::updateState(PlayerState targetState) {
 	if (!world) state = PlayerState::DEAD;
-	else if (ownedCells.size()) state = PlayerState::ALIVE;
-	else if (targetState == PlayerState::DEAD) {
+	else if (ownedCells.size()) {
+		state = PlayerState::ALIVE;
+		if (router->spectateTarget) router->spectateTarget->spectators.remove(router);
+		router->spectateTarget = nullptr;
+	} else if (targetState == PlayerState::DEAD) {
 		state = PlayerState::DEAD;
 		router->onDead();
 		killCount = 0;
@@ -66,9 +69,14 @@ void Player::updateViewArea() {
 			}
 			this->score = score;
 			maxScore = std::max(score, maxScore);
-			if ((score > world->border.w * world->border.h / 200.0f) && handle->tick > 1000) {
-				world->shouldRestart = true;
-				world->worldChat->broadcast(nullptr, string(leaderboardName) + " won with " + to_string((int) (score / 1000.0f)) + "k mass");
+			if ((score > world->border.w * world->border.h / 100.0f * handle->runtime.restartMulti) && handle->tick > 500) {
+				if (handle->runtime.killOversize) {
+					world->killPlayer(this, true);
+					world->worldChat->broadcast(nullptr, string(leaderboardName) + " died from extreme obesity (" + to_string((int)(score / 1000.0f)) + "k mass)");
+				} else {
+					world->shouldRestart = true;
+					world->worldChat->broadcast(nullptr, string(leaderboardName) + " destroyed the server with " + to_string((int)(score / 1000.0f)) + "k mass");
+				}
 			}
 
 			factor = pow(ownedCells.size() + 50, 0.1);

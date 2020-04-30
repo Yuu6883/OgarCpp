@@ -16,6 +16,10 @@ using std::to_string;
 
 #define LOAD_SSL_OPTION(op) if (GAME_CONFIG[#op].is_string()) options.op = string(GAME_CONFIG[#op]).c_str();
 
+Listener::Listener(ServerHandle* handle) : handle(handle) {
+	socketsPool = new ThreadPool(handle->getSettingInt("socketsThreads"));
+};
+
 bool Listener::open(int threads = 1) {
 	if (threads < 1) {
 		threads = 1;
@@ -281,6 +285,8 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 	if (--connectionsByIP[connection->ipv4] <= 0)
 		connectionsByIP.erase(connection->ipv4);
 	globalChat->remove(connection);
+	if (connection->player && connection->player->world)
+		connection->player->world->worldChat->remove(connection);
 };
 
 void Listener::update() {
@@ -306,7 +312,12 @@ void Listener::update() {
 		r->close();
 	}
 
-	for (auto r : routers) r->update();
+	Stopwatch watch;
+	watch.begin();
+	for (auto r : routers) socketsPool->enqueue([r]() { r->update(); });
+	socketsPool->waitFinished();
+	if (handle->bench) 
+		printf("Routers update time: %f\n", watch.lap());
 };
 
 

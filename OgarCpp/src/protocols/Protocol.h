@@ -62,7 +62,7 @@ public:
 	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) = 0;
 	virtual void onVisibleCellThreadedUpdate() = 0;
 	virtual void onDead() = 0;
-	void send(string_view data) { connection->send(data); };
+	void send(string_view data, bool cleanup = false) { connection->send(data, cleanup); };
 	void fail(int code, string_view reason) {
 		connection->closeSocket(code ? code : CLOSE_UNSUPPORTED, reason.size() ? reason : "Unspecified protocol fail");
 	};

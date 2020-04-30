@@ -113,20 +113,13 @@ void ProtocolVanis::onWorldReset() {
 };
 
 void ProtocolVanis::onDead() {
-	{
-		Writer writer;
-		writer.writeUInt8(0x12);
-		send(writer.finalize());
-	}
-	{
-		Writer writer;
-		writer.writeUInt8(0x14);
-		writer.writeUInt16((connection->listener->handle->tick -
-			connection->player->joinTick) * connection->listener->handle->tickDelay / 1000);
-		writer.writeUInt16(connection->player->killCount);
-		writer.writeUInt32(connection->player->maxScore);
-		send(writer.finalize());
-	}
+	Writer writer;
+	writer.writeUInt8(0x14);
+	writer.writeUInt16((connection->listener->handle->tick -
+		connection->player->joinTick) * connection->listener->handle->tickDelay / 1000);
+	writer.writeUInt16(connection->player->killCount);
+	writer.writeUInt32(connection->player->maxScore);
+	send(writer.finalize());
 }
 
 void ProtocolVanis::onLeaderboardUpdate(LBType type, vector<LBEntry*>& entries, LBEntry* selfEntry) {
@@ -217,7 +210,19 @@ void ProtocolVanis::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, 
 		writer.writeUInt32(cell->eatenBy->id);
 	}
 	writer.writeUInt32(0);
-	send(writer.finalize());
+	send(writer.finalize(true), true);
+
+	auto player = connection->player;
+	if (!player) return;
+	for (auto router : player->router->spectators) {
+
+		if (router->type == RouterType::PLAYER
+			&& router->hasPlayer
+			&& router->player->state == PlayerState::SPEC
+			&& router->spectateTarget == player->router)
+			((Connection*) router)->send(writer.finalize(true), true);
+		// printf("Sending buffer from player#%u to player#%u\n", player->id, router->player->id);
+	}
 };
 
 void ProtocolVanis::onVisibleCellThreadedUpdate() {

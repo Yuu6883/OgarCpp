@@ -24,6 +24,7 @@ void registerProtocols(ServerHandle* handle) {
 	handle->protocols->registerProtocol(ptc);
 }
 
+bool exited = false;
 void registerCommands(ServerHandle* handle) {
 
 	Command<ServerHandle*> startCommand("start", "start the handle", "",
@@ -40,8 +41,9 @@ void registerCommands(ServerHandle* handle) {
 
 	Command<ServerHandle*> exitCommand("exit", "stop the handle and close the command stream", "",
 		[](ServerHandle* handle, auto context, vector<string>& args) {
-		handle->stop();
 		handle->exiting = true;
+		handle->stop();
+		exited = true;
 		Logger::info("Exiting OgarCpp");
 	});
 	handle->commands.registerCommand(exitCommand);
@@ -85,7 +87,7 @@ void registerCommands(ServerHandle* handle) {
 void promptInput(ServerHandle& handle) {
 	Logger::verbose("CLI reader open");
 	string input;
-	while (!handle.exiting) {
+	while (!exited) {
 		std::cout << "> ";
 		std::getline(std::cin, input);
 		input = trim(input);

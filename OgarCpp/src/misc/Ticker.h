@@ -19,6 +19,7 @@ class Ticker {
 	time_point<steady_clock> _start;
 	list<Callback> callbacks;
 	list<pair<Callback, int>> intervals;
+	list<pair<Callback, int>> timeouts;
 	std::thread* th = nullptr;
 
 public:
@@ -39,8 +40,16 @@ public:
 		intervals.push_back(make_pair(cb, interval));
 	}
 
+	void timeout(int timeout, Callback cb) {
+		timeouts.push_back(make_pair(cb, timeout));
+	}
+
 	void clearInterval() {
 		intervals.clear();
+	}
+
+	void clearTimeout() {
+		timeouts.clear();
 	}
 
 	void clear() {
@@ -65,12 +74,19 @@ public:
 
 	void tick() {
 		while (running) {
-			for_each(callbacks.begin(), callbacks.end(), [](Callback cb) {
-				cb();
-			}); 
-			for_each(intervals.begin(), intervals.end(), [this](pair<Callback, int> p) {
-				if (!(ticked % p.second)) p.first();
-			});
+			for (auto cb : callbacks) cb();
+			for (auto [cb, interval] : intervals) if (!(ticked % interval)) cb();
+			auto iter = timeouts.begin();
+			while (iter != timeouts.cend()) {
+				auto [cb, timeout] = *iter;
+				if (!timeout) {
+					cb();
+				} else {
+					timeouts.push_front(make_pair(cb, timeout - 1));
+				}
+				iter = timeouts.erase(iter);
+			}
+
 			auto timepoint = _start + ticked++ * milliseconds{ step };
 			auto delta = timepoint - steady_clock::now();
 			if (delta.count() < 0) {

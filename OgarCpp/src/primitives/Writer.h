@@ -97,11 +97,12 @@ public:
 		ptr += view.size();
 	}
 
-	string_view finalize() {
+	string_view finalize(bool copy = false) {
 		auto offset = this->offset();
-		if (offset > POOL_SIZE * 0.9f) {
-			printf("WARNING: OFFSET = %i", offset);
-		}
-		return string_view(pool, offset);
+		if (!copy) return string_view(pool, offset);
+
+		auto buffer = malloc(offset);
+		memcpy(buffer, pool, offset);
+		return string_view((char*) buffer, offset);
 	}
 };

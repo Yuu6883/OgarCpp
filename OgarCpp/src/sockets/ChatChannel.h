@@ -2,14 +2,14 @@
 
 #include <string>
 #include <string_view>
-#include <vector>
+#include <list>
 
 class Connection;
 class Listener;
 
+using std::list;
 using std::string;
 using std::string_view;
-using std::vector;
 
 struct ChatSource {
 	string name;
@@ -24,7 +24,7 @@ struct ChatSource {
 
 struct ChatChannel {
 
-	vector<Connection*> connections;
+	list<Connection*> connections;
 	Listener* listener;
 
 	ChatChannel(Listener* listener) : listener(listener) {};
@@ -34,14 +34,7 @@ struct ChatChannel {
 	}
 
 	void remove(Connection* conn) {
-		auto iter = connections.begin();
-		while (iter != connections.cend()) {
-			if (*iter == conn) {
-				connections.erase(iter);
-				return;
-			}
-			iter++;
-		}
+		connections.remove(conn);
 	}
 
 	bool shouldFilter(string_view message);
