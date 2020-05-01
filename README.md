@@ -3,7 +3,7 @@ Luka's OgarII implemented in C++ with high performance.
 
 ## Features
 * Complete: Pretty much everything in OgarII besides team mode.
-* Tiny: Executable only 1kb.
+* Tiny: Executable only 1Mb.
 * Fast: Accelerated physics calculation with multithreading.
 * Fun: Bot AI is smarter
 
@@ -26,7 +26,7 @@ You can build and run this locally for yourself, but you are too lazy (like me),
 It is currently hosted on a $6 high-frequency Vultr VPS (in EU), with the settings in `bench.json`. Very limited resource, yet high performance.
 
 ## TODO
-* Offical build release
+* Official build release
 * Memory check (pretty sure there's no leak but need more test)
 * Minions
 * Benchmark
