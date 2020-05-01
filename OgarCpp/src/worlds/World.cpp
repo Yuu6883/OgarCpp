@@ -193,6 +193,10 @@ void World::removePlayer(Player* player) {
 
 void World::killPlayer(Player* player, bool instantKill) {
 
+	if (player->state != PlayerState::ALIVE) return;
+	/* if (player->router->type == RouterType::PLAYER)
+		Logger::debug(string("Killing player ") + player->leaderboardName); */
+	
 	for (auto c : player->ownedCells) {
 		if (instantKill) {
 			removeCell(c);
@@ -213,13 +217,12 @@ void World::killPlayer(Player* player, bool instantKill) {
 	for (auto c : player->ownedCellData)
 		delete c;
 	player->ownedCellData.clear();
-	player->router->onDead();
 }
 
 Point World::getRandomPos(float cellSize) {
 	return {
-		(float) (border.getX() - border.w + cellSize + randomZeroToOne * (2 * border.w - cellSize)),
-		(float) (border.getY() - border.h + cellSize + randomZeroToOne * (2 * border.h - cellSize))
+		border.getX() - border.w + cellSize + (float) randomZeroToOne * (2 * border.w - cellSize),
+		border.getY() - border.h + cellSize + (float) randomZeroToOne * (2 * border.h - cellSize)
 	};
 }
 
@@ -227,7 +230,7 @@ bool World::isSafeSpawnPos(Rect& range) {
 	return !finder->containAny(range, [](auto item) { return ((Cell*) item)->shouldAvoidWhenSpawning(); });
 }
 
-Point World::getSafeSpawnPos(float cellSize) {
+Point World::getSafeSpawnPos(float cellSize, bool& failed) {
 	int tries = handle->runtime.worldSafeSpawnTries;
 	while (--tries >= 0) {
 		auto pos = getRandomPos(cellSize);
@@ -235,10 +238,11 @@ Point World::getSafeSpawnPos(float cellSize) {
 		if (isSafeSpawnPos(rect))
 			return Point(pos);
 	}
+	failed = true;
 	return Point(getRandomPos(cellSize));
 }
 
-SpawnResult World::getPlayerSpawn(float cellSize) {
+SpawnResult World::getPlayerSpawn(float cellSize, bool& failed) {
 	double rnd = randomZeroToOne;
 	float chance = handle->runtime.worldSafeSpawnFromEjectedChance;
 	
@@ -256,7 +260,7 @@ SpawnResult World::getPlayerSpawn(float cellSize) {
 			}
 		}
 	}
-	return { (unsigned int)-1, getSafeSpawnPos(cellSize) };
+	return { 0, getSafeSpawnPos(cellSize, failed) };
 }
 
 void World::spawnPlayer(Player* player, Point& pos, float size) {
@@ -311,19 +315,23 @@ void World::liveUpdate() {
 	if (handle->bench)
 		printf("\nonTickTime: %2.5fms\n", bench.lap());
 
-	while (pelletCount < handle->runtime.pelletCount) {
-		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize);
-		addCell(new Pellet(this, this, pos.getX(), pos.getY()));
+	unsigned int diff = handle->runtime.pelletCount - pelletCount;
+	bool failed = false;
+	while (diff-- > 0) {
+		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize, failed);
+		if (!failed) addCell(new Pellet(this, this, pos.getX(), pos.getY()));
 	}
 
-	while (virusCount < handle->runtime.virusMinCount) {
-		auto pos = getSafeSpawnPos(handle->runtime.virusSize);
-		addCell(new Virus(this, pos.getX(), pos.getY()));
+	diff = handle->runtime.virusMinCount - virusCount;
+	while (diff-- > 0) {
+		auto pos = getSafeSpawnPos(handle->runtime.virusSize + 200.0f, failed);
+		if (!failed) addCell(new Virus(this, pos.getX(), pos.getY()));
 	}
 
-	while (motherCellCount < handle->runtime.mothercellCount) {
-		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize);
-		addCell(new MotherCell(this, pos.getX(), pos.getY()));
+	diff = handle->runtime.mothercellCount - motherCellCount;
+	while (diff-- > 0) {
+		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize + 200.0f, failed);
+		if (!failed) addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
 
 	if (handle->bench)
@@ -735,7 +743,7 @@ void World::splitPlayer(Player* player) {
 
 void World::ejectFromPlayer(Player* player) {
 	if (player->justPopped) {
-		handle->ticker.timeout(2, [player] { player->justPopped = false; });
+		handle->ticker.timeout(5, [player] { player->justPopped = false; });
 		return;
 	};
 	float dispersion = handle->runtime.ejectDispersion;

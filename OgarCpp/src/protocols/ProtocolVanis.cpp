@@ -31,7 +31,7 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 			break;
 		// ping
 		case 3:
-			connection->send(PONG);
+			send(PONG, true);
 			break;
 		// toggle linelock
 		case 15:
@@ -210,7 +210,7 @@ void ProtocolVanis::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, 
 		writer.writeUInt32(cell->eatenBy->id);
 	}
 	writer.writeUInt32(0);
-	send(writer.finalize(true), true);
+	send(writer.finalize());
 
 	auto player = connection->player;
 	if (!player) return;
@@ -220,12 +220,13 @@ void ProtocolVanis::onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, 
 			&& router->hasPlayer
 			&& router->player->state == PlayerState::SPEC
 			&& router->spectateTarget == player->router)
-			((Connection*) router)->send(writer.finalize(true), true);
+			((Connection*) router)->protocol->send(writer.finalize());
 		// printf("Sending buffer from player#%u to player#%u\n", player->id, router->player->id);
 	}
 };
 
 void ProtocolVanis::onVisibleCellThreadedUpdate() {
+	/*
 	auto player = connection->player;
 	if (!player) return;
 	Writer writer;
@@ -300,7 +301,7 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 			|| router->spectateTarget != player->router) continue;
 		printf("Sending buffer from player#%u to player#%u\n", player->id, router->player->id);
 		((Connection*)router)->send(buffer);
-	}
+	} */
 }
 
 void ProtocolVanis::onStatsRequest() {

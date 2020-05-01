@@ -42,7 +42,7 @@ inline Json GAME_CONFIG = R"(
     "worldMapH" : 7071,
     "worldFinderMaxLevel" : 16,
     "worldFinderMaxItems" : 16,
-    "worldSafeSpawnTries" : 64,
+    "worldSafeSpawnTries" : 128,
     "worldSafeSpawnFromEjectedChance" : 0.8,
     "worldPlayerDisposeDelay" : 100,
     "worldEatMult" : 1.140175425099138,

@@ -1,34 +1,17 @@
 #pragma once
 
 #include "Protocol.h"
-
-#pragma once
-
 #include "../misc/Misc.h"
 #include "../primitives/Rect.h"
 #include "../sockets/ChatChannel.h"
-#include "Protocol.h"
 
 class Cell;
 class PlayerCell;
-using std::pair;
 using std::make_pair;
+using std::string_view;
 
 class ProtocolVanis : public Protocol {
 public:
-	bool leaderboardPending = false;
-	bool serverInfoPending = false;
-	bool worldStatsPending = false;
-	bool clearCellsPending = false;
-
-	LBType lbType = LBType::NONE;
-	vector<LBEntry*> lbData;
-	LBEntry* lbSelfData = nullptr;
-
-	vector<pair<ChatSource*, string>> pendingChat;
-	Rect* worldBorderPending = nullptr;
-	ViewArea* spectateAreaPending = nullptr;
-
 	ProtocolVanis(Connection* connection) : Protocol(connection) {
 		noDelDup = true;
 		// UTF16String = true;
@@ -57,6 +40,6 @@ public:
 	void onStatsRequest();
 	void onVisibleCellThreadedUpdate();
 	void onMinimapUpdate();
-	Protocol* clone() { return new ProtocolVanis(*this); };
 	void onDead();
+	Protocol* clone() { return new ProtocolVanis(*this); };
 };

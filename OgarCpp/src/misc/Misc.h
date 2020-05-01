@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <ctime>
+#include <random>
 
 #define randomZeroToOne ((double) rand() / (RAND_MAX))
 
@@ -26,6 +28,7 @@ static const unsigned char OGAR_VERSION[3] = { 1, 3, 6 };
 static const string OGAR_VERSION_STRING = "1.3.6";
 
 inline unsigned int randomColor() {
+    srand(time(NULL));
 	switch ((unsigned char)(randomZeroToOne * 6)) {
         case 0: return ((unsigned char)(randomZeroToOne * 0x100) << 16) | (0xFF << 8) | 0x10;
         case 1: return ((unsigned char)(randomZeroToOne * 0x100) << 16) | (0x10 << 8) | 0xFF;

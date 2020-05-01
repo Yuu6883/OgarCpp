@@ -221,10 +221,12 @@ void PlayerBot::close() {
 
 void PlayerBot::onDead() {
 	listener->handle->ticker.timeout(60, [this] {
-		if (player->cellName.length()) spawningName = player->cellName;
-		else spawningName = listener->handle->randomBotName();
-		if (player->cellSkin.length()) spawningSkin = player->cellSkin;
-		else spawningSkin = listener->handle->randomBotSkin();
-		requestSpawning = true;
+		if (player->state != PlayerState::ALIVE) {
+			if (player->cellName.length()) spawningName = player->cellName;
+			else spawningName = listener->handle->randomBotName();
+			if (player->cellSkin.length()) spawningSkin = player->cellSkin;
+			else spawningSkin = listener->handle->randomBotSkin();
+			requestSpawning = true;
+		}
 	});
 }

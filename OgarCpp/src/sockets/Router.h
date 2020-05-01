@@ -68,5 +68,6 @@ public:
 	virtual bool shouldClose() = 0;
 	virtual void update() = 0;
 	virtual bool isThreaded() = 0;
+	virtual void postUpdate() = 0;
 	virtual void onDead() = 0;
 };

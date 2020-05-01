@@ -114,31 +114,20 @@ void Connection::onNewOwnedCell(PlayerCell* cell) {
 	protocol->onNewOwnedCell(cell);
 }
 
-void Connection::send(string_view message, bool cleanup) {
+void Connection::send(string_view message, bool preserveBuffer) {
 	if (socketDisconnected) {
 		Logger::warn("Sending buffer but socket is disconnected");
-		if (cleanup) delete message.data();
+		if (!preserveBuffer) delete message.data();
 		return;
 	}
-	socket ? socket->cork([this, message, cleanup] {
-		bool backpressure = socket->send(message);
-		if (!backpressure) {
-			busy = true;
-			int bufferedAmount = socket->getBufferedAmount();
-			if (player)
-				Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
-		}
-		if (cleanup) delete message.data();
-	}) : SSLsocket->cork([this, message, cleanup] {
-		bool backpressure = SSLsocket->send(message);
-		if (!backpressure) {
-			busy = true;
-			int bufferedAmount = SSLsocket->getBufferedAmount();
-			if (player)
-				Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
-		}
-		if (cleanup) delete message.data();
-	});
+	bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
+	if (!backpressure) {
+		busy = true;
+		int bufferedAmount = SSLsocket->getBufferedAmount();
+		if (player)
+			Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
+	}
+	if (!preserveBuffer) delete message.data();
 }
 
 bool Connection::isThreaded() {
@@ -207,4 +196,8 @@ void Connection::update() {
 
 void Connection::onDead() {
 	if (protocol) protocol->onDead();
+}
+
+void Connection::postUpdate() {
+	if (protocol) protocol->postUpdate();
 }

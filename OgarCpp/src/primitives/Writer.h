@@ -97,10 +97,8 @@ public:
 		ptr += view.size();
 	}
 
-	string_view finalize(bool copy = false) {
+	string_view finalize() {
 		auto offset = this->offset();
-		if (!copy) return string_view(pool, offset);
-
 		auto buffer = malloc(offset);
 		memcpy(buffer, pool, offset);
 		return string_view((char*) buffer, offset);

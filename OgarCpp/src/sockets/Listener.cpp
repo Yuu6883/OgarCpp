@@ -316,6 +316,7 @@ void Listener::update() {
 	watch.begin();
 	for (auto r : routers) socketsPool->enqueue([r]() { r->update(); });
 	socketsPool->waitFinished();
+	for (auto r : routers) r->postUpdate();
 	if (handle->bench) 
 		printf("Routers update time: %f\n", watch.lap());
 };

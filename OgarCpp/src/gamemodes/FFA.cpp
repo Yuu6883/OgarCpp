@@ -11,14 +11,21 @@ void FFA::onPlayerSpawnRequest(Player* player, string name, string skin) {
 	if (player->state == PlayerState::ALIVE && handle->runtime.respawnEnabled) {
 		player->world->killPlayer(player);
 	}
+
 	float size = player->router->type == RouterType::MINION ?
 		handle->runtime.minionSpawnSize : handle->runtime.playerSpawnSize;
-	auto spawnResult = player->world->getPlayerSpawn(size);
-	unsigned int color = spawnResult.color ? spawnResult.color : randomColor();
-	player->cellName = player->chatName = player->leaderboardName = name;
-	player->cellSkin = skin;
-	player->chatColor = player->cellColor = color;
-	player->world->spawnPlayer(player, spawnResult.pos, size);
+
+	bool failed = false;
+	auto spawnResult = player->world->getPlayerSpawn(size * 1.2f, failed);
+	if (failed) {
+		player->router->requestSpawning = true;
+	} else {
+		unsigned int color = spawnResult.color ? spawnResult.color : randomColor();
+		player->cellName = player->chatName = player->leaderboardName = name;
+		player->cellSkin = skin;
+		player->chatColor = player->cellColor = color;
+		player->world->spawnPlayer(player, spawnResult.pos, size);
+	}
 }
 
 void FFA::compileLeaderboard(World* world) {

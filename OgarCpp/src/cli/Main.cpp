@@ -89,7 +89,8 @@ void promptInput(ServerHandle& handle) {
 	string input;
 	while (!exited) {
 		std::cout << "> ";
-		std::getline(std::cin, input);
+		if (std::cin) std::getline(std::cin, input);
+		else break;
 		input = trim(input);
 		if (!input.length()) continue;
 		handle.commands.execute(nullptr, input);

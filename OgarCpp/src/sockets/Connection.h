@@ -65,8 +65,9 @@ public:
 	void onWorldSet();
 	void onNewOwnedCell(PlayerCell*);
 	void onWorldReset();
-	void send(string_view data, bool cleanup = false);
+	void send(string_view data, bool preserveBuffer = false);
 	void closeSocket(int code, string_view reason);
 	bool isThreaded();
 	void onDead();
+	void postUpdate();
 };

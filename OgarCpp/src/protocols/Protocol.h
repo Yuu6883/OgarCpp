@@ -1,5 +1,6 @@
 #pragma once
 
+#include <list>
 #include <string>
 #include <string_view>
 #include "../primitives/Rect.h"
@@ -13,6 +14,7 @@ class Cell;
 
 using std::string;
 using std::string_view;
+using std::pair;
 
 enum class LBType {
 	NONE, FFA, PIE, TEXT
@@ -40,6 +42,7 @@ struct TEXTENtry : LBEntry {
 
 class Protocol {
 public:
+	list<pair<string_view, bool>> pendingBuffer;
 	bool noDelDup = false;
 	bool threadedUpdate = false;
 	bool UTF16String = false;
@@ -62,9 +65,14 @@ public:
 	virtual void onVisibleCellUpdate(vector<Cell*>& add, vector<Cell*>& upd, vector<Cell*>& eat, vector<Cell*>& del) = 0;
 	virtual void onVisibleCellThreadedUpdate() = 0;
 	virtual void onDead() = 0;
-	void send(string_view data, bool cleanup = false) { connection->send(data, cleanup); };
+	void send(string_view data, bool preserveBuffer = false) { pendingBuffer.push_back(make_pair(data, preserveBuffer)); };
 	void fail(int code, string_view reason) {
 		connection->closeSocket(code ? code : CLOSE_UNSUPPORTED, reason.size() ? reason : "Unspecified protocol fail");
+	};
+	void postUpdate() {
+		for (auto [data, preserveBuffer] : pendingBuffer)
+			connection->send(data, preserveBuffer);
+		pendingBuffer.clear();
 	};
 	virtual Protocol* clone() = 0;
 };

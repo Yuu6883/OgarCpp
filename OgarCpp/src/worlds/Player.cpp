@@ -73,6 +73,7 @@ void Player::updateViewArea() {
 				if (handle->runtime.killOversize) {
 					world->killPlayer(this, true);
 					world->worldChat->broadcast(nullptr, string(leaderboardName) + " died from extreme obesity (" + to_string((int)(score / 1000.0f)) + "k mass)");
+					router->onDead();
 				} else {
 					world->shouldRestart = true;
 					world->worldChat->broadcast(nullptr, string(leaderboardName) + " destroyed the server with " + to_string((int)(score / 1000.0f)) + "k mass");
