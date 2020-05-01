@@ -230,19 +230,23 @@ bool World::isSafeSpawnPos(Rect& range) {
 	return !finder->containAny(range, [](auto item) { return ((Cell*) item)->shouldAvoidWhenSpawning(); });
 }
 
-Point World::getSafeSpawnPos(float cellSize, bool& failed) {
+Point World::getSafeSpawnPos(float& cellSize, bool& failed) {
 	int tries = handle->runtime.worldSafeSpawnTries;
+	cellSize *= 1.2f;
 	while (--tries >= 0) {
 		auto pos = getRandomPos(cellSize);
 		Rect rect(pos.getX(), pos.getY(), cellSize, cellSize);
-		if (isSafeSpawnPos(rect))
+		if (isSafeSpawnPos(rect)) {
+			cellSize /= 1.2f;
 			return Point(pos);
+		}
+		cellSize *= 0.998;
 	}
 	failed = true;
 	return Point(getRandomPos(cellSize));
 }
 
-SpawnResult World::getPlayerSpawn(float cellSize, bool& failed) {
+SpawnResult World::getPlayerSpawn(float& cellSize, bool& failed) {
 	double rnd = randomZeroToOne;
 	float chance = handle->runtime.worldSafeSpawnFromEjectedChance;
 	
@@ -318,19 +322,22 @@ void World::liveUpdate() {
 	unsigned int diff = handle->runtime.pelletCount - pelletCount;
 	bool failed = false;
 	while (diff-- > 0) {
-		auto pos = getSafeSpawnPos(handle->runtime.pelletMinSize, failed);
+		float spawnSize = handle->runtime.pelletMinSize;
+		auto pos = getSafeSpawnPos(spawnSize, failed);
 		if (!failed) addCell(new Pellet(this, this, pos.getX(), pos.getY()));
 	}
 
 	diff = handle->runtime.virusMinCount - virusCount;
 	while (diff-- > 0) {
-		auto pos = getSafeSpawnPos(handle->runtime.virusSize + 200.0f, failed);
+		float spawnSize = handle->runtime.virusSize + 200.0f;
+		auto pos = getSafeSpawnPos(spawnSize, failed);
 		if (!failed) addCell(new Virus(this, pos.getX(), pos.getY()));
 	}
 
 	diff = handle->runtime.mothercellCount - motherCellCount;
 	while (diff-- > 0) {
-		auto pos = getSafeSpawnPos(handle->runtime.mothercellSize + 200.0f, failed);
+		float spawnSize = handle->runtime.mothercellSize + 200.0f;
+		auto pos = getSafeSpawnPos(spawnSize, failed);
 		if (!failed) addCell(new MotherCell(this, pos.getX(), pos.getY()));
 	}
 

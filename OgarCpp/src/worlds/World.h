@@ -71,8 +71,8 @@ public:
 	void removePlayer(Player* player);
 	Point getRandomPos(float cellSize);
 	bool isSafeSpawnPos(Rect& range);
-	Point getSafeSpawnPos(float cellSize, bool& failed);
-	SpawnResult getPlayerSpawn(float cellSize, bool& failed);
+	Point getSafeSpawnPos(float& cellSize, bool& failed);
+	SpawnResult getPlayerSpawn(float& cellSize, bool& failed);
 	void spawnPlayer(Player* player, Point& pos, float size);
 	void update() { frozen ? frozenUpdate() : liveUpdate(); };
 	void frozenUpdate();

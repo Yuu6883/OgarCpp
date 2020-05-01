@@ -16,7 +16,7 @@ void FFA::onPlayerSpawnRequest(Player* player, string name, string skin) {
 		handle->runtime.minionSpawnSize : handle->runtime.playerSpawnSize;
 
 	bool failed = false;
-	auto spawnResult = player->world->getPlayerSpawn(size * 1.2f, failed);
+	auto spawnResult = player->world->getPlayerSpawn(size, failed);
 	if (failed) {
 		player->router->requestSpawning = true;
 	} else {
