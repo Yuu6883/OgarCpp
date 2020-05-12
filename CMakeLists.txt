@@ -75,9 +75,11 @@ set(ALL_FILES
 include_directories($ENV{VCPKG_ROOT}/installed/x64-linux/include/)
 link_directories($ENV{VCPKG_ROOT}/installed/x64-linux/lib/)
 
+set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libstdc++")
+
 ################################################################################
 # Target
 ################################################################################
 add_executable(${PROJECT_NAME} ${ALL_FILES})
-target_link_libraries(${PROJECT_NAME} pthread uSockets z)
+target_link_libraries(${PROJECT_NAME} pthread uSockets z stdc++fs)
 

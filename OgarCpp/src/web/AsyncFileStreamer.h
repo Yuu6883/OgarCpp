@@ -25,18 +25,23 @@ struct AsyncFileStreamer {
     }
 
     void updateRootCache() {
-        for(auto &p : std::filesystem::recursive_directory_iterator(root)) {
-            std::string url = p.path().string().substr(root.length());
-            std::replace(url.begin(), url.end(), '\\', '/'); // Windows have autism
-            auto size = p.file_size();
-            if (!size) continue;
-            std::string size_str = size > 1024 * 1024 ? (to_string(size / 1024 / 1024) + "MB") : (to_string(size / 1024) + "KB");
-            Logger::verbose("Caching " + url + "    (" + size_str + ")");
+        try {
+            for (auto& p : std::filesystem::recursive_directory_iterator(root)) {
+                std::string url = p.path().string().substr(root.length());
+                std::replace(url.begin(), url.end(), '\\', '/'); // Windows have autism
+                if (p.is_directory()) continue;
+                auto size = p.file_size();
+                if (!size) continue;
+                std::string size_str = size > 1024 * 1024 ? (to_string(size / 1024 / 1024) + "MB") : (to_string(size / 1024) + "KB");
+                Logger::verbose("Caching " + url + "    (" + size_str + ")");
 
-            if (url == "/index.html") url = "/";
-            char *key = new char[url.length()];
-            memcpy(key, url.data(), url.length());
-            asyncFileReaders[std::string_view(key, url.length())] = new AsyncFileReader(p.path().string());
+                if (url == "/index.html") url = "/";
+                char* key = new char[url.length()];
+                memcpy(key, url.data(), url.length());
+                asyncFileReaders[std::string_view(key, url.length())] = new AsyncFileReader(p.path().string());
+            }
+        } catch (std::exception& e) {
+            Logger::error(e.what());
         }
     }
 

@@ -444,6 +444,8 @@ void World::liveUpdate() {
 	batch_size = playerCells.size() / handle->runtime.physicsThreads + 1;
 	offset = 0;
 
+	playerCells.sort([](PlayerCell* a, PlayerCell* b) { return b->getSize() * a->getAge() < a->getSize() * b->getAge(); });
+
 	while (offset < playerCells.size()) {
 		auto incre = std::min(batch_size, (int) playerCells.size() - offset);
 		physicsPool->enqueue([this, offset, incre, &rigid, &eat, &mtx]() {
@@ -643,9 +645,11 @@ void World::resolveEatCheck(Cell* a, Cell* b) {
 }
 
 bool World::boostCell(Cell* cell) {
-	float d = cell->boost.d / 9 * handle->stepMult;
-	cell->setX(cell->getX() + cell->boost.dx * d);
-	cell->setY(cell->getY() + cell->boost.dy * d);
+	float d = cell->boost.d / 9 * handle->stepMult; // *cell->getSize() * 0.01f;
+	float modifier = 1.0f;
+	if (cell->getAge() <= 5) modifier = std::max(1.0f, 1.0f + log10f(cell->getSize()) / 10.0f);
+	cell->setX(cell->getX() + cell->boost.dx * d * modifier);
+	cell->setY(cell->getY() + cell->boost.dy * d * modifier);
 	bounceCell(cell, true);
 	updateCell(cell);
 	if ((cell->boost.d -= d) >= 1) return true;
@@ -686,13 +690,15 @@ void World::movePlayerCell(PlayerCell* cell) {
 	if (!cell->owner) return;
 	auto router = cell->owner->router;
 	if (router->disconnected) return;
-	if (cell->getAge() <= 3) return;
 	float dx = router->mouseX - cell->getX();
 	float dy = router->mouseY - cell->getY();
 	float d = sqrt(dx * dx + dy * dy);
 	if (d < 1) return;
+	float modifier = 1.0f;
+	if (cell->getSize() < handle->runtime.playerMinSplitSize * 5.0f &&
+		cell->getAge() <= handle->runtime.playerNoCollideDelay) modifier = -1.0f;
 	dx /= d; dy /= d;
-	float m = std::min(cell->getMoveSpeed(), d) * handle->stepMult;
+	float m = std::min(cell->getMoveSpeed() * modifier, d) * handle->stepMult;
 	cell->setX(cell->getX() + dx * m);
 	cell->setY(cell->getY() + dy * m);
 }
