@@ -74,6 +74,9 @@
     <ClInclude Include="src\sockets\Connection.h" />
     <ClInclude Include="src\sockets\Listener.h" />
     <ClInclude Include="src\sockets\Router.h" />
+    <ClInclude Include="src\web\AsyncFileReader.h" />
+    <ClInclude Include="src\web\AsyncFileStreamer.h" />
+    <ClInclude Include="src\web\Middleware.h" />
     <ClInclude Include="src\worlds\MatchMaker.h" />
     <ClInclude Include="src\worlds\Player.h" />
     <ClInclude Include="src\worlds\World.h" />
@@ -81,6 +84,9 @@
   <ItemGroup>
     <None Include="..\README.md" />
     <None Include="config.json" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\CMakeLists.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>

@@ -161,6 +161,15 @@
     <ClInclude Include="src\bots\PlayerBot.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\web\AsyncFileReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\web\AsyncFileStreamer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\web\Middleware.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\README.md">
@@ -169,5 +178,10 @@
     <None Include="config.json">
       <Filter>Resource Files</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="..\CMakeLists.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
   </ItemGroup>
 </Project>

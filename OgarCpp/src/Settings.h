@@ -12,6 +12,9 @@ using std::ofstream;
 
 inline Json GAME_CONFIG = R"(
 {
+    "serveWeb": false,
+    "webPort": 80,
+    "webRoot": "",
     "spawnProtection": 40,
     "restartMulti": 0.75,
     "killOversize": false,

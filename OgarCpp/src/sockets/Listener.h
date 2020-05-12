@@ -25,6 +25,7 @@ public:
     bool ssl = false;
 	std::regex originRegex = std::regex("");
 	ServerHandle* handle;
+	std::vector<us_listen_socket_t*> webservers;
 	std::vector<us_listen_socket_t*> sockets;
 	std::vector<std::thread*> socketThreads;
 	ThreadPool* socketsPool;
