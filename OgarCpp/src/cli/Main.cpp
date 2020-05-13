@@ -82,6 +82,17 @@ void registerCommands(ServerHandle* handle) {
 		handle->ticker.clearInterval();
 	});
 	handle->commands.registerCommand(monitorStopCommand);
+
+	Command<ServerHandle*> ejectCommand("meject", "", "",
+		[](ServerHandle* handle, auto context, vector<string>& args) {
+		handle->ticker.every(10, [handle] {
+			if (handle->worlds.size()) {
+				printf("Ejected count: %u\n", handle->worlds.begin()->second->ejectCount);
+				handle->worlds.begin()->second->ejectCount = 0;
+			}
+		});
+	});
+	handle->commands.registerCommand(ejectCommand);
 }
 
 void promptInput(ServerHandle& handle) {

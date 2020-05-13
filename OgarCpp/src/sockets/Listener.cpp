@@ -66,8 +66,6 @@ bool Listener::open(int threads = 1) {
 	LOAD_SSL_OPTION(dh_params_file_name);
 	LOAD_SSL_OPTION(ca_file_name);
 
-	if (serveWeb)
-
 	{
 		std::mutex m;
 		std::condition_variable cv;

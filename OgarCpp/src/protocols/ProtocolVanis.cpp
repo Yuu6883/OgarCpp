@@ -52,7 +52,9 @@ void ProtocolVanis::onSocketMessage(Reader& reader) {
 				connection->ejectAttempts++;
 			} else {
 				connection->ejectAttempts = 0;
-				connection->ejectMacro = reader.readUInt8() > 0;
+				unsigned char macro = reader.readUInt8();
+				// if (connection->ejectMacro != macro) printf("Toggling macro: %i\n", (int) macro);
+				connection->ejectMacro = macro > 0;
 			}
 			break;
 		// chat

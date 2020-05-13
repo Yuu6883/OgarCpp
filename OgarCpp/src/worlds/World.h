@@ -35,6 +35,7 @@ public:
 	bool frozen = false;
 	bool toBeRemoved = false;
 	unsigned int _nextCellId = 1;
+	unsigned ejectCount = 0;
 	
 	list<Cell*> gcTruck;
 	list<Cell*> cells;

@@ -179,6 +179,7 @@ void Connection::update() {
 		if (player->visibleCells.find(id) != player->visibleCells.cend()) continue;
 		if (cell->eatenBy) eat.push_back(cell);
 		if (!protocol->noDelDup || !cell->eatenBy) del.push_back(cell);
+		if (cell->deadTick == 1) del.push_back(cell); // delete dead player cell
 	}
 
 	if (player->state == PlayerState::SPEC || player->state == PlayerState::ROAM)
