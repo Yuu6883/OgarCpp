@@ -1,11 +1,12 @@
 # OgarCpp
-Luka's OgarII implemented in C++ with high performance.
+[OgarII](https://github.com/Luka967/OgarII) implemented in C++ with high performance.
 
 ## Features
 * Complete: Pretty much everything in OgarII besides team mode.
-* Tiny: Executable only 1Mb.
+* Tiny: Executable only 2Mb.
 * Fast: Accelerated physics calculation with multithreading.
-* Fun: Bot AI is smarter
+* Fun: Bot AI is smarter.
+* Example frontend included in `/public`
 
 ## Install & Build
 * ### Windows
@@ -23,7 +24,7 @@ There's been very little benchmark in this field and it's hard to make a standar
 
 ## Testing
 You can build and run this locally for yourself, but you are too lazy (like me), you can always check out a running instance at http://ogarcpp.yuu.studio (Test Server).
-It is currently hosted on a $6 high-frequency Vultr VPS (in EU), with the settings in `bench.json`. Very limited resource, yet high performance.
+This is currently hosted on a $6 high-frequency Vultr VPS (in EU), with the settings in `bench.json`. Very limited resource, yet high performance.
 
 ## TODO
 * Official build release
@@ -31,12 +32,14 @@ It is currently hosted on a $6 high-frequency Vultr VPS (in EU), with the settin
 * Minions
 * Benchmark
 * Endianness support to protocols since we are assuming the server runs on a little-endian machine
-* Improve physics calculation (fix solotricks)
 * More gamemodes (probably not going to be bothered since there's more work to frontend than the backend)
 * Optimize even more!?!?
+
+## Bugs
+* Web serving crashes on Linux after awhile
 
 ## Notes
 Reasons why I'm rewriting this in c++:
 * Bored
-* Just learned this language through lame college courses and I want to practice it more since it's a powerful language
 * NodeJS kinda slow
+* Just learned this language in some lame college courses and I want to practice it more since it's a powerful language
