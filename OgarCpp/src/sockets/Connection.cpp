@@ -7,7 +7,7 @@
 #include "../primitives/Logger.h"
 #include "../worlds/MatchMaker.h"
 
-#define MAX_FRAME_SIZE 512
+#define MAX_FRAME_SIZE 1024
 using std::to_string;
 
 string ipv4ToString(unsigned int ipv4) {
@@ -50,7 +50,7 @@ void Connection::closeSocket(int code, string_view str) {
 
 void Connection::onSocketMessage(string_view buffer) {
 	if (!buffer.size() || buffer.size() > MAX_FRAME_SIZE) {
-		closeSocket(CLOSE_TOO_LARGE, "Unexpected message size");
+		closeSocket(CLOSE_TOO_LARGE, "Unexpected message size: " + to_string(buffer.size()));
 		return;
 	}
 	Reader reader(buffer);

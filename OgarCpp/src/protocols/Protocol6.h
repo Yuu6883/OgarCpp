@@ -27,8 +27,9 @@ public:
 		if (reader.readUInt8() != 254) return false;
 		protocol = reader.readUInt32();
 		if (protocol != 6) {
-			fail(CloseCodes::CLOSE_UNSUPPORTED, "Unsupported protocol version");
-			return false;
+			Logger::warn("Using protocol6 with " + std::to_string(protocol));
+			// fail(CloseCodes::CLOSE_UNSUPPORTED, "Unsupported protocol version");
+			return true;
 		}
 		return true;
 	}

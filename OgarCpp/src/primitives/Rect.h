@@ -8,17 +8,17 @@ struct Boost {
 	float d;
 };
 
-struct Quadrant {
-	bool t, b, l, r;
-	void print(std::ostream& stream) {
-		stream << "Quadrant(";
-		if (t) stream << "top ";
-		if (b) stream << "bottom ";
-		if (l) stream << "left ";
-		if (r) stream << "right ";
-		stream << ")";
-	}
-};
+typedef unsigned char Quadrant;
+
+#define QUAD_T 0x1
+#define QUAD_B 0x2
+#define QUAD_L 0x4
+#define QUAD_R 0x8
+
+#define QUAD_TL 0x5
+#define QUAD_TR 0x9
+#define QUAD_BL 0x6
+#define QUAD_BR 0xa
 
 class Point {
 protected:
@@ -55,21 +55,17 @@ public:
 	}
 
 	Quadrant getQuadIntersect(const Rect& other) {
-		return Quadrant{
-			.t = y - h < other.y || y + h < other.y,
-			.b = y - h > other.y || y + h > other.y,
-			.l = x - w < other.x || x + w < other.x,
-			.r = x - w > other.x || x + w > other.x,
-		};
+		return ((y - h < other.y || y + h < other.y) && QUAD_T) |
+			   ((y - h > other.y || y + h > other.y) && QUAD_B) |
+			   ((x - w < other.x || x + w < other.x) && QUAD_L) |
+			   ((x - w > other.x || x + w > other.x) && QUAD_R);
 	}
 
 	Quadrant getQuadFullIntersect(const Rect& other) {
-		return Quadrant{
-			.t = y - h < other.y && y + h < other.y,
-			.b = y - h > other.y && y + h > other.y,
-			.l = x - w < other.x && x + w < other.x,
-			.r = x - w > other.x && x + w > other.x,
-		};
+		return ((y - h < other.y && y + h < other.y) && QUAD_T) |
+			   ((y - h > other.y && y + h > other.y) && QUAD_B) |
+			   ((x - w < other.x && x + w < other.x) && QUAD_L) |
+			   ((x - w > other.x && x + w > other.x) && QUAD_R);
 	}
 
 	void print(std::ostream& stream) {

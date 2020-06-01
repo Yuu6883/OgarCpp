@@ -24,16 +24,17 @@ class QuadTree {
 	friend std::ostream& operator<<(std::ostream& stream, QuadTree& quad);
 public:
 	QuadNode* root;
-	int maxLevel;
-	int maxItem;
+	unsigned int maxLevel;
+	unsigned int maxItem;
+	unsigned int maxSearch = 0;
 	atomic<unsigned int> reference = 0;
-	QuadTree(Rect& range, int maxLevel, int maxItem, bool cleanup = false);
+	QuadTree(Rect& range, unsigned int maxLevel, unsigned int maxItem, bool cleanup = false);
 	~QuadTree();
 	void insert(QuadItem*, bool nosplit = false);
 	void split();
 	void update(QuadItem*);
 	void remove(QuadItem*);
-	void search(Rect&, function<void(QuadItem*)> callback);
+	unsigned int search(Rect&, function<bool(QuadItem*)> callback);
 	bool containAny(Rect&, function<bool(QuadItem*)> selector);
 };
 

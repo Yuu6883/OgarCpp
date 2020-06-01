@@ -66,11 +66,11 @@ bool Listener::open(int threads = 1) {
 	LOAD_SSL_OPTION(dh_params_file_name);
 	LOAD_SSL_OPTION(ca_file_name);
 
-	{
-		std::mutex m;
-		std::condition_variable cv;
+	if (serveWeb && webRoot.length()) {
+		{
+			std::mutex m;
+			std::condition_variable cv;
 
-		if (serveWeb && webRoot.length()) {
 			for (int th = 0; th < threads; th++) {
 				socketThreads.push_back(new std::thread([this, options, webPort, webRoot, th, &m, &cv] {
 					AsyncFileStreamer asyncFileStreamer(webRoot);
@@ -108,13 +108,13 @@ bool Listener::open(int threads = 1) {
 					}
 				}));
 			}
-		}
 
-		{
-			std::unique_lock<std::mutex> lk(m);
-			cv.wait(lk, [&threads, this] { return threads == webservers.size(); });
-			Logger::info(to_string(threads) + " WebServer" + (threads > 1 ? "s" : "") +
-				(ssl ? "(SSL)" : "") + " opened at port " + to_string(webPort));
+			{
+				std::unique_lock<std::mutex> lk(m);
+				cv.wait(lk, [&threads, this] { return threads == webservers.size(); });
+				Logger::info(to_string(threads) + " WebServer" + (threads > 1 ? "s" : "") +
+					(ssl ? "(SSL)" : "") + " opened at port " + to_string(webPort));
+			}
 		}
 	}
 

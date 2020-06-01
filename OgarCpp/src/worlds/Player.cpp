@@ -134,6 +134,7 @@ void Player::updateVisibleCells(bool threaded) {
 			// if (data->type == CellType::EJECTED_CELL) printf("Cell#%u belongs to %u (%u) \n", data->id, data->pid, id);
 			if (data->type != CellType::EJECTED_CELL || data->age > 1)
 				visibleCellData.insert(std::make_pair(data->id, data));
+			return false;
 		});
 
 	} else {
@@ -149,6 +150,7 @@ void Player::updateVisibleCells(bool threaded) {
 			auto cell = (Cell*)c;
 			if (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1)
 				visibleCells.insert(std::make_pair(cell->id, cell));
+			return false;
 		});
 
 		/*

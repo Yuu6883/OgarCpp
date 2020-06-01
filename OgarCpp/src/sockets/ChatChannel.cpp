@@ -2,7 +2,6 @@
 #include "Connection.h"
 #include "../protocols/Protocol.h"
 #include "../worlds/Player.h"
-#include <bit>
 
 ChatSource ChatSource::from(Connection* conn) {
 	return ChatSource(conn->player->chatName, false, conn->player->chatColor, conn->player->id, conn->isUTF16());

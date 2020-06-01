@@ -42,7 +42,7 @@
   "playerAllowSkinInName": true,
   "playerDecayMult": 0.001,
   "playerEjectDelay": 1,
-  "playerMaxCells": 1024,
+  "playerMaxCells": 256,
   "playerMaxNameLength": 256,
   "playerMaxSize": 60000,
   "playerMergeNewVersion": false,

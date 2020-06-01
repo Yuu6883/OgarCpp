@@ -88,7 +88,8 @@ void Protocol6::onSocketMessage(Reader& reader) {
 		case 255:
 			return fail(CloseCodes::CLOSE_UNSUPPORTED, "Unexpected message type");
 		default:
-			return fail(CloseCodes::CLOSE_UNSUPPORTED, "Unknown message type");
+			Logger::warn("Unknown message type: " + std::to_string((int) messageId));
+			// return fail(CloseCodes::CLOSE_UNSUPPORTED, "Unknown message type");
 	}
 }
 

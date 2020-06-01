@@ -39,6 +39,7 @@ void PlayerBot::update() {
 	ejectMacro = false;
 
 	player->updateVisibleCells();
+	if (player->justPopped) return; // nerf lmao
 	if (player->state != PlayerState::ALIVE && !requestSpawning) {
 	} else {
 		PlayerCell* biggestCell = nullptr;
