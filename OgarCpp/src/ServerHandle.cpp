@@ -36,7 +36,7 @@ void ServerHandle::loadSettings() {
 	int freq = getSettingInt("serverFrequency");
 	tickDelay = 1000 / freq;
 	ticker.setStep(tickDelay);
-	stepMult = tickDelay / 40;
+	stepMult = tickDelay / tickDelay;
 
 	LOAD_INT(spawnProtection);
 	LOAD_FLOAT(restartMulti);
@@ -107,6 +107,7 @@ void ServerHandle::loadSettings() {
 	LOAD_FLOAT(playerMergeTime);
 	LOAD_FLOAT(playerMergeTimeIncrease);
 	LOAD_FLOAT(playerDecayMult);
+	LOAD_INT(botSpawnSize);
 
 	runtime.botNames.clear();
 	auto botNames = GAME_CONFIG["worldPlayerBotNames"];
@@ -195,7 +196,7 @@ void ServerHandle::onTick() {
 		if (world->toBeRemoved)
 			removingIds.push_back(id);
 	}
-	float time1 = stopwatch.lap();
+	timing.physicsTotal = stopwatch.lap();
 
 	for (auto id : removingIds)
 		removeWorld(id);
@@ -203,7 +204,7 @@ void ServerHandle::onTick() {
 	listener.update();
 	matchmaker.update();
 	gamemode->onHandleTick();
-	float time2 = stopwatch.lap();
+	timing.routerTotal = stopwatch.lap();
 
 	for (auto [_, world] : worlds)
 		world->clearTruck();
@@ -213,9 +214,6 @@ void ServerHandle::onTick() {
 	bench = false;
 
 	averageTickTime = stopwatch.elapsed();
-	if (bench)
-		printf("Tick: %fms, World: %fms, Listener: %fms\n", averageTickTime, time1, time2);
-	stopwatch.stop();
 };
 
 bool ServerHandle::start() {
@@ -242,17 +240,17 @@ bool ServerHandle::stop() {
 
 	if (ticker.running)
 		ticker.stop();
+
+	Logger::debug("Closing listeners");
+	listener.close();
+
 	Logger::debug(string("Removing ") + to_string(worlds.size()) + " worlds");
 	while (worlds.size())
 		removeWorld(worlds.begin()->first);
-	for (auto router : listener.routers)
-		router->close();
 	Logger::debug(string("Removing ") + to_string(players.size()) + " players");
 	while (players.size())
 		removePlayer(players.begin()->first);
 	gamemode->onHandleStop();
-	Logger::debug("Closing listeners");
-	listener.close();
 	running = false;
 
 	Logger::info("Ticker stopped");

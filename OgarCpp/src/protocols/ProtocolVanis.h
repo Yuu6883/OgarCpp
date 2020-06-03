@@ -42,4 +42,5 @@ public:
 	void onMinimapUpdate();
 	void onDead();
 	Protocol* clone() { return new ProtocolVanis(*this); };
+	void onTimingMatrix();
 };

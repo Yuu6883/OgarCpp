@@ -308,3 +308,10 @@ void ProtocolVanis::onVisibleCellThreadedUpdate() {
 
 void ProtocolVanis::onStatsRequest() {
 };
+
+void ProtocolVanis::onTimingMatrix() {
+	Writer writer;
+	writer.writeUInt8(0x20);
+	writer.writeBuffer(string_view((char*) &connection->listener->handle->timing, sizeof(TimingMatrix)));
+	send(writer.finalize());
+}

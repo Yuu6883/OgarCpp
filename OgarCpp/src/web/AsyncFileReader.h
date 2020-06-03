@@ -89,8 +89,6 @@ public:
         std::async(std::launch::async, [this, cb, offset]() {
             //std::cout << "ASYNC Caching 1 MB at offset = " << offset << std::endl;
 
-
-
             // den har stängts! öppna igen!
             if (!fin.good()) {
                 fin.close();

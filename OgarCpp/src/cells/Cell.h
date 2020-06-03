@@ -58,11 +58,11 @@ public:
 	unsigned int id;
 	unsigned long birthTick;
 	unsigned long deadTick = 0;
+	bool inside = false;
 	bool exist = true;
 
 	Cell* eatenBy = nullptr;
 	Boost boost = Boost();
-	bool isBoosting = false;
 
 	Player* owner = nullptr;
 
@@ -107,6 +107,8 @@ public:
 		}
 	}
 
+	bool isBoosting() { return boost.d > 1; };
+
 	virtual CellType getType() = 0;
 	virtual bool isSpiked() = 0;
 	virtual bool isAgitated() = 0;
@@ -150,7 +152,7 @@ public:
 	CellType getType() { return PLAYER; };
 	bool isSpiked() { return false; };
 	bool isAgitated() { return false; };
-	bool shouldAvoidWhenSpawning() { return true; };
+	bool shouldAvoidWhenSpawning() { return owner ? true : false; };
 	string_view getName();
 	string_view getSkin();
 	EatResult getEatResult(Cell* other);

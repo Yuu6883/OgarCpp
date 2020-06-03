@@ -137,13 +137,14 @@ void Player::updateVisibleCells(bool threaded) {
 			return false;
 		});
 
-	} else {
+	}
+	else {
 		lastVisibleCells.clear();
 		lastVisibleCells = visibleCells;
 		visibleCells.clear();
 
 		for (auto cell : ownedCells)
-			if (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1)
+			if (!cell->inside && (cell->getType() != CellType::EJECTED_CELL || cell->getAge() > 1))
 				visibleCells.insert(std::make_pair(cell->id, cell));
 
 		world->finder->search(viewArea, [this](auto c) {
@@ -165,17 +166,13 @@ void Player::updateVisibleCells(bool threaded) {
 			printf("%u, ", id);
 		}
 		printf("\n"); */
-	}	
+	}
 }
 
 bool Player::exist() {
 	if (!router->disconnected) return true;
-	if (state != PlayerState::ALIVE) {
-		world->removePlayer(this);
-		handle->removePlayer(this->id);
-		return false;
-	}
 	world->killPlayer(this);
+	world->removePlayer(this);
 	handle->removePlayer(this->id);
 	return false;
 }

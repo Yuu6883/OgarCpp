@@ -18,7 +18,7 @@ Connection::~Connection() { if (protocol) delete protocol; };
 
 void Connection::close() {
 	if (!socketDisconnected) {
-		closeSocket(CLOSE_GOING_AWAY, "Manual connection close call");
+		closeSocket(CLOSE_GOING_AWAY, "Server closed connection");
 		return;
 	}
 	disconnected = true;
@@ -37,12 +37,10 @@ void Connection::onSocketClose(int code, string_view reason) {
 
 void Connection::closeSocket(int code, string_view str) {
 	if (socketDisconnected) return;
-	disconnected = true;
-	disconnectedTick = listener->getTick();
 	socketDisconnected = true;
 	closeCode = code;
 	closeReason = string(str);
-	uWS::Loop::get()->defer([this, code, str] {
+	loop->defer([this, code, str] {
 		if (socket) socket->end(code ? code : CLOSE_ABNORMAL, str);
 		else SSLsocket->end(code ? code : CLOSE_ABNORMAL, str);
 	});
@@ -120,14 +118,17 @@ void Connection::send(string_view message, bool preserveBuffer) {
 		if (!preserveBuffer) delete message.data();
 		return;
 	}
-	bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
-	if (!backpressure) {
-		busy = true;
-		int bufferedAmount = SSLsocket->getBufferedAmount();
-		if (player)
-			Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
-	}
-	if (!preserveBuffer) delete message.data();
+	loop->defer([this, message, preserveBuffer] {
+		listener->handle->bytesSent += message.size();
+		bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
+		if (!backpressure) {
+			busy = true;
+			int bufferedAmount = socket ? socket->getBufferedAmount() : SSLsocket->getBufferedAmount();
+			if (player)
+				Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
+		}
+		if (!preserveBuffer) delete message.data();
+	});
 }
 
 bool Connection::isThreaded() {
@@ -186,8 +187,10 @@ void Connection::update() {
 		protocol->onSpectatePosition(&player->viewArea);
 	if (listener->handle->tick % 4 == 0)
 		listener->handle->gamemode->sendLeaderboard(this);
-	if (listener->handle->tick % 10 == 0)
+	if (listener->handle->tick % 5 == 0)
 		protocol->onMinimapUpdate();
+
+	protocol->onTimingMatrix();
 	if (player->state == PlayerState::SPEC && player->router->spectateTarget) {
 		if (player->router->spectateTarget->type == RouterType::PLAYER &&
 			player->router->spectateTarget->player->state == PlayerState::ALIVE) return;

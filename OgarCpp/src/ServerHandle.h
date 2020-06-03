@@ -27,6 +27,7 @@ struct RuntimeSettings {
 	bool killOversize;
 	vector<string> botNames;
 	vector<string> botSkins;
+	int botSpawnSize;
 	string serverName;
 	bool chatEnabled;
 	int worldMaxPlayers;
@@ -96,8 +97,28 @@ struct RuntimeSettings {
 	float playerDecayMult = 0.001;
 };
 
+struct TimingMatrix {
+	float physicsTotal = 0.0f;
+	float routerTotal  = 0.0f;
+	float totalCells = 0.0f;
+	float bandwidth = 0.0f;
+	float tickCells = 0.0f;
+	float spawnCell = 0.0f;
+	float insides = 0.0f;
+	float boostCell = 0.0f;
+	float updatePC = 0.0f;
+	float sortCell = 0.0f;
+	float quadTree = 0.0f;
+	float queryOPs = 0.0f;
+	float rgdCheck = 0.0f;
+	float eatCheck = 0.0f;
+	float viewarea = 0.0f;
+};
+
 class ServerHandle {
 public:
+	TimingMatrix timing;
+
 	ProtocolStore* protocols;
 	GamemodeList*  gamemodes;
 
@@ -113,6 +134,7 @@ public:
 	unsigned long tick = -1;
 	int tickDelay = -1;
 	int stepMult = -1;
+	atomic<size_t> bytesSent = 0;
 
 	float averageTickTime = 0.0;
 

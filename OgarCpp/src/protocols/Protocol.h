@@ -74,5 +74,6 @@ public:
 			connection->send(data, preserveBuffer);
 		pendingBuffer.clear();
 	};
+	virtual void onTimingMatrix() = 0;
 	virtual Protocol* clone() = 0;
 };

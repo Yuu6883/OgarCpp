@@ -79,4 +79,5 @@ public:
 	Protocol* clone() { return new ProtocolModern(*this); };
 	void onDead() {};
 	void onMinimapUpdate() {};
+	void onTimingMatrix() {};
 };

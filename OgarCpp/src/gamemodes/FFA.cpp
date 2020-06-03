@@ -12,8 +12,20 @@ void FFA::onPlayerSpawnRequest(Player* player, string name, string skin) {
 		player->world->killPlayer(player);
 	}
 
-	float size = player->router->type == RouterType::MINION ?
-		handle->runtime.minionSpawnSize : handle->runtime.playerSpawnSize;
+	float size = 0.0f;
+	
+	switch (player->router->type) {
+		case RouterType::PLAYER:
+			size = handle->runtime.playerSpawnSize;
+			break;
+		case RouterType::PLAYER_BOT:
+			size = handle->runtime.botSpawnSize;
+			break;
+		case RouterType::MINION:
+		default:
+			size = handle->runtime.minionSpawnSize;
+			break;
+	}
 
 	bool failed = false;
 	auto spawnResult = player->world->getPlayerSpawn(size, failed);

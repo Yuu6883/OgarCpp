@@ -24,7 +24,10 @@ enum CloseCodes : short {
 	CLOSE_ABNORMAL,
 	UNSUPPORTED_PAYLOAD,
 	POLICY_VIOLATION,
-	CLOSE_TOO_LARGE
+	CLOSE_TOO_LARGE,
+	MANDATORY_EXT,
+	SERVER_ERROR,
+	SERVER_RESTART
 };
 
 class Connection : public Router {
@@ -40,6 +43,7 @@ public:
 	vector<Minion*> minions;
 	bool minionsFrozen = false;
 	bool controllingMinions = false;
+	uWS::Loop* loop = nullptr;
 
 	Connection(Listener* listener, unsigned int ipv4, uWS::WebSocket<false, true>* socket) :
 		Router(listener), ipv4(ipv4), socket(socket) {

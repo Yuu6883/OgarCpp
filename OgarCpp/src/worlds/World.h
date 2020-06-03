@@ -39,7 +39,6 @@ public:
 	
 	list<Cell*> gcTruck;
 	list<Cell*> cells;
-	list<Cell*> boostingCells;
 	list<EjectedCell*> ejectedCells;
 	list<PlayerCell*> playerCells;
 	list<Player*> players;
@@ -63,8 +62,6 @@ public:
 	void afterCreation();
 	void setBorder(Rect& rect);
 	void addCell(Cell* cell);
-	bool setCellAsBoosting(Cell* cell);
-	bool setCellAsNotBoosting(Cell* cell);
 	void updateCell(Cell* cell);
 	void removeCell(Cell* cell);
 	void addPlayer(Player* player);
@@ -80,7 +77,7 @@ public:
 	void liveUpdate();
 	void resolveRigidCheck(Cell* a, Cell* b);
 	void resolveEatCheck(Cell* a, Cell* b);
-	bool boostCell(Cell* cell);
+	void boostCell(Cell* cell);
 	void bounceCell(Cell* cell, bool bounce = false);
 	void splitVirus(Virus* virus);
 	void movePlayerCell(PlayerCell* cell);

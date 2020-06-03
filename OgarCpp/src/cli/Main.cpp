@@ -44,7 +44,7 @@ void registerCommands(ServerHandle* handle) {
 		handle->exiting = true;
 		handle->stop();
 		exited = true;
-		Logger::info("Exiting OgarCpp");
+		Logger::info("Press any key to exit OgarCpp");
 	});
 	handle->commands.registerCommand(exitCommand);
 
@@ -68,10 +68,13 @@ void registerCommands(ServerHandle* handle) {
 
 	Command<ServerHandle*> monitorStartCommand("mstart", "monitor load and cell count", "",
 		[](ServerHandle* handle, auto context, vector<string>& args) {
+		handle->bytesSent = 0;
 		handle->ticker.every(20, [handle] {
 			if (handle->worlds.size()) {
 				printf("Load: %2.2f%% ", handle->worlds.begin()->second->stats.loadTime);
+				printf("Bandwidth: %2.2fkb/s", handle->bytesSent / 1024.0f);
 				printf("cells: %lu\n",   handle->worlds.begin()->second->cells.size());
+				handle->bytesSent = 0;
 			}
 		});
 	});

@@ -16,7 +16,6 @@ class Router;
 class Connection;
 
 struct SocketData {
-	uWS::Loop* loop;
 	Connection* connection = nullptr;
 };
 

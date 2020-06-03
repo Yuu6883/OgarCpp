@@ -48,4 +48,5 @@ public:
 	void onStatsRequest();
 	void onDead() {};
 	void onMinimapUpdate() {};
+	void onTimingMatrix() {};
 };

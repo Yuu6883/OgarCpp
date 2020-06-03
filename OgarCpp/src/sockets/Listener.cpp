@@ -137,13 +137,14 @@ bool Listener::open(int threads = 1) {
 							std::string origin = string(req->getHeader("origin"));
 							auto data = (SocketData*)ws->getUserData();
 
-							data->loop = uWS::Loop::get();
-							data->loop->defer([this, data, ws, origin] {
+							auto loop = uWS::Loop::get();
+							loop->defer([this, data, ws, origin, loop] {
 								std::string_view ip_buff = ws->getRemoteAddress();
 								unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
 
 								if (verifyClient(ipv4, ws, origin)) {
 									data->connection = onConnection(ipv4, ws);
+									data->connection->loop = loop;
 									Logger::info("Connected");
 								} else {
 								  Logger::warn("Client verification failed");
@@ -203,16 +204,18 @@ bool Listener::open(int threads = 1) {
 							std::string origin = std::string(req->getHeader("origin"));
 							auto data = (SocketData*)ws->getUserData();
 
-							data->loop = uWS::Loop::get();
-							data->loop->defer([this, data, ws, origin] {
+							auto loop = uWS::Loop::get();
+							loop->defer([this, data, ws, origin, loop] {
 								std::string_view ip_buff = ws->getRemoteAddress();
 								unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
 
 								if (verifyClient(ipv4, ws, origin)) {
 									data->connection = onConnection(ipv4, ws);
+									data->connection->loop = loop;
 									Logger::info("Connected");
-								} else {
-								  Logger::warn("Client verification failed");
+								}
+								else {
+									Logger::warn("Client verification failed");
 								}
 							});
 						},
@@ -271,6 +274,14 @@ bool Listener::open(int threads = 1) {
 
 bool Listener::close() {
 	if (sockets.empty() && socketThreads.empty()) return false;
+
+	for (auto router : routers) router->close();
+
+	if (externalRouters) {
+		Logger::debug("Waiting for " + std::to_string(externalRouters.load()) + " connections to close");
+		std::this_thread::sleep_for(std::chrono::milliseconds{ 500 }); // Dumb
+		Logger::info("All external connections closed");
+	}
 
 	for (auto server : webservers)
 		us_listen_socket_close(0, server);
@@ -369,6 +380,8 @@ void Listener::onDisconnection(Connection* connection, int code, std::string_vie
 	Logger::debug(string("Socket closed { code: ") + to_string(code) + ", reason: " + string(message) + " }");
 	if (--connectionsByIP[connection->ipv4] <= 0)
 		connectionsByIP.erase(connection->ipv4);
+	externalRouters--;
+	routers.remove(connection);
 	globalChat->remove(connection);
 	if (connection->player && connection->player->world)
 		connection->player->world->worldChat->remove(connection);
@@ -384,8 +397,6 @@ void Listener::update() {
 			continue;
 		}
 		iter = routers.erase(iter);
-		if (r->isExternal())
-			externalRouters--;
 		if (r->type == RouterType::PLAYER) {
 			auto c = (Connection*) r;
 			onDisconnection(c, c->closeCode, c->closeReason);

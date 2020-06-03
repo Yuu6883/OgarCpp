@@ -126,7 +126,6 @@ void Virus::whenAte(Cell* cell) {
 		boost.dx = (boost.dx * boost.d + cell->boost.dx * runtime->virusPushBoost) / d;
 		boost.dy = (boost.dy * boost.d + cell->boost.dy * runtime->virusPushBoost) / d;
 		boost.d = d;
-		world->setCellAsBoosting(this);
 	} else {
 		splitAngle = atan2(cell->boost.dx, cell->boost.dy);
 		if (++fedTimes >= runtime->virusFeedTimes) {
@@ -159,10 +158,7 @@ EjectedCell::EjectedCell(World* world, Player* owner, float x, float y, unsigned
 EatResult EjectedCell::getEatResult(Cell* other) {
 	if (other->getType() == VIRUS) return ((Virus*)other)->getEjectedEatResult(false);
 	if (other->getType() == MOTHER_CELL) return EatResult::EATINVD;
-	if (other->getType() == EJECTED_CELL) {
-		if (!other->isBoosting) world->setCellAsBoosting(other);
-		return EatResult::COLLIDE;
-	}
+	if (other->getType() == EJECTED_CELL) return EatResult::COLLIDE;
 	return EatResult::NONE;
 }
 
@@ -239,7 +235,6 @@ void MotherCell::spawnPellet() {
 	auto d = world->handle->runtime.mothercellPelletBoost;
 	pellet->boost.d = d / 2.0 + ((double) rand() / (RAND_MAX)) * d / 2.0;
 	world->addCell(pellet);
-	world->setCellAsBoosting(pellet);
 }
 
 void MotherCell::whenAte(Cell* cell) {

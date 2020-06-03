@@ -12,6 +12,7 @@ public:
 	bool selfeed = false;
 	bool trypopsplit = false;
 	bool revpopsplit = false;
+	bool solotrick = false;
 	PlayerBot(World* world);
 	bool shouldClose() {
 		return !hasPlayer || !player->exist() || !player->hasWorld;
