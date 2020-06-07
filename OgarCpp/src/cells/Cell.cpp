@@ -78,27 +78,11 @@ void PlayerCell::onSpawned() {
 		owner->router->onNewOwnedCell(this);
 		owner->ownedCells.push_back(this);
 	}
-	world->playerCells.push_front(this);
 }
 
 void PlayerCell::onRemoved() {
-	auto iter = world->playerCells.begin();
-	while (iter != world->playerCells.cend()) {
-		if (*iter == this) {
-			world->playerCells.erase(iter);
-			break;
-		}
-		iter++;
-	}
 	if (!owner) return;
-	iter = owner->ownedCells.begin();
-	while (iter != owner->ownedCells.cend()) {
-		if (*iter == this) {
-			owner->ownedCells.erase(iter);
-			break;
-		}
-		iter++;
-	}
+	owner->ownedCells.remove(this);
 	if (!owner->ownedCells.size() && eatenBy && eatenBy->owner)
 		eatenBy->owner->killCount++;
 
@@ -163,18 +147,9 @@ EatResult EjectedCell::getEatResult(Cell* other) {
 }
 
 void EjectedCell::onSpawned() {
-	world->ejectedCells.push_back(this);
 }
 
 void EjectedCell::onRemoved() {
-	auto iter = world->ejectedCells.begin();
-	while (iter != world->ejectedCells.cend()) {
-		if (*iter == this) {
-			iter = world->ejectedCells.erase(iter);
-			break;
-		}
-		iter++;
-	}
 }
 
 Pellet::Pellet(World* world, Spawner* spawner, float x, float y):

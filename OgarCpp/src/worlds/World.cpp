@@ -84,8 +84,6 @@ void World::restart() {
 	if (!shouldRestart) return;
 
 	Logger::info(string("World (id: ") + to_string(id) + ") restarting!");
-	playerCells.clear();
-	ejectedCells.clear();
 	for (auto c : cells) delete c;
 	cells.clear();
 	for (auto c : gcTruck) delete c;
@@ -232,21 +230,6 @@ Point World::getSafeSpawnPos(float& cellSize, bool& failed) {
 SpawnResult World::getPlayerSpawn(float& cellSize, bool& failed) {
 	double rnd = randomZeroToOne;
 	float chance = handle->runtime.worldSafeSpawnFromEjectedChance;
-	
-	if ((chance > rnd) && (ejectedCells.size() > 0)) {
-		int tries = handle->runtime.worldSafeSpawnTries;
-		while (--tries >= 0) {
-			std::random_device random_device;
-			std::mt19937 engine{ random_device() };
-			std::uniform_int_distribution<int> dist(0, ejectedCells.size() - 1);
-			auto cell = *std::next(ejectedCells.begin(), dist(engine));
-			Rect rect(cell->getX(), cell->getY(), cellSize, cellSize);
-			if (isSafeSpawnPos(rect)) {
-				removeCell(cell);
-				return { cell->getColor(), { cell->getX(), cell->getX() } };
-			}
-		}
-	}
 	return { 0, getSafeSpawnPos(cellSize, failed) };
 }
 
@@ -343,12 +326,14 @@ void World::liveUpdate() {
 	handle->timing.insides = static_cast<float>(insides);
 	handle->timing.boostCell = bench.lap();
 	
-	for (auto c : playerCells) {
-		movePlayerCell(c);
-		decayPlayerCell(c);
-		autosplitPlayerCell(c);
-		bounceCell(c);
-		updateCell(c);
+	for (auto c : cells) {
+		if (c->getType() != CellType::PLAYER) continue;
+		auto pc = static_cast<PlayerCell*>(c);
+		movePlayerCell(pc);
+		decayPlayerCell(pc);
+		autosplitPlayerCell(pc);
+		bounceCell(pc);
+		updateCell(pc);
 	}
 
 	handle->timing.updatePC = bench.lap();
@@ -377,8 +362,8 @@ void World::liveUpdate() {
 
 				if (c->getType() == CellType::PELLET || c->inside ||
 			//		c->getType() == CellType::VIRUS  ||
-					c->getType() == CellType::EJECTED_CELL && 
-					(c->getAge() <= 20 || !c->isBoosting())) continue;
+					(c->getType() == CellType::EJECTED_CELL && 
+					 (c->getAge() <= 20 || !c->isBoosting()))) continue;
 
 				auto q = finder->search(c->range, [&c, &thread_rigid, &thread_eat](auto o) {
 					auto other = (Cell*) o;

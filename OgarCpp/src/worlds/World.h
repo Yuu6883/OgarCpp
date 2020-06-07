@@ -39,8 +39,6 @@ public:
 	
 	list<Cell*> gcTruck;
 	list<Cell*> cells;
-	list<EjectedCell*> ejectedCells;
-	list<PlayerCell*> playerCells;
 	list<Player*> players;
 	Player* largestPlayer = nullptr;
 
