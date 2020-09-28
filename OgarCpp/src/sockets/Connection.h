@@ -32,7 +32,7 @@ enum CloseCodes : short {
 
 class Connection : public Router {
 public:
-	unsigned int ipv4;
+	string ip;
 	uWS::WebSocket<false, true>* socket = nullptr;
 	uWS::WebSocket<true,  true>* SSLsocket = nullptr;
 	time_point<steady_clock> lastChatTime = steady_clock::now();
@@ -45,13 +45,13 @@ public:
 	bool controllingMinions = false;
 	uWS::Loop* loop = nullptr;
 
-	Connection(Listener* listener, unsigned int ipv4, uWS::WebSocket<false, true>* socket) :
-		Router(listener), ipv4(ipv4), socket(socket) {
+	Connection(Listener* listener, string ip, uWS::WebSocket<false, true>* socket) :
+		Router(listener), ip(ip), socket(socket) {
 		type = RouterType::PLAYER;
 	};
 
-	Connection(Listener* listener, unsigned int ipv4, uWS::WebSocket<true, true>* SSLsocket) :
-		Router(listener), ipv4(ipv4), SSLsocket(SSLsocket) {
+	Connection(Listener* listener, string ip, uWS::WebSocket<true, true>* SSLsocket) :
+		Router(listener), ip(ip), SSLsocket(SSLsocket) {
 		type = RouterType::PLAYER;
 	};
 

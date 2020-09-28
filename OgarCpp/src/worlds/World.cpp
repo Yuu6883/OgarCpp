@@ -340,8 +340,8 @@ void World::liveUpdate() {
 	
 	std::mutex mtx;
 
-	cells.sort([](Cell* a, Cell* b) {
-		return a->isBoosting() && !b->isBoosting() || (a->getSize() > b->getSize()); });
+	/* cells.sort([](Cell* a, Cell* b) {
+		return a->isBoosting() && !b->isBoosting() || (a->getSize() > b->getSize()); }); */
 
 	handle->timing.sortCell = bench.lap();
 
@@ -572,8 +572,8 @@ void World::movePlayerCell(PlayerCell* cell) {
 	float d = sqrt(dx * dx + dy * dy);
 	if (d < 1) return;
 	float modifier = 1.0f;
-	if (cell->getSize() < handle->runtime.playerMinSplitSize * 5.0f &&
-		cell->getAge() <= handle->runtime.playerNoCollideDelay) modifier = -1.0f;
+	if (cell->getSize() > handle->runtime.playerMinSplitSize * 5.0f &&
+		cell->getAge() <= handle->runtime.playerNoCollideDelay) modifier = 2.0f;
 	dx /= d; dy /= d;
 	float m = std::min(cell->getMoveSpeed() * modifier, d) * handle->stepMult;
 	cell->setX(cell->getX() + dx * m);

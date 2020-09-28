@@ -23,7 +23,7 @@ string_view PlayerCell::getName() { return owner->cellName; };
 string_view PlayerCell::getSkin() { return owner->cellSkin; };
 
 float PlayerCell::getMoveSpeed() {
-	return 88 * pow(size, -0.4396754) * owner->handle->runtime.playerMoveMult;
+	return 88 * pow(size, -0.4396754f) * owner->handle->runtime.playerMoveMult;
 }
 
 EatResult PlayerCell::getEatResult(Cell* other) {

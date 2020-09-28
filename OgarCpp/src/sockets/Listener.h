@@ -1,4 +1,5 @@
 #pragma once
+#pragma warning(disable : 4996)
 
 #include <uwebsockets/App.h>
 #include <atomic>
@@ -8,6 +9,7 @@
 #include <map>
 #include "../primitives/SimplePool.h"
 
+using std::string;
 using std::atomic;
 
 class ChatChannel;
@@ -33,7 +35,7 @@ public:
 
 	atomic<unsigned int> externalRouters = 0;
 	std::list<Router*> routers;
-	std::map<unsigned int, unsigned int> connectionsByIP;
+	std::map<string, unsigned int> connectionsByIP;
 
 	Listener(ServerHandle* handle);
 	~Listener() {
@@ -43,10 +45,10 @@ public:
 
 	bool open(int);
 	bool close();
-	bool verifyClient(unsigned int ipv4, void* socket, std::string origin);
+	bool verifyClient(uWS::HttpRequest* req, void* res);
 
 	unsigned long getTick();
-	Connection* onConnection(unsigned int ipv4, void* socket);
+	Connection* onConnection(string ip, void* socket);
 	void onDisconnection(Connection* connection, int code, std::string_view message);
 	void update();
 };

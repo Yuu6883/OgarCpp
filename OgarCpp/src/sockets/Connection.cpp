@@ -10,10 +10,6 @@
 #define MAX_FRAME_SIZE 1024
 using std::to_string;
 
-string ipv4ToString(unsigned int ipv4) {
-	return "";
-}
-
 Connection::~Connection() { if (protocol) delete protocol; };
 
 void Connection::close() {

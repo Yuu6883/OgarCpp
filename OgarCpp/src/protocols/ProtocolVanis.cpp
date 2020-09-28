@@ -192,9 +192,15 @@ void writeAddOrUpdate(Writer& writer, vector<Cell*>& cells) {
 		if (type == 1)
 			writer.writeUInt16(cell->owner->id);
 		writer.writeUInt32(cell->id);
-		writer.writeInt32(cell->getX());
-		writer.writeInt32(cell->getY());
-		writer.writeInt16(cell->getSize());
+		int x = static_cast<int>(cell->getX());
+		int y = static_cast<int>(cell->getY());
+		short size = static_cast<short>(cell->getSize());
+		x = (x >> 2) << 2;
+		y = (y >> 2) << 2;
+		size = (size >> 2) << 2;
+		writer.writeInt32(x);
+		writer.writeInt32(y);
+		writer.writeInt16(size);
 	}
 }
 

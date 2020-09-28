@@ -131,25 +131,35 @@ bool Listener::open(int threads = 1) {
 						.maxPayloadLength = 16 * 1024,
 						.maxBackpressure = 1 * 1024 * 1204,
 						/* Handlers */
-						.open = [this](auto* ws, auto* req) {
+						.upgrade = [this](auto* res, auto* req, auto* context) {
+
+							/* You may read from req only here, and COPY whatever you need into your PerSocketData.
+							 * PerSocketData is valid from .open to .close event, accessed with ws->getUserData().
+							 * HttpRequest (req) is ONLY valid in this very callback, so any data you will need later
+							 * has to be COPIED into PerSocketData here. */
+							if (verifyClient(req, res)) {
+								/* Immediately upgrading without doing anything "async" before, is simple */
+								res->template upgrade<SocketData>({
+									/* We initialize PerSocketData struct here */
+									}, req->getHeader("sec-websocket-key"),
+									req->getHeader("sec-websocket-protocol"),
+									req->getHeader("sec-websocket-extensions"),
+									context);
+							}
+
+							 /* If you don't want to upgrade you can instead respond with custom HTTP here,
+							  * such as res->writeStatus(...)->writeHeader(...)->end(...); or similar.*/
+						 },
+						.open = [this](auto* ws) {
 							if (handle->exiting) return;
-							// req object gets yeet'd after return, capture origin to pass into loop::defer
-							std::string origin = string(req->getHeader("origin"));
+
 							auto data = (SocketData*)ws->getUserData();
 
 							auto loop = uWS::Loop::get();
-							loop->defer([this, data, ws, origin, loop] {
-								std::string_view ip_buff = ws->getRemoteAddress();
-								unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
-
-								if (verifyClient(ipv4, ws, origin)) {
-									data->connection = onConnection(ipv4, ws);
-									data->connection->loop = loop;
-									Logger::info("Connected");
-								} else {
-								  Logger::warn("Client verification failed");
-								}
-							});
+							std::string ip = std::string(ws->getRemoteAddressAsText());
+							data->connection = onConnection(ip, ws);
+							data->connection->loop = loop;
+							Logger::info("Connected");
 						},
 						.message = [this](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
 							if (handle->exiting) return;
@@ -197,27 +207,35 @@ bool Listener::open(int threads = 1) {
 						.compression = uWS::SHARED_COMPRESSOR,
 						.maxPayloadLength = 16 * 1024,
 						.maxBackpressure = 1 * 1024 * 1204,
+						.upgrade = [this](auto* res, auto* req, auto* context) {
+							/* You may read from req only here, and COPY whatever you need into your PerSocketData.
+							 * PerSocketData is valid from .open to .close event, accessed with ws->getUserData().
+							 * HttpRequest (req) is ONLY valid in this very callback, so any data you will need later
+							 * has to be COPIED into PerSocketData here. */
+							if (verifyClient(req, res)) {
+								/* Immediately upgrading without doing anything "async" before, is simple */
+								res->template upgrade<SocketData>({
+									/* We initialize PerSocketData struct here */
+									}, req->getHeader("sec-websocket-key"),
+									req->getHeader("sec-websocket-protocol"),
+									req->getHeader("sec-websocket-extensions"),
+									context);
+							}
+
+							/* If you don't want to upgrade you can instead respond with custom HTTP here,
+							 * such as res->writeStatus(...)->writeHeader(...)->end(...); or similar.*/
+						 },
 						/* Handlers */
-						.open = [this](auto* ws, auto* req) {
+						.open = [this](auto* ws) {
 							if (handle->exiting) return;
-							// req object gets yeet'd after return, capture origin to pass into loop::defer
-							std::string origin = std::string(req->getHeader("origin"));
+
 							auto data = (SocketData*)ws->getUserData();
 
 							auto loop = uWS::Loop::get();
-							loop->defer([this, data, ws, origin, loop] {
-								std::string_view ip_buff = ws->getRemoteAddress();
-								unsigned int ipv4 = ip_buff.size() == 4 ? *((unsigned int*)ip_buff.data()) : 0;
-
-								if (verifyClient(ipv4, ws, origin)) {
-									data->connection = onConnection(ipv4, ws);
-									data->connection->loop = loop;
-									Logger::info("Connected");
-								}
-								else {
-									Logger::warn("Client verification failed");
-								}
-							});
+							std::string ip = std::string(ws->getRemoteAddressAsText());
+							data->connection = onConnection(ip, ws);
+							data->connection->loop = loop;
+							Logger::info("Connected");
 						},
 						.message = [this](auto* ws, std::string_view buffer, uWS::OpCode opCode) {
 							if (handle->exiting) return;
@@ -301,20 +319,15 @@ bool Listener::close() {
 	return true;
 };
 
-bool Listener::verifyClient(unsigned int ipv4, void* socket, std::string origin) {
-    
-    uWS::WebSocket<true, true>* s1 = nullptr;
-    uWS::WebSocket<false, true>* s2 = nullptr;
-    if (ssl)
-        s1 = (uWS::WebSocket<true, true>*) socket;
-    else
-        s2 = (uWS::WebSocket<false, true>*) socket;
-    
-	if (!ipv4) {
-		Logger::warn("INVALID IP");
-		ssl ? s1->end(INVALID_IP, "Invalid IP") : s2->end(INVALID_IP, "Invalid IP");
-		return false;
-	}
+bool Listener::verifyClient(uWS::HttpRequest* req, void* res) {
+
+	uWS::HttpResponse<false>* http_res = nullptr;
+	uWS::HttpResponse<true>* https_res = nullptr;
+
+	if (ssl)
+		https_res = (uWS::HttpResponse<true>*) res;
+	else
+		http_res = (uWS::HttpResponse<false>*) res;
 
 	// Log header
 	/*
@@ -327,24 +340,31 @@ bool Listener::verifyClient(unsigned int ipv4, void* socket, std::string origin)
 	// check connection list length
 	if (externalRouters.load() >= handle->runtime.listenerMaxConnections) {
 		Logger::warn(string("CONNECTION MAXED: ") + to_string(handle->runtime.listenerMaxConnections));
-		ssl ? s1->end(CONNECTION_MAXED, "Server max connection reached") : s2->end(CONNECTION_MAXED, "Server max connection reached");
+		ssl ? https_res->writeStatus("400")->end("Server max connection reached") : 
+			http_res->writeStatus("400")->end("Server max connection reached");
 		return false;
 	}
 
+	string_view origin = req->getHeader("origin");
+
 	// check request origin
-	Logger::debug(std::string("Origin: ") + origin);
+	Logger::debug(std::string("Origin: ") + std::string(origin));
 	if (!std::regex_match(std::string(origin), originRegex)) {
-		ssl ? s1->end(UNKNOWN_ORIGIN, "Unknown origin") : s2->end(UNKNOWN_ORIGIN, "Unknown origin");
+		ssl ? https_res->writeStatus("400")->end("Unknown origin") :
+			http_res->writeStatus("400")->end("Unknown origin");
 		return false;
 	}
 
 	// Maybe check IP black list (use kernal is probably better)
 
 	// check connection per IP
+	std::string ip = std::string(ssl ? https_res->getRemoteAddressAsText() : http_res->getRemoteAddressAsText());
+
 	int ipLimit = handle->runtime.listenerMaxConnectionsPerIP;
-	if (ipLimit > 0 && connectionsByIP.find(ipv4) != connectionsByIP.cend() &&
-		connectionsByIP[ipv4] >= ipLimit) {
-		ssl ? s1->end(IP_LIMITED, "IP limited") : s2->end(IP_LIMITED, "IP limited");
+	if (ipLimit > 0 && connectionsByIP.find(ip) != connectionsByIP.cend() &&
+		connectionsByIP[ip] >= ipLimit) {
+		ssl ? https_res->writeStatus("400")->end("IP limited") :
+			http_res->writeStatus("400")->end("IP limited");
 		return false;
 	}
 
@@ -356,7 +376,7 @@ unsigned long Listener::getTick() {
 }
 
 // Called in socket thread=
-Connection* Listener::onConnection(unsigned int ipv4, void* socket) {
+Connection* Listener::onConnection(string ip, void* socket) {
     
     uWS::WebSocket<true, true>* s1 = nullptr;
     uWS::WebSocket<false, true>* s2 = nullptr;
@@ -365,11 +385,11 @@ Connection* Listener::onConnection(unsigned int ipv4, void* socket) {
     else
         s2 = (uWS::WebSocket<false, true>*) socket;
     
-	auto connection = ssl ? new Connection(this, ipv4, s1) : new Connection(this, ipv4, s2);
-	if (connectionsByIP.find(ipv4) != connectionsByIP.cend()) {
-		connectionsByIP[ipv4]++;
+	auto connection = ssl ? new Connection(this, ip, s1) : new Connection(this, ip, s2);
+	if (connectionsByIP.find(ip) != connectionsByIP.cend()) {
+		connectionsByIP[ip]++;
 	} else {
-		connectionsByIP.insert(std::make_pair(ipv4, 1));
+		connectionsByIP.insert(std::make_pair(ip, 1));
 	}
 	externalRouters++;
 	routers.push_back(connection);
@@ -378,8 +398,8 @@ Connection* Listener::onConnection(unsigned int ipv4, void* socket) {
 
 void Listener::onDisconnection(Connection* connection, int code, std::string_view message) {
 	Logger::debug(string("Socket closed { code: ") + to_string(code) + ", reason: " + string(message) + " }");
-	if (--connectionsByIP[connection->ipv4] <= 0)
-		connectionsByIP.erase(connection->ipv4);
+	if (--connectionsByIP[connection->ip] <= 0)
+		connectionsByIP.erase(connection->ip);
 	externalRouters--;
 	routers.remove(connection);
 	globalChat->remove(connection);
