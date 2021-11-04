@@ -116,12 +116,12 @@ void Connection::send(string_view message, bool preserveBuffer) {
 	}
 	loop->defer([this, message, preserveBuffer] {
 		listener->handle->bytesSent += message.size();
-		bool backpressure = socket ? socket->send(message) : SSLsocket->send(message);
-		if (!backpressure) {
+		int status = socket ? socket->send(message) : SSLsocket->send(message);
+		if (status) {
 			busy = true;
 			int bufferedAmount = socket ? socket->getBufferedAmount() : SSLsocket->getBufferedAmount();
-			if (player)
-				Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
+			// if (player)
+			// 	Logger::warn(player->leaderboardName + " backpressure alert: " + to_string(bufferedAmount) + ")");
 		}
 		if (!preserveBuffer) delete message.data();
 	});

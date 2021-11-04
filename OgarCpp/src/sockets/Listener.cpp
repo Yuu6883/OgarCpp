@@ -59,7 +59,8 @@ bool Listener::open(int threads = 1) {
 	if (GAME_CONFIG["webRoot"].is_string())
 		webRoot = GAME_CONFIG["webRoot"];
 
-	us_socket_context_options_t options;
+	uWS::SocketContextOptions options;
+
 	LOAD_SSL_OPTION(key_file_name);
 	LOAD_SSL_OPTION(cert_file_name);
 	LOAD_SSL_OPTION(passphrase);
@@ -181,8 +182,8 @@ bool Listener::open(int threads = 1) {
 								Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
 							}
 						},
-						.ping = [](auto* ws) {},
-						.pong = [](auto* ws) {},
+						.ping = [](auto* ws, std::string_view buffer) {},
+						.pong = [](auto* ws, std::string_view buffer) {},
 						.close = [this](auto* ws, int code, std::string_view message) {
 							if (handle->exiting) return;
 							auto data = (SocketData*)ws->getUserData();
@@ -216,7 +217,8 @@ bool Listener::open(int threads = 1) {
 								/* Immediately upgrading without doing anything "async" before, is simple */
 								res->template upgrade<SocketData>({
 									/* We initialize PerSocketData struct here */
-									}, req->getHeader("sec-websocket-key"),
+									}, 
+									req->getHeader("sec-websocket-key"),
 									req->getHeader("sec-websocket-protocol"),
 									req->getHeader("sec-websocket-extensions"),
 									context);
@@ -258,8 +260,8 @@ bool Listener::open(int threads = 1) {
 								Logger::warn("WebSocket still have backpressure after drain called: " + to_string(amount));
 							}
 						},
-						.ping = [](auto* ws) {},
-						.pong = [](auto* ws) {},
+						.ping = [](auto* ws, std::string_view buffer) {},
+						.pong = [](auto* ws, std::string_view buffer) {},
 						.close = [this](auto* ws, int code, std::string_view message) {
 							if (handle->exiting) return;
 							auto data = (SocketData*)ws->getUserData();
@@ -378,12 +380,12 @@ unsigned long Listener::getTick() {
 // Called in socket thread=
 Connection* Listener::onConnection(string ip, void* socket) {
     
-    uWS::WebSocket<true, true>* s1 = nullptr;
-    uWS::WebSocket<false, true>* s2 = nullptr;
+    uWS::WebSocket<true, true, SocketData>* s1 = nullptr;
+    uWS::WebSocket<false, true, SocketData>* s2 = nullptr;
     if (ssl)
-        s1 = (uWS::WebSocket<true, true>*) socket;
+        s1 = (uWS::WebSocket<true, true, SocketData>*) socket;
     else
-        s2 = (uWS::WebSocket<false, true>*) socket;
+        s2 = (uWS::WebSocket<false, true, SocketData>*) socket;
     
 	auto connection = ssl ? new Connection(this, ip, s1) : new Connection(this, ip, s2);
 	if (connectionsByIP.find(ip) != connectionsByIP.cend()) {

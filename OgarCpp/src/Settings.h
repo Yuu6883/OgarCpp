@@ -12,8 +12,8 @@ using std::ofstream;
 
 inline Json GAME_CONFIG = R"(
 {
-    "serveWeb": false,
-    "webPort": 80,
+    "serveWeb": true,
+    "webPort": 8080,
     "webRoot": "",
     "spawnProtection": 40,
     "restartMulti": 0.75,
@@ -29,7 +29,7 @@ inline Json GAME_CONFIG = R"(
     "listenerMaxClientDormancy" : 60000,
     "listenerMaxConnectionsPerIP" : 1,
     "listenerThreads" : 6,
-    "listeningPort" : 443,
+    "listeningPort" : 3000,
     "serverFrequency" : 25,
     "serverName" : "An unnamed server",
     "serverGameMode" : "FFA",
@@ -54,6 +54,7 @@ inline Json GAME_CONFIG = R"(
     "worldPlayerBotsPerWorld" : 0,
     "worldPlayerBotNames" : [] ,
     "worldPlayerBotSkins" : [] ,
+    "botSpawnSize": 100,
     "worldMinionsPerPlayer" : 0,
     "worldMaxPlayers" : 50,
     "worldMinCount" : 0,

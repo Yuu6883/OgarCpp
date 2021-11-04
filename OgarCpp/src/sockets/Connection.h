@@ -4,6 +4,7 @@
 #include <vector>
 #include <uwebsockets/App.h>
 #include "../primitives/Logger.h"
+#include "Listener.h"
 #include "Router.h"
 
 class Protocol;
@@ -33,8 +34,8 @@ enum CloseCodes : short {
 class Connection : public Router {
 public:
 	string ip;
-	uWS::WebSocket<false, true>* socket = nullptr;
-	uWS::WebSocket<true,  true>* SSLsocket = nullptr;
+	uWS::WebSocket<false, true, SocketData>* socket = nullptr;
+	uWS::WebSocket<true,  true, SocketData>* SSLsocket = nullptr;
 	time_point<steady_clock> lastChatTime = steady_clock::now();
 	Protocol* protocol = nullptr;
 	atomic<bool> socketDisconnected = false;
@@ -45,12 +46,12 @@ public:
 	bool controllingMinions = false;
 	uWS::Loop* loop = nullptr;
 
-	Connection(Listener* listener, string ip, uWS::WebSocket<false, true>* socket) :
+	Connection(Listener* listener, string ip, uWS::WebSocket<false, true, SocketData>* socket) :
 		Router(listener), ip(ip), socket(socket) {
 		type = RouterType::PLAYER;
 	};
 
-	Connection(Listener* listener, string ip, uWS::WebSocket<true, true>* SSLsocket) :
+	Connection(Listener* listener, string ip, uWS::WebSocket<true, true, SocketData>* SSLsocket) :
 		Router(listener), ip(ip), SSLsocket(SSLsocket) {
 		type = RouterType::PLAYER;
 	};

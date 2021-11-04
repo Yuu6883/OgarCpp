@@ -81,5 +81,5 @@ set(CMAKE_CXX_STANDARD_LIBRARIES "-static-libstdc++")
 # Target
 ################################################################################
 add_executable(${PROJECT_NAME} ${ALL_FILES})
-target_link_libraries(${PROJECT_NAME} pthread uSockets z stdc++fs)
+target_link_libraries(${PROJECT_NAME} pthread uSockets z stdc++fs uSockets ssl crypto dl)
 
