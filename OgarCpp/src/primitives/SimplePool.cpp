@@ -2,9 +2,9 @@
 #include "Logger.h"
 
 ThreadPool::ThreadPool(unsigned int n)
-    : busy()
-    , processed()
-    , stop()
+    : busy(0)
+    , processed(0)
+    , stop(0)
 {
     if (!n) {
         Logger::error(string("Need at least 1 thread for thread pool to work"));
